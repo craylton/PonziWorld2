@@ -1,6 +1,3 @@
-Create a basic login screen
-    This should only require a username for now, I'll handle auth later
-Create the homepage, whih is displayed after logging in
 Once logged in for the first time ever, the user should get a new investor (grandma)
 Create a daily digest page
     If logged in for the first time today, but not for the first time ever, you should get a digest of what happened yesterday
