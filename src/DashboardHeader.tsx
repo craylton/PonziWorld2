@@ -7,7 +7,7 @@ interface DashboardHeaderProps {
 }
 
 function formatCurrency(amount: number) {
-  return amount.toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+  return amount.toLocaleString(undefined, { style: 'currency', currency: 'GBP', maximumFractionDigits: 2 });
 }
 
 export default function DashboardHeader({ bankName, claimedCapital, actualCapital }: DashboardHeaderProps) {
