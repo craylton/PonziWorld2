@@ -9,3 +9,5 @@ So for example, instead of `npm install && npm run dev`, you should run `npm ins
 3. The app is designed to be run on mobile first (less than 1080px wide), but should also work on desktop.
 
 4. After making any frontend changes, make sure to run `npm run lint` to check for linting errors.
+
+5. Style-wise, it's better to have multiple small components rather than one large component. When a component grows too large, consider breaking it down into smaller components.

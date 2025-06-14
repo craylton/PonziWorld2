@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import DashboardHeader from './DashboardHeader';
+import HamburgerButton from './HamburgerButton';
+import SidePanel from './SidePanel';
 import './Dashboard.css';
 
 interface DashboardProps {
@@ -12,9 +14,10 @@ const DUMMY_CLAIMED_CAPITAL = 1000000;
 const DUMMY_ACTUAL_CAPITAL = 250000;
 
 export default function Dashboard({ username }: DashboardProps) {
-    const [showLeftPanel, setShowLeftPanel] = useState(false);
-    const [showRightPanel, setShowRightPanel] = useState(false);
-    const mainContent = `Welcome to the dashboard, ${username}!`;
+  const [showLeftPanel, setShowLeftPanel] = useState(false);
+  const [showRightPanel, setShowRightPanel] = useState(false);
+  const mainContent = `Welcome to the dashboard, ${username}!`;
+
   return (
     <div className="dashboard-root">
       <DashboardHeader
@@ -23,59 +26,43 @@ export default function Dashboard({ username }: DashboardProps) {
         actualCapital={DUMMY_ACTUAL_CAPITAL}
       />
       <div className="dashboard-layout">
-        {/* Sliding left panel with hamburger/X button inside */}
-        <aside
-          className={`dashboard-panel dashboard-panel--left${showLeftPanel ? ' dashboard-panel--visible' : ''}`}
-        >
-          <button
-            className={`dashboard-hamburger dashboard-hamburger--panel${showLeftPanel ? ' dashboard-hamburger--open' : ''}`}
-            aria-label={showLeftPanel ? 'Close left panel' : 'Open left panel'}
+        {/* Left Side Panel */}
+        <SidePanel side="left" visible={showLeftPanel}>
+          <HamburgerButton
+            isOpen={showLeftPanel}
             onClick={() => setShowLeftPanel((v) => !v)}
-          >
-            <span />
-            <span />
-            <span />
-          </button>
+            ariaLabel={showLeftPanel ? 'Close left panel' : 'Open left panel'}
+            className="dashboard-hamburger--panel"
+          />
           Left Panel
-        </aside>
+        </SidePanel>
         <main className="dashboard-main">
           {/* Hamburger for left panel (mobile only, floats over main) */}
-          <button
-            className={`dashboard-hamburger dashboard-hamburger--float dashboard-hamburger--left${showLeftPanel ? ' dashboard-hamburger--hidden' : ''}`}
-            aria-label="Open left panel"
+          <HamburgerButton
+            isOpen={false}
             onClick={() => setShowLeftPanel(true)}
-          >
-            <span />
-            <span />
-            <span />
-          </button>
+            ariaLabel="Open left panel"
+            className={`dashboard-hamburger--float dashboard-hamburger--left${showLeftPanel ? ' dashboard-hamburger--hidden' : ''}`}
+          />
           {mainContent}
           {/* Hamburger for right panel (mobile only, floats over main) */}
-          <button
-            className={`dashboard-hamburger dashboard-hamburger--float dashboard-hamburger--right${showRightPanel ? ' dashboard-hamburger--hidden' : ''}`}
-            aria-label="Open right panel"
+          <HamburgerButton
+            isOpen={false}
             onClick={() => setShowRightPanel(true)}
-          >
-            <span />
-            <span />
-            <span />
-          </button>
+            ariaLabel="Open right panel"
+            className={`dashboard-hamburger--float dashboard-hamburger--right${showRightPanel ? ' dashboard-hamburger--hidden' : ''}`}
+          />
         </main>
-        {/* Sliding right panel with hamburger/X button inside */}
-        <aside
-          className={`dashboard-panel dashboard-panel--right${showRightPanel ? ' dashboard-panel--visible' : ''}`}
-        >
-          <button
-            className={`dashboard-hamburger dashboard-hamburger--panel${showRightPanel ? ' dashboard-hamburger--open' : ''}`}
-            aria-label={showRightPanel ? 'Close right panel' : 'Open right panel'}
+        {/* Right Side Panel */}
+        <SidePanel side="right" visible={showRightPanel}>
+          <HamburgerButton
+            isOpen={showRightPanel}
             onClick={() => setShowRightPanel((v) => !v)}
-          >
-            <span />
-            <span />
-            <span />
-          </button>
+            ariaLabel={showRightPanel ? 'Close right panel' : 'Open right panel'}
+            className="dashboard-hamburger--panel"
+          />
           Right Panel
-        </aside>
+        </SidePanel>
       </div>
     </div>
   );
