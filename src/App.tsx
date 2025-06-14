@@ -16,7 +16,8 @@ function App() {
   useEffect(() => {
     const fetchMessage = async () => {
       try {
-        const res = await fetch('http://localhost:8080/api/hello')
+        const baseUrl = 'http://localhost:8080';
+        const res = await fetch(`${baseUrl}/api/hello`)
         const data: HelloResponse = await res.json()
         setMessage(data.message)
       } catch {
