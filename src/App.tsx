@@ -1,3 +1,4 @@
+import Login from './Login';
 import { useEffect, useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
@@ -11,9 +12,11 @@ interface HelloResponse {
 function App() {
   const [count, setCount] = useState<number>(0)
   const [message, setMessage] = useState<string>('')
+  const [username, setUsername] = useState<string | null>(null)
 
   // Fetch hello message from backend
   useEffect(() => {
+    if (!username) return;
     const fetchMessage = async () => {
       try {
         const baseUrl = 'http://localhost:8080';
@@ -25,7 +28,11 @@ function App() {
       }
     }
     fetchMessage()
-  }, [])
+  }, [username])
+
+  if (!username) {
+    return <Login onLogin={setUsername} />;
+  }
 
   return (
     <>
@@ -51,6 +58,7 @@ function App() {
         Click on the Vite and React logos to learn more
       </p>
       <h1>PonziWorld2</h1>
+      <p>Welcome, {username}!</p>
       <p>{message}</p>
     </>
   )
