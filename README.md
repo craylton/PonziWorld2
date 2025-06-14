@@ -1,68 +1,39 @@
-# React + TypeScript + Vite
+# Ponzi World
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is a multiplayer game where players are encouraged to create their own Ponzi schemes and scam each other out of as much money as possible!
 
-Currently, two official plugins are available:
+Currently it's in very early development. 
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Prerequisites
+- Go 1.18+
+- MongoDB (running locally on port 27017 by default)
+  - You can run MongoDB easily with Docker:
+    ```powershell
+    docker run --name ponzi-mongo -d -p 27017:27017 mongo:latest
+    ```
 
-## Running the UI (Frontend)
+## Running the Backend
+
+0. If running locally, ensure MongoDB is running (see above for Docker command)
+1. Open a terminal in the `backend` directory.
+2. Run the backend:
+   ```powershell
+   go run .
+   ```
+
+- The backend will listen on http://localhost:8080
+- The MongoDB connection string can be set with the `MONGODB_URI` environment variable (defaults to `mongodb://localhost:27017`).
+
+## Running the Frontend
 
 To start the React UI locally:
 
 1. Install dependencies (if you haven't already):
-   ```sh
+   ```powershell
    npm install
    ```
 2. Start the development server:
-   ```sh
+   ```powershell
    npm run dev
    ```
 3. Open your browser and go to the URL shown in the terminal (usually http://localhost:5173).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```

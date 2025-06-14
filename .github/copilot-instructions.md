@@ -1,3 +1,7 @@
-<!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
 
 This project is a monorepo with a Vite+React+TypeScript frontend and a Go backend. The backend exposes a REST API and connects to MongoDB. The frontend fetches data from the backend and displays it.
+
+1. You cannot run commands in powershell with `&&` or `||` separators, you must use `;` to separate them instead.
+So for example, instead of `npm install && npm run dev`, you should run `npm install; npm run dev`.
+
+2. The step-by-step instructions for running the project are in the README. When changing the run process, please update the README accordingly.
