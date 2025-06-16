@@ -4,11 +4,11 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: #f7f7f7;
+  background: #812a89;
 }
 
 .login-form {
-  background: #fff;
+  background: #ff6cdc;
   padding: 2rem 2.5rem;
   border-radius: 8px;
   box-shadow: 0 2px 16px rgba(0,0,0,0.08);
@@ -43,4 +43,25 @@
 
 .login-form button:hover {
   background: #535bf2;
+}
+
+@media (max-width: 440px) {
+  .login-form {
+    min-width: 0;
+    width: 100%;
+    max-width: 95vw;
+    padding: 1rem 0.5rem;
+    box-sizing: border-box;
+    border-radius: 0px;
+    box-shadow: none;
+  }
+  .login-form input,
+  .login-form button {
+    font-size: 0.95rem;
+    padding: 0.5rem 0.4rem;
+  }
+  .new-bank-btn {
+    font-size: 1rem !important;
+    padding: 0.6rem !important;
+  }
 }
