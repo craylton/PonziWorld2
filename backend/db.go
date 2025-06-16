@@ -10,7 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-// ConnectDB initializes and returns a MongoDB client and context
 func ConnectDB() (*mongo.Client, context.Context, context.CancelFunc) {
 	uri := os.Getenv("MONGODB_URI")
 	if uri == "" {

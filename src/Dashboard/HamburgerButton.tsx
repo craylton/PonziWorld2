@@ -7,7 +7,6 @@ interface HamburgerButtonProps {
   className?: string;
 }
 
-// Uses SVG for hamburger/X icon
 const HamburgerButton: React.FC<HamburgerButtonProps> = ({ isOpen, onClick, ariaLabel, className = '' }) => (
   <button
     className={`dashboard-hamburger ${className} ${isOpen ? 'dashboard-hamburger--open' : ''}`}

@@ -23,7 +23,6 @@ func main() {
 	log.Fatal(http.ListenAndServe(":"+port, corsMiddleware(mux)))
 }
 
-// corsMiddleware adds CORS headers to responses
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")

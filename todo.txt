@@ -1,3 +1,11 @@
+Allow creating a user
+    Persist to the DB
+Allow logging in as that user
+    Reject invalid logins
+Display a list of investors in the left panel
+    Need to create fake investors for now
+Put fake investors into the DB
+
 Once logged in for the first time ever, the user should get a new investor (grandma)
 Create a daily digest page
     If logged in for the first time today, but not for the first time ever, you should get a digest of what happened yesterday

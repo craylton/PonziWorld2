@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import DashboardHeader from './DashboardHeader';
-import HamburgerButton from './HamburgerButton';
+import { useState } from 'react';
 import SidePanel from './SidePanel';
 import './Dashboard.css';
+import DashboardHeader from './DashboardHeader';
+import HamburgerButton from './HamburgerButton';
 
 interface DashboardProps {
   username: string;

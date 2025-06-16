@@ -9,7 +9,7 @@ Currently it's in very early development.
 - MongoDB (running locally on port 27017 by default)
   - You can run MongoDB easily with Docker:
     ```powershell
-    docker run --name ponzi-mongo -d -p 27017:27017 mongo:latest
+    docker start ponzi-mongo
     ```
 
 ## Running the Backend
