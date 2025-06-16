@@ -1,44 +1,79 @@
 /* Responsive styles for the dashboard header */
 .dashboard-header {
   display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  padding: 1rem 0.5rem;
+  text-align: center;
+  padding: 1.25rem 1rem 1.5rem 1rem;
   background: #fff;
-  border-radius: 8px;
+  border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-  margin-bottom: 1.5rem;
-  gap: 1rem;
+  margin: 1.5rem auto 1.5rem auto;
+  width: 100%;
+  max-width: 600px;
 }
 .dashboard-header__bank {
-  font-size: 1.2rem;
-  font-weight: 600;
+  font-size: 2rem;
+  font-weight: 700;
   color: #213547;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.5px;
 }
-.dashboard-header__claimed,
-.dashboard-header__actual {
-  font-size: 1rem;
+.dashboard-header__capitals {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+.dashboard-header__capital {
+  display: flex;
+  flex-direction: column;
+  font-size: 1.05rem;
   color: #444;
+  padding: 0 1rem;
 }
-.dashboard-header__claimed span,
-.dashboard-header__actual span {
-  font-weight: 500;
+.dashboard-header__capital:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 2.2em;
+  width: 1px;
+  background: linear-gradient(to bottom, #e0e0e0 60%, transparent 100%);
+  opacity: 0.7;
+}
+.dashboard-header__separator {
+  width: 1px;
+  height: 2.2em;
+  background: linear-gradient(to bottom, #e0e0e0 10%, #cfcfcf 90%);
+  margin: 0 1.2rem;
+  align-self: center;
+  border-radius: 1px;
+  opacity: 0.7;
+}
+.dashboard-header__capital-label {
+  font-size: 0.95rem;
+  color: #888;
+  margin-bottom: 0.1rem;
+}
+.dashboard-header__capital-value {
+  font-weight: 600;
   color: #646cff;
 }
 
 @media (max-width: 600px) {
   .dashboard-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-    padding: 0.75rem 0.25rem;
+    padding: 0.75rem 0.5rem 1rem 0.5rem;
+    max-width: 100%;
   }
   .dashboard-header__bank {
-    font-size: 1rem;
+    font-size: 1.3rem;
   }
-  .dashboard-header__claimed,
-  .dashboard-header__actual {
-    font-size: 0.95rem;
+  .dashboard-header__capitals {
+    flex-direction: column;
+    gap: 0.5rem;
   }
 }
