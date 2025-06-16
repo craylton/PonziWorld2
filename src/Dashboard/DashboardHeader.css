@@ -33,26 +33,6 @@
   color: #444;
   padding: 0 1rem;
 }
-.dashboard-header__capital:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  height: 2.2em;
-  width: 1px;
-  background: linear-gradient(to bottom, #e0e0e0 60%, transparent 100%);
-  opacity: 0.7;
-}
-.dashboard-header__separator {
-  width: 1px;
-  height: 2.2em;
-  background: linear-gradient(to bottom, #e0e0e0 10%, #cfcfcf 90%);
-  margin: 0 1.2rem;
-  align-self: center;
-  border-radius: 1px;
-  opacity: 0.7;
-}
 .dashboard-header__capital-label {
   font-size: 0.95rem;
   color: #cecece;
@@ -81,10 +61,6 @@
   .dashboard-header__capital {
     font-size: 0.95rem;
     padding: 0 0.2rem;
-  }
-  .dashboard-header__separator {
-    margin: 0.2rem 0;
-    height: 1.2em;
   }
   .dashboard-header__capital-label {
     font-size: 0.85rem;

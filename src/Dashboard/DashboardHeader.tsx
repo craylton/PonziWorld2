@@ -19,7 +19,6 @@ export default function DashboardHeader({ bankName, claimedCapital, actualCapita
           <span className="dashboard-header__capital-label">Claimed Capital</span>
           <span className="dashboard-header__capital-value">{formatCurrency(claimedCapital)}</span>
         </div>
-        <div className="dashboard-header__separator" aria-hidden="true"></div>
         <div className="dashboard-header__capital">
           <span className="dashboard-header__capital-label">Actual Capital</span>
           <span className="dashboard-header__capital-value">{formatCurrency(actualCapital)}</span>
