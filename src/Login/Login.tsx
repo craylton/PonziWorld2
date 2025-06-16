@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import './Login.css';
-import { useNavigation } from '../navigation';
+import { useNavigate } from 'react-router-dom';
 
 interface LoginProps {
   onLogin: (username: string) => void;
@@ -8,12 +8,13 @@ interface LoginProps {
 
 export default function Login({ onLogin }: LoginProps) {
   const [username, setUsername] = useState('');
-  const { setPage } = useNavigation();
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (username.trim()) {
       onLogin(username.trim());
+      navigate('/');
     }
   };
 
@@ -32,7 +33,7 @@ export default function Login({ onLogin }: LoginProps) {
         <button
           type="button"
           className="new-bank-btn"
-          onClick={() => setPage('newbank')}
+          onClick={() => navigate('/new')}
           style={{ marginTop: '1rem', background: '#2d7ef7', color: '#fff', border: 'none', borderRadius: 6, padding: '0.75rem', fontSize: '1.1rem' }}
         >
           New Bank

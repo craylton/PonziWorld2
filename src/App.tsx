@@ -1,30 +1,28 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Login/Login';
 import Dashboard from './Dashboard/Dashboard';
+import NewBank from './NewBank/NewBank';
+import ProtectedRoute from './ProtectedRoute';
 import { useState } from 'react'
 import './App.css'
-import NewBank from './NewBank/NewBank';
-import { NavigationProvider, useNavigation } from './navigation';
-
-function MainApp() {
-  const [username, setUsername] = useState<string | null>(null);
-  const { page } = useNavigation();
-
-  if (page === 'newbank') {
-    return <NewBank />;
-  }
-
-  if (!username) {
-    return <Login onLogin={setUsername} />;
-  }
-
-  return <Dashboard username={username} />;
-}
 
 function App() {
+  const [username, setUsername] = useState<string | null>(null);
   return (
-    <NavigationProvider>
-      <MainApp />
-    </NavigationProvider>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={
+          username ? <Navigate to="/" replace /> : <Login onLogin={setUsername} />
+        } />
+        <Route path="/new" element={
+          username ? <Navigate to="/" replace /> : <NewBank />
+        } />
+        <Route path="/" element={<ProtectedRoute isAuthenticated={!!username} />}>
+          <Route index element={<Dashboard username={username ?? ''} />} />
+        </Route>
+        <Route path="*" element={<Navigate to={username ? "/" : "/login"} replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
