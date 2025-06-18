@@ -12,6 +12,10 @@ func main() {
 	defer cancel()
 	defer client.Disconnect(ctx)
 
+	if err := EnsureUserIndexes(client); err != nil {
+		log.Fatalf("Failed to ensure user indexes: %v", err)
+	}
+
 	mux := http.NewServeMux()
 	RegisterRoutes(mux)
 

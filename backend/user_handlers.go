@@ -37,6 +37,11 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	_, err := collection.InsertOne(ctx, user)
 	if err != nil {
+		if mongo.IsDuplicateKeyError(err) {
+			w.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Username already exists"})
+			return
+		}
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create user"})
 		return
