@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./NewBank.css";
 
 const NewBank: React.FC = () => {
@@ -7,6 +8,7 @@ const NewBank: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,8 +38,8 @@ const NewBank: React.FC = () => {
 
   return (
     <div className="new-bank-container">
-      <h2>Create a New Bank</h2>
       <form className="new-bank-form" onSubmit={handleSubmit}>
+        <h2>Create a New Bank</h2>
         <label>
           Username
           <input
@@ -60,6 +62,13 @@ const NewBank: React.FC = () => {
         </label>
         <button type="submit" className="confirm-btn" disabled={!username || !bankName || loading}>
           {loading ? "Creating..." : "Confirm"}
+        </button>
+        <button
+          type="button"
+          className="back-login-btn"
+          onClick={() => navigate('/login')}
+        >
+          Back to Login
         </button>
         {error && <div className="error-msg">{error}</div>}
         {success && <div className="success-msg">Bank created! You can now log in.</div>}

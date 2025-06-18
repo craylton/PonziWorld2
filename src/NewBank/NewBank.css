@@ -1,20 +1,26 @@
 .new-bank-container {
-  max-width: 400px;
-  margin: 40px auto;
-  padding: 2rem;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #812a89;
 }
 
 .new-bank-form {
-  width: 100%;
+  background: #ff6cdc;
+  padding: 2rem 2.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
+  min-width: 300px;
+}
+
+.new-bank-form h2 {
+  margin: 0 0 1rem 0;
+  text-align: center;
 }
 
 .new-bank-form label {
@@ -25,24 +31,74 @@
 }
 
 .new-bank-form input {
-  margin-top: 0.5rem;
-  padding: 0.75rem;
+  padding: 0.5rem;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  border-radius: 4px;
   font-size: 1rem;
 }
 
 .confirm-btn {
+  padding: 0.5rem;
+  background: #646cff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.confirm-btn:hover {
+  background: #535bf2;
+}
+
+.back-login-btn {
   background: #2d7ef7;
   color: #fff;
   border: none;
   border-radius: 6px;
   padding: 0.75rem;
   font-size: 1.1rem;
-  transition: opacity 0.2s;
+  margin-top: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.back-login-btn:hover {
+  background: #535bf2;
+}
+
+.error-msg {
+  color: #6b1e14;
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+.success-msg {
+  color: #185f18;
+  text-align: center;
+  margin-top: 0.5rem;
 }
 
 .confirm-btn:disabled {
   cursor: not-allowed;
   opacity: 0.7;
+}
+
+@media (max-width: 440px) {
+  .new-bank-form {
+    min-width: 0;
+    width: 100%;
+    max-width: 95vw;
+    padding: 1rem 0.5rem;
+    box-sizing: border-box;
+    border-radius: 0px;
+    box-shadow: none;
+  }
+  .new-bank-form input,
+  .confirm-btn,
+  .back-login-btn {
+    font-size: 0.95rem;
+    padding: 0.5rem 0.4rem;
+  }
 }
