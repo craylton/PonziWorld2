@@ -9,8 +9,6 @@ This project is a monorepo with a Vite+React+TypeScript frontend and a Go backen
 3. The app is designed for mobile first (less than 440px wide), but should also work on desktop.
   - The biggest impact of this is on mobile the sidebars on the dashboard are hidden by default and can be toggled with buttons.
 4. After making frontend changes, make sure to run `npm run lint` to check for linting issues. There should be no warnings or errors.
-5. After making backend changes, make sure to run `go build` to make sure the code compiles. There should be no warnings or errors.
-  - If the server is already running you may need to stop it first, and if so please remember to start it up again after!
 5. Style-wise, it's better to have multiple small components rather than one large component.
   - When a component grows too large, consider breaking it down into smaller components.
 
