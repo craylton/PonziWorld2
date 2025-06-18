@@ -3,6 +3,7 @@ import SidePanel from './SidePanel';
 import './Dashboard.css';
 import DashboardHeader from './DashboardHeader';
 import HamburgerButton from './HamburgerButton';
+import InvestorList from './InvestorList';
 
 interface DashboardProps {
   username: string;
@@ -25,8 +26,7 @@ export default function Dashboard({ username }: DashboardProps) {
         claimedCapital={DUMMY_CLAIMED_CAPITAL}
         actualCapital={DUMMY_ACTUAL_CAPITAL}
       />
-      <div className="dashboard-layout">
-        {/* Left Side Panel */}
+      <div className="dashboard-layout">        {/* Left Side Panel */}
         <SidePanel side="left" visible={showLeftPanel}>
           <HamburgerButton
             isOpen={showLeftPanel}
@@ -34,7 +34,7 @@ export default function Dashboard({ username }: DashboardProps) {
             ariaLabel={showLeftPanel ? 'Close left panel' : 'Open left panel'}
             className="dashboard-hamburger--panel"
           />
-          Left Panel
+          <InvestorList />
         </SidePanel>
         <main className="dashboard-main">
           {/* Hamburger for left panel (mobile only, floats over main) */}

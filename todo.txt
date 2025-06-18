@@ -1,7 +1,3 @@
-Allow creating a user
-    Persist to the DB
-Allow logging in as that user
-    Reject invalid logins
 Display a list of investors in the left panel
     Need to create fake investors for now
 Put fake investors into the DB
