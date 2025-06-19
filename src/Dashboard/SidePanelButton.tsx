@@ -18,7 +18,7 @@ const SidePanelButton: React.FC<SidePanelButtonProps> = ({
     ariaLabel,
     className = '' }) => (
     <button
-        className={`dashboard-sidepanel-button ${className} ${shouldAllowClose ? 'dashboard-sidepanel-button--open' : ''}`}
+        className={`dashboard-sidepanel-button ${className}`}
         aria-label={ariaLabel}
         onClick={onClick}
         type="button"

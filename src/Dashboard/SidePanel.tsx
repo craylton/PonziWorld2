@@ -7,7 +7,7 @@ interface SidePanelProps {
 }
 
 const SidePanel: React.FC<SidePanelProps> = ({ side, visible, children }) => {
-  const panelClass = `dashboard-panel dashboard-panel--${side}${visible ? ' dashboard-panel--visible' : ''}`;
+  const panelClass = `dashboard-sidepanel dashboard-sidepanel--${side}${visible ? ' dashboard-sidepanel--visible' : ''}`;
   return (
     <aside className={panelClass}>
       {children}
