@@ -1,4 +1,4 @@
-package main
+package tests
 
 import (
 	"bytes"
@@ -23,6 +23,7 @@ func TestUserCreationAndLogin(test *testing.T) {
 	routes.RegisterRoutes(mux)
 	server := httptest.NewServer(mux)
 	defer server.Close()
+	var defaultCapital int64 = 1000
 
 	// Generate unique username for this test
 	timestamp := time.Now().Unix()
@@ -35,7 +36,10 @@ func TestUserCreationAndLogin(test *testing.T) {
 			"username": testUsername,
 			"bankName": testBankName,
 		}
-		jsonData, _ := json.Marshal(createUserData)
+		jsonData, err := json.Marshal(createUserData)
+		if err != nil {
+			t.Fatalf("Failed to marshal create user data: %v", err)
+		}
 
 		// act
 		resp, err := http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
@@ -62,14 +66,12 @@ func TestUserCreationAndLogin(test *testing.T) {
 		if createdUser.BankName != testBankName {
 			t.Errorf("Expected bank name %s, got %s", testBankName, createdUser.BankName)
 		}
-		if createdUser.ClaimedCapital != 1000 {
-			t.Errorf("Expected claimed capital 1000, got %d", createdUser.ClaimedCapital)
+		if createdUser.ClaimedCapital != defaultCapital {
+			t.Errorf("Expected claimed capital %d, got %d", defaultCapital, createdUser.ClaimedCapital)
 		}
-		if createdUser.ActualCapital != 1000 {
-			t.Errorf("Expected actual capital 1000, got %d", createdUser.ActualCapital)
+		if createdUser.ActualCapital != defaultCapital {
+			t.Errorf("Expected actual capital %d, got %d", defaultCapital, createdUser.ActualCapital)
 		}
-
-		t.Logf("Created user: %+v", createdUser)
 	})
 
 	test.Run("Login User", func(t *testing.T) {
@@ -101,14 +103,12 @@ func TestUserCreationAndLogin(test *testing.T) {
 		if loggedInUser.BankName != testBankName {
 			t.Errorf("Expected bank name %s, got %s", testBankName, loggedInUser.BankName)
 		}
-		if loggedInUser.ClaimedCapital != 1000 {
-			t.Errorf("Expected claimed capital 1000, got %d", loggedInUser.ClaimedCapital)
+		if loggedInUser.ClaimedCapital != defaultCapital {
+			t.Errorf("Expected claimed capital %d, got %d", defaultCapital, loggedInUser.ClaimedCapital)
 		}
-		if loggedInUser.ActualCapital != 1000 {
-			t.Errorf("Expected actual capital 1000, got %d", loggedInUser.ActualCapital)
+		if loggedInUser.ActualCapital != defaultCapital {
+			t.Errorf("Expected actual capital %d, got %d", defaultCapital, loggedInUser.ActualCapital)
 		}
-
-		t.Logf("Logged in user: %+v", loggedInUser)
 	})
 
 	// Cleanup: Remove test user from database
@@ -125,7 +125,7 @@ func TestUserCreationAndLogin(test *testing.T) {
 }
 
 // TestUserCreationDuplicateUsername tests that duplicate usernames are rejected
-func TestUserCreationDuplicateUsername(t *testing.T) {
+func TestUserCreationDuplicateUsername(test *testing.T) {
 	// Setup test server
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux)
@@ -142,44 +142,47 @@ func TestUserCreationDuplicateUsername(t *testing.T) {
 		"username": testUsername,
 		"bankName": testBankName,
 	}
-	jsonData, _ := json.Marshal(createUserData)
+	jsonData, err := json.Marshal(createUserData)
+	if err != nil {
+		test.Fatalf("Failed to marshal create user data: %v", err)
+	}
 
 	resp1, err := http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		t.Fatalf("Failed to create first user: %v", err)
+		test.Fatalf("Failed to create first user: %v", err)
 	}
 	defer resp1.Body.Close()
 
 	if resp1.StatusCode != http.StatusOK {
-		t.Errorf("Expected status 200 for first user, got %d", resp1.StatusCode)
+		test.Errorf("Expected status 200 for first user, got %d", resp1.StatusCode)
 	}
 
 	// Try to create duplicate user
 	resp2, err := http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		t.Fatalf("Failed to attempt duplicate user creation: %v", err)
+		test.Fatalf("Failed to attempt duplicate user creation: %v", err)
 	}
 	defer resp2.Body.Close()
 
 	if resp2.StatusCode != http.StatusBadRequest {
-		t.Errorf("Expected status 400 for duplicate user, got %d", resp2.StatusCode)
+		test.Errorf("Expected status 400 for duplicate user, got %d", resp2.StatusCode)
 	}
 
 	// Cleanup: Remove test user from database
-	t.Cleanup(func() {
+	test.Cleanup(func() {
 		client, ctx, cancel := db.ConnectDB()
 		defer cancel()
 		defer client.Disconnect(ctx)
 		collection := client.Database("ponziworld").Collection("users")
 		_, err := collection.DeleteOne(ctx, bson.M{"username": testUsername})
 		if err != nil {
-			t.Logf("Failed to cleanup test user: %v", err)
+			test.Logf("Failed to cleanup test user: %v", err)
 		}
 	})
 }
 
 // TestLoginNonExistentUser tests login with a user that doesn't exist
-func TestLoginNonExistentUser(t *testing.T) {
+func TestLoginNonExistentUser(test *testing.T) {
 	// Setup test server
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux)
@@ -190,15 +193,18 @@ func TestLoginNonExistentUser(t *testing.T) {
 	loginData := map[string]string{
 		"username": "nonexistentuser_123456789",
 	}
-	jsonData, _ := json.Marshal(loginData)
+	jsonData, err := json.Marshal(loginData)
+	if err != nil {
+		test.Fatalf("Failed to marshal login data: %v", err)
+	}
 
 	resp, err := http.Post(server.URL+"/api/login", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		t.Fatalf("Failed to attempt login: %v", err)
+		test.Fatalf("Failed to attempt login: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusUnauthorized {
-		t.Errorf("Expected status 401 for non-existent user, got %d", resp.StatusCode)
+		test.Errorf("Expected status 401 for non-existent user, got %d", resp.StatusCode)
 	}
 }

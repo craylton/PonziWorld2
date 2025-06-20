@@ -1,3 +1,12 @@
+Next up:
+Create a test database
+    currently tests put test data straight into the real DB
+    there should ideally be an isolated test DB
+Create a middleware folder
+    The CORS stuff can go in there
+    other things like auth will also end up in there
+
+HIGH LEVEL THINGS:
 
 Create some investment instruments
     HYSA
