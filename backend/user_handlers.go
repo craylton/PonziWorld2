@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -10,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-// CreateUserHandler handles POST /api/users
+// CreateUserHandler handles POST /api/user
 func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var req struct {
@@ -73,43 +72,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	defer client.Disconnect(ctx)
 	collection := client.Database("ponziworld").Collection("users")
 
-	// Try to get the raw document first to check if capital fields exist
-	var rawDoc bson.M
-	err := collection.FindOne(ctx, bson.M{"username": req.Username}).Decode(&rawDoc)
+	var user User
+	err := collection.FindOne(ctx, bson.M{"username": req.Username}).Decode(&user)
 	if err == mongo.ErrNoDocuments {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "User not found"})
 		return
 	} else if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
-		return
-	}
-
-	// Check if capital fields are missing
-	_, hasClaimedCapital := rawDoc["claimedCapital"]
-	_, hasActualCapital := rawDoc["actualCapital"]
-
-	// If capital fields are missing, backfill them
-	if !hasClaimedCapital || !hasActualCapital {
-		update := bson.M{
-			"$set": bson.M{
-				"claimedCapital": 1000,
-				"actualCapital":  1000,
-			},
-		}
-		_, err := collection.UpdateOne(ctx, bson.M{"username": req.Username}, update)
-		if err != nil {
-			log.Printf("Failed to backfill capital fields for user %s: %v", req.Username, err)
-		} else {
-			log.Printf("Backfilled capital fields for user %s", req.Username)
-		}
-	}
-
-	// Now get the updated user document
-	var user User
-	err = collection.FindOne(ctx, bson.M{"username": req.Username}).Decode(&user)
-	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
 		return

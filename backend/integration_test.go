@@ -10,11 +10,10 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // TestUserCreationAndLogin tests the complete user creation and login flow
-func TestUserCreationAndLogin(t *testing.T) {
+func TestUserCreationAndLogin(test *testing.T) {
 	// Setup test server
 	mux := http.NewServeMux()
 	RegisterRoutes(mux)
@@ -26,15 +25,18 @@ func TestUserCreationAndLogin(t *testing.T) {
 	testUsername := fmt.Sprintf("testuser_%d", timestamp)
 	testBankName := fmt.Sprintf("Test Bank %d", timestamp)
 
-	t.Run("Create User", func(t *testing.T) {
-		// Test user creation
+	test.Run("Create User", func(t *testing.T) {
+		// arrange
 		createUserData := map[string]string{
 			"username": testUsername,
 			"bankName": testBankName,
 		}
 		jsonData, _ := json.Marshal(createUserData)
 
+		// act
 		resp, err := http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
+
+		// assert
 		if err != nil {
 			t.Fatalf("Failed to create user: %v", err)
 		}
@@ -66,7 +68,7 @@ func TestUserCreationAndLogin(t *testing.T) {
 		t.Logf("Created user: %+v", createdUser)
 	})
 
-	t.Run("Login User", func(t *testing.T) {
+	test.Run("Login User", func(t *testing.T) {
 		// Test user login
 		loginData := map[string]string{
 			"username": testUsername,
@@ -106,99 +108,14 @@ func TestUserCreationAndLogin(t *testing.T) {
 	})
 
 	// Cleanup: Remove test user from database
-	t.Cleanup(func() {
+	test.Cleanup(func() {
 		client, ctx, cancel := ConnectDB()
 		defer cancel()
 		defer client.Disconnect(ctx)
 		collection := client.Database("ponziworld").Collection("users")
 		_, err := collection.DeleteOne(ctx, bson.M{"username": testUsername})
 		if err != nil {
-			t.Logf("Failed to cleanup test user: %v", err)
-		}
-	})
-}
-
-// TestExistingUserBackfill tests that existing users without capital fields get backfilled
-func TestExistingUserBackfill(t *testing.T) {
-	// Setup test server
-	mux := http.NewServeMux()
-	RegisterRoutes(mux)
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
-	// Generate unique username for this test
-	timestamp := time.Now().Unix()
-	testUsername := fmt.Sprintf("olduser_%d", timestamp)
-	testBankName := fmt.Sprintf("Old Bank %d", timestamp)
-	// Manually insert a user without capital fields (simulating old user)
-	client, ctx, cancel := ConnectDB()
-	defer cancel()
-	defer client.Disconnect(ctx)
-	collection := client.Database("ponziworld").Collection("users")
-
-	oldUser := bson.M{
-		"_id":      primitive.NewObjectID(),
-		"username": testUsername,
-		"bankName": testBankName,
-		// Note: NOT including claimedCapital and actualCapital to simulate old user
-	}
-	_, err := collection.InsertOne(ctx, oldUser)
-	if err != nil {
-		t.Fatalf("Failed to insert old user: %v", err)
-	}
-
-	t.Run("Login Old User Should Backfill", func(t *testing.T) {
-		// Test login for old user (should trigger backfill)
-		loginData := map[string]string{
-			"username": testUsername,
-		}
-		jsonData, _ := json.Marshal(loginData)
-
-		resp, err := http.Post(server.URL+"/api/login", "application/json", bytes.NewBuffer(jsonData))
-		if err != nil {
-			t.Fatalf("Failed to login old user: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status 200, got %d", resp.StatusCode)
-		}
-
-		var loggedInUser User
-		if err := json.NewDecoder(resp.Body).Decode(&loggedInUser); err != nil {
-			t.Fatalf("Failed to decode logged in user: %v", err)
-		}
-
-		// Verify backfilled capital values
-		if loggedInUser.ClaimedCapital != 1000 {
-			t.Errorf("Expected backfilled claimed capital 1000, got %d", loggedInUser.ClaimedCapital)
-		}
-		if loggedInUser.ActualCapital != 1000 {
-			t.Errorf("Expected backfilled actual capital 1000, got %d", loggedInUser.ActualCapital)
-		}
-
-		t.Logf("Backfilled user: %+v", loggedInUser)
-
-		// Verify the database was actually updated
-		var updatedUser User
-		err = collection.FindOne(ctx, bson.M{"username": testUsername}).Decode(&updatedUser)
-		if err != nil {
-			t.Fatalf("Failed to find updated user: %v", err)
-		}
-
-		if updatedUser.ClaimedCapital != 1000 {
-			t.Errorf("Database not updated: expected claimed capital 1000, got %d", updatedUser.ClaimedCapital)
-		}
-		if updatedUser.ActualCapital != 1000 {
-			t.Errorf("Database not updated: expected actual capital 1000, got %d", updatedUser.ActualCapital)
-		}
-	})
-
-	// Cleanup: Remove test user from database
-	t.Cleanup(func() {
-		_, err := collection.DeleteOne(ctx, bson.M{"username": testUsername})
-		if err != nil {
-			t.Logf("Failed to cleanup test user: %v", err)
+			test.Logf("Failed to cleanup test user: %v", err)
 		}
 	})
 }

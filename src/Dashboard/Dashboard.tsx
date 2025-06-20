@@ -4,14 +4,7 @@ import DashboardHeader from './DashboardHeader';
 import InvestorList from './SidePanel/InvestorList/InvestorList';
 import SidePanelButton from './SidePanel/SidePanelButton';
 import SidePanel from './SidePanel/SidePanel';
-
-interface User {
-  id: string;
-  username: string;
-  bankName: string;
-  claimedCapital: number;
-  actualCapital: number;
-}
+import type { User } from '../User';
 
 interface DashboardProps {
   user: User;

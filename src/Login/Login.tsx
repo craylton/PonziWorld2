@@ -1,14 +1,7 @@
 import { useState } from 'react';
 import './Login.css';
 import { useNavigate } from 'react-router-dom';
-
-interface User {
-  id: string;
-  username: string;
-  bankName: string;
-  claimedCapital: number;
-  actualCapital: number;
-}
+import type { User } from '../User';
 
 interface LoginProps {
   onLogin: (user: User) => void;

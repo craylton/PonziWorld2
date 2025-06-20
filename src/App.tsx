@@ -5,14 +5,7 @@ import NewBank from './NewBank/NewBank';
 import ProtectedRoute from './ProtectedRoute';
 import { useState } from 'react'
 import './App.css'
-
-interface User {
-  id: string;
-  username: string;
-  bankName: string;
-  claimedCapital: number;
-  actualCapital: number;
-}
+import type { User } from './User';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
