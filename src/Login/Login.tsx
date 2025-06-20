@@ -2,8 +2,16 @@ import { useState } from 'react';
 import './Login.css';
 import { useNavigate } from 'react-router-dom';
 
+interface User {
+  id: string;
+  username: string;
+  bankName: string;
+  claimedCapital: number;
+  actualCapital: number;
+}
+
 interface LoginProps {
-  onLogin: (username: string) => void;
+  onLogin: (user: User) => void;
 }
 
 export default function Login({ onLogin }: LoginProps) {
@@ -22,12 +30,12 @@ export default function Login({ onLogin }: LoginProps) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username: username.trim() }),
-        });
-        if (!res.ok) {
+        });        if (!res.ok) {
           const data = await res.json();
           setError(data.error || 'Login failed');
         } else {
-          onLogin(username.trim());
+          const userData = await res.json();
+          onLogin(userData);
           navigate('/');
         }
       } catch {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -31,9 +32,11 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	defer client.Disconnect(ctx)
 	collection := client.Database("ponziworld").Collection("users")
 	user := User{
-		ID:       primitive.NewObjectID(),
-		Username: req.Username,
-		BankName: req.BankName,
+		ID:             primitive.NewObjectID(),
+		Username:       req.Username,
+		BankName:       req.BankName,
+		ClaimedCapital: 1000,
+		ActualCapital:  1000,
 	}
 	_, err := collection.InsertOne(ctx, user)
 	if err != nil {
@@ -69,8 +72,10 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 	defer client.Disconnect(ctx)
 	collection := client.Database("ponziworld").Collection("users")
-	var user User
-	err := collection.FindOne(ctx, bson.M{"username": req.Username}).Decode(&user)
+
+	// Try to get the raw document first to check if capital fields exist
+	var rawDoc bson.M
+	err := collection.FindOne(ctx, bson.M{"username": req.Username}).Decode(&rawDoc)
 	if err == mongo.ErrNoDocuments {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "User not found"})
@@ -80,5 +85,35 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
 		return
 	}
+
+	// Check if capital fields are missing
+	_, hasClaimedCapital := rawDoc["claimedCapital"]
+	_, hasActualCapital := rawDoc["actualCapital"]
+
+	// If capital fields are missing, backfill them
+	if !hasClaimedCapital || !hasActualCapital {
+		update := bson.M{
+			"$set": bson.M{
+				"claimedCapital": 1000,
+				"actualCapital":  1000,
+			},
+		}
+		_, err := collection.UpdateOne(ctx, bson.M{"username": req.Username}, update)
+		if err != nil {
+			log.Printf("Failed to backfill capital fields for user %s: %v", req.Username, err)
+		} else {
+			log.Printf("Backfilled capital fields for user %s", req.Username)
+		}
+	}
+
+	// Now get the updated user document
+	var user User
+	err = collection.FindOne(ctx, bson.M{"username": req.Username}).Decode(&user)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
+		return
+	}
+
 	json.NewEncoder(w).Encode(user)
 }
