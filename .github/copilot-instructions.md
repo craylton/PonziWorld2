@@ -1,4 +1,3 @@
-
 This project is a monorepo with a Vite+React+TypeScript frontend and a Go backend. The backend exposes a REST API and connects to MongoDB. The frontend fetches data from the backend and displays it.
 
 ## General Development Guidelines
@@ -11,8 +10,10 @@ This project is a monorepo with a Vite+React+TypeScript frontend and a Go backen
 4. After making frontend changes, make sure to run `npm run lint` to check for linting issues. There should be no warnings or errors.
 5. Style-wise, it's better to have multiple small components rather than one large component.
   - When a component grows too large, consider breaking it down into smaller components.
-6. After making your changes, it's a good idea to review your own changes, and amend them if necessary.
-  - When reviewing your own changes you might realise you've misseed something or that you can improve/tidy your code.
+6. After making your changes, review them thoroughly and amend them if necessary.
+  - When reviewing your own changes you might realise you've missed something or that you can improve/tidy your code.
+7. After making backend changes, run the backend tests to ensure everything is still working.
+  - You can run the tests with `go test -v ./...` in the `backend` directory.
 
 ## The Application Layout
 

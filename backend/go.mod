@@ -1,4 +1,4 @@
-module backend
+module ponziworld/backend
 
 go 1.24.4
 

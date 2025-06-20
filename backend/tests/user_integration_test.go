@@ -10,13 +10,17 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+
+	"ponziworld/backend/db"
+	"ponziworld/backend/models"
+	"ponziworld/backend/routes"
 )
 
 // TestUserCreationAndLogin tests the complete user creation and login flow
 func TestUserCreationAndLogin(test *testing.T) {
 	// Setup test server
 	mux := http.NewServeMux()
-	RegisterRoutes(mux)
+	routes.RegisterRoutes(mux)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
@@ -46,7 +50,7 @@ func TestUserCreationAndLogin(test *testing.T) {
 			t.Errorf("Expected status 200, got %d", resp.StatusCode)
 		}
 
-		var createdUser User
+		var createdUser models.User
 		if err := json.NewDecoder(resp.Body).Decode(&createdUser); err != nil {
 			t.Fatalf("Failed to decode created user: %v", err)
 		}
@@ -85,7 +89,7 @@ func TestUserCreationAndLogin(test *testing.T) {
 			t.Errorf("Expected status 200, got %d", resp.StatusCode)
 		}
 
-		var loggedInUser User
+		var loggedInUser models.User
 		if err := json.NewDecoder(resp.Body).Decode(&loggedInUser); err != nil {
 			t.Fatalf("Failed to decode logged in user: %v", err)
 		}
@@ -109,7 +113,7 @@ func TestUserCreationAndLogin(test *testing.T) {
 
 	// Cleanup: Remove test user from database
 	test.Cleanup(func() {
-		client, ctx, cancel := ConnectDB()
+		client, ctx, cancel := db.ConnectDB()
 		defer cancel()
 		defer client.Disconnect(ctx)
 		collection := client.Database("ponziworld").Collection("users")
@@ -124,7 +128,7 @@ func TestUserCreationAndLogin(test *testing.T) {
 func TestUserCreationDuplicateUsername(t *testing.T) {
 	// Setup test server
 	mux := http.NewServeMux()
-	RegisterRoutes(mux)
+	routes.RegisterRoutes(mux)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
@@ -163,7 +167,7 @@ func TestUserCreationDuplicateUsername(t *testing.T) {
 
 	// Cleanup: Remove test user from database
 	t.Cleanup(func() {
-		client, ctx, cancel := ConnectDB()
+		client, ctx, cancel := db.ConnectDB()
 		defer cancel()
 		defer client.Disconnect(ctx)
 		collection := client.Database("ponziworld").Collection("users")
@@ -178,7 +182,7 @@ func TestUserCreationDuplicateUsername(t *testing.T) {
 func TestLoginNonExistentUser(t *testing.T) {
 	// Setup test server
 	mux := http.NewServeMux()
-	RegisterRoutes(mux)
+	routes.RegisterRoutes(mux)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
