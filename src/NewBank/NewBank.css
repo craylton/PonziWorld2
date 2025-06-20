@@ -53,15 +53,11 @@
 }
 
 .back-login-btn {
-  background: #2d7ef7;
-  color: #fff;
+  background: none;
+  color: #812a89;
   border: none;
-  border-radius: 6px;
-  padding: 0.75rem;
-  font-size: 1.1rem;
-  margin-top: 1rem;
-  cursor: pointer;
-  transition: background 0.2s;
+  font-size: 1rem;
+  text-decoration: underline;
 }
 
 .back-login-btn:hover {

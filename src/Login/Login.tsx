@@ -49,14 +49,19 @@ export default function Login({ onLogin }: LoginProps) {
           onChange={e => setUsername(e.target.value)}
           required
         />
-        <button type="submit" disabled={loading}>{loading ? 'Logging in...' : 'Login'}</button>
+        <button
+          type="submit"
+          disabled={loading}
+          className="login-btn"
+        >
+          {loading ? 'Logging in...' : 'Login'}
+        </button>
         <button
           type="button"
           className="new-bank-btn"
           onClick={() => navigate('/new')}
-          style={{ marginTop: '1rem', background: '#2d7ef7', color: '#fff', border: 'none', borderRadius: 6, padding: '0.75rem', fontSize: '1.1rem' }}
         >
-          New Bank
+          New user? Click here to start a new bank
         </button>
         {error && <div className="error-msg">{error}</div>}
       </form>

@@ -1,10 +1,24 @@
 # Ponzi World
 
-This is a multiplayer game where players are encouraged to create their own Ponzi schemes and scam each other out of as much money as possible!
+## Game Summary
 
-Currently it's in very early development. 
+Welcome to Ponzi World! You are now an investment bank manager, and you are tasked with making as much money as possible! 🤑
 
-## Prerequisites
+But, the stock market just crashed and you've lost a fortune. Your investors aren't going to be happy. 😬 Once you tell them about this crash, they'll withdraw all their investments and your bank will go bust 📉 If  only there was some way of, uh, 'bending' the truth a bit?
+
+This is a daily multiplayer game (very much still in early development) where players are encouraged to create their own Ponzi schemes and scam each other out of as much money as possible!
+
+The basic idea is:
+- Once per day you log in and manage your investments.
+- Each day, many other players will also log in and manage their own investments.
+- Some of those players will invest in your bank.
+- You will be asked how much money you made yesterday. Thanks to your crooked accountant, telling the truth is optional!
+- If you tell the truth, your bank might not look very promising to investors, so they won't invest much.
+- If you lie too much, people might become suspicious and you could get reported, fined, and maybe even shut down completely!
+
+## Running the game
+
+### Prerequisites
 - Go 1.18+
 - MongoDB (running locally on port 27017 by default)
   - You can run MongoDB easily with Docker:
@@ -12,7 +26,7 @@ Currently it's in very early development.
     docker start ponzi-mongo
     ```
 
-## Running the Backend
+### Running the Backend
 
 0. If running locally, ensure MongoDB is running (see above for Docker command)
 1. Open a terminal in the `backend` directory.
@@ -24,7 +38,7 @@ Currently it's in very early development.
 - The backend will listen on http://localhost:8080
 - The MongoDB connection string can be set with the `MONGODB_URI` environment variable (defaults to `mongodb://localhost:27017`).
 
-## Running the Frontend
+### Running the Frontend
 
 To start the React UI locally:
 

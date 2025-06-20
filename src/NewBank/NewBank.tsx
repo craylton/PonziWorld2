@@ -60,9 +60,15 @@ const NewBank: React.FC = () => {
             required
           />
         </label>
-        <button type="submit" className="confirm-btn" disabled={!username || !bankName || loading}>
+        <button
+          type="submit"
+          className="confirm-btn"
+          disabled={!username || !bankName || loading}
+        >
           {loading ? "Creating..." : "Confirm"}
         </button>
+        {error && <div className="error-msg">{error}</div>}
+        {success && <div className="success-msg">Bank created! You can now log in.</div>}
         <button
           type="button"
           className="back-login-btn"
@@ -70,8 +76,6 @@ const NewBank: React.FC = () => {
         >
           Back to Login
         </button>
-        {error && <div className="error-msg">{error}</div>}
-        {success && <div className="success-msg">Bank created! You can now log in.</div>}
       </form>
     </div>
   );

@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import SidePanel from './SidePanel';
 import './Dashboard.css';
 import DashboardHeader from './DashboardHeader';
-import InvestorList from './InvestorList';
-import SidePanelButton from './SidePanelButton';
+import InvestorList from './SidePanel/InvestorList/InvestorList';
+import SidePanelButton from './SidePanel/SidePanelButton';
+import SidePanel from './SidePanel/SidePanel';
 
 interface DashboardProps {
   username: string;

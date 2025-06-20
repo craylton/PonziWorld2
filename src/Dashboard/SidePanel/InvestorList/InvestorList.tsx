@@ -1,11 +1,7 @@
 import { useState, useMemo } from 'react';
 import './InvestorList.css';
-
-interface Investor {
-  id: string;
-  name: string;
-  amountInvested: number;
-}
+import type { Investor } from './Investor';
+import InvestorSummary from './InvestorSummary';
 
 // Dummy data for investors
 const DUMMY_INVESTORS: Investor[] = [
@@ -21,11 +17,7 @@ const DUMMY_INVESTORS: Investor[] = [
 
 type SortOption = 'alphabetical' | 'investment';
 
-interface InvestorListProps {
-  className?: string;
-}
-
-export default function InvestorList({ className = '' }: InvestorListProps) {
+export default function InvestorList() {
   const [sortBy, setSortBy] = useState<SortOption>('investment');
 
   const sortedInvestors = useMemo(() => {
@@ -34,24 +26,14 @@ export default function InvestorList({ className = '' }: InvestorListProps) {
     if (sortBy === 'alphabetical') {
       sorted.sort((a, b) => a.name.localeCompare(b.name));
     } else {
-      // Sort by investment amount (largest first)
       sorted.sort((a, b) => b.amountInvested - a.amountInvested);
     }
     
     return sorted;
   }, [sortBy]);
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
   return (
-    <div className={`investor-list ${className}`}>
+    <div className={`investor-list`}>
       <div className="investor-list__header">
         <h3 className="investor-list__title">Investors</h3>
         <select
@@ -66,12 +48,7 @@ export default function InvestorList({ className = '' }: InvestorListProps) {
       
       <div className="investor-list__items">
         {sortedInvestors.map((investor) => (
-          <div key={investor.id} className="investor-list__item">
-            <div className="investor-list__name">{investor.name}</div>
-            <div className="investor-list__amount">
-              {formatCurrency(investor.amountInvested)}
-            </div>
-          </div>
+          <InvestorSummary investor={investor} />
         ))}
       </div>
     </div>
