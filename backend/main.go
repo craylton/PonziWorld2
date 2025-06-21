@@ -5,19 +5,22 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	db "ponziworld/backend/db"
+	routes "ponziworld/backend/routes"
 )
 
 func main() {
-	client, ctx, cancel := ConnectDB()
+	client, ctx, cancel := db.ConnectDB()
 	defer cancel()
 	defer client.Disconnect(ctx)
 
-	if err := EnsureUserIndexes(client); err != nil {
+	if err := db.EnsureUserIndexes(client); err != nil {
 		log.Fatalf("Failed to ensure user indexes: %v", err)
 	}
 
 	mux := http.NewServeMux()
-	RegisterRoutes(mux)
+	routes.RegisterRoutes(mux)
 
 	port := os.Getenv("PORT")
 	if port == "" {

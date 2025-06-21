@@ -4,27 +4,23 @@ import DashboardHeader from './DashboardHeader';
 import InvestorList from './SidePanel/InvestorList/InvestorList';
 import SidePanelButton from './SidePanel/SidePanelButton';
 import SidePanel from './SidePanel/SidePanel';
+import type { User } from '../User';
 
 interface DashboardProps {
-  username: string;
+  user: User;
 }
 
-// TODO: Replace with real data from backend
-const DUMMY_BANK_NAME = 'Ponzi National Bank';
-const DUMMY_CLAIMED_CAPITAL = 1000000;
-const DUMMY_ACTUAL_CAPITAL = 250000;
-
-export default function Dashboard({ username }: DashboardProps) {
+export default function Dashboard({ user }: DashboardProps) {
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
-  const mainContent = `Welcome to the dashboard, ${username}!`;
+  const mainContent = `Welcome to the dashboard, ${user.username}!`;
 
   return (
     <div className="dashboard-root">
       <DashboardHeader
-        bankName={DUMMY_BANK_NAME}
-        claimedCapital={DUMMY_CLAIMED_CAPITAL}
-        actualCapital={DUMMY_ACTUAL_CAPITAL}
+        bankName={user.bankName}
+        claimedCapital={user.claimedCapital}
+        actualCapital={user.actualCapital}
       />
       <div className="dashboard-layout">
         <SidePanel side="left" visible={isLeftPanelOpen}>

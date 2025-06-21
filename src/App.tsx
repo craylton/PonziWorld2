@@ -5,22 +5,23 @@ import NewBank from './NewBank/NewBank';
 import ProtectedRoute from './ProtectedRoute';
 import { useState } from 'react'
 import './App.css'
+import type { User } from './User';
 
 function App() {
-  const [username, setUsername] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={
-          username ? <Navigate to="/" replace /> : <Login onLogin={setUsername} />
+          user ? <Navigate to="/" replace /> : <Login onLogin={setUser} />
         } />
         <Route path="/new" element={
-          username ? <Navigate to="/" replace /> : <NewBank />
+          user ? <Navigate to="/" replace /> : <NewBank />
         } />
-        <Route path="/" element={<ProtectedRoute isAuthenticated={!!username} />}>
-          <Route index element={<Dashboard username={username ?? ''} />} />
+        <Route path="/" element={<ProtectedRoute isAuthenticated={!!user} />}>
+          <Route index element={<Dashboard user={user!} />} />
         </Route>
-        <Route path="*" element={<Navigate to={username ? "/" : "/login"} replace />} />
+        <Route path="*" element={<Navigate to={user ? "/" : "/login"} replace />} />
       </Routes>
     </BrowserRouter>
   );

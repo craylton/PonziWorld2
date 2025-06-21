@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import './Login.css';
 import { useNavigate } from 'react-router-dom';
+import type { User } from '../User';
 
 interface LoginProps {
-  onLogin: (username: string) => void;
+  onLogin: (user: User) => void;
 }
 
 export default function Login({ onLogin }: LoginProps) {
@@ -25,12 +26,13 @@ export default function Login({ onLogin }: LoginProps) {
         });
         if (!res.ok) {
           const data = await res.json();
-          setError(data.error || 'Login failed');
+          setError(`Login failed: ${data.error || 'Unknown error'}`);
         } else {
-          onLogin(username.trim());
-          navigate('/');
+          const userData = await res.json();
+          onLogin(userData);
         }
-      } catch {
+      } catch (error) {
+        console.error('Login error:', error);
         setError('Network error');
       } finally {
         setLoading(false);
@@ -49,6 +51,7 @@ export default function Login({ onLogin }: LoginProps) {
           onChange={e => setUsername(e.target.value)}
           required
         />
+        {error && <div className="error-msg">{error}</div>}
         <button
           type="submit"
           disabled={loading}
@@ -63,7 +66,6 @@ export default function Login({ onLogin }: LoginProps) {
         >
           New user? Click here to start a new bank
         </button>
-        {error && <div className="error-msg">{error}</div>}
       </form>
     </div>
   );

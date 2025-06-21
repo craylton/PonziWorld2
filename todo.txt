@@ -1,3 +1,20 @@
+Next up:
+Create a test database
+    currently tests put test data straight into the real DB
+    there should ideally be an isolated test DB
+Create a middleware folder
+    The CORS stuff can go in there
+    other things like auth will also end up in there
+Defensive programming when retrieving data from DB
+    Documents could be the wrong shape
+    even if my app always write the right shape
+    for now only need to check username and bank name
+    the capital fields will eventually be located somewhere else
+Change login response
+    Best practice is to return a JWT token from /login
+    And then a subsequent call to get the user
+
+HIGH LEVEL THINGS:
 
 Create some investment instruments
     HYSA
