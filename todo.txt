@@ -10,6 +10,9 @@ Defensive programming when retrieving data from DB
     even if my app always write the right shape
     for now only need to check username and bank name
     the capital fields will eventually be located somewhere else
+Change login response
+    Best practice is to return a JWT token from /login
+    And then a subsequent call to get the user
 
 HIGH LEVEL THINGS:
 

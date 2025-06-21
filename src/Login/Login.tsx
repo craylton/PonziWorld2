@@ -23,15 +23,16 @@ export default function Login({ onLogin }: LoginProps) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username: username.trim() }),
-        });        if (!res.ok) {
+        });
+        if (!res.ok) {
           const data = await res.json();
-          setError(data.error || 'Login failed');
+          setError(`Login failed: ${data.error || 'Unknown error'}`);
         } else {
           const userData = await res.json();
           onLogin(userData);
-          navigate('/');
         }
-      } catch {
+      } catch (error) {
+        console.error('Login error:', error);
         setError('Network error');
       } finally {
         setLoading(false);
@@ -50,6 +51,7 @@ export default function Login({ onLogin }: LoginProps) {
           onChange={e => setUsername(e.target.value)}
           required
         />
+        {error && <div className="error-msg">{error}</div>}
         <button
           type="submit"
           disabled={loading}
@@ -64,7 +66,6 @@ export default function Login({ onLogin }: LoginProps) {
         >
           New user? Click here to start a new bank
         </button>
-        {error && <div className="error-msg">{error}</div>}
       </form>
     </div>
   );
