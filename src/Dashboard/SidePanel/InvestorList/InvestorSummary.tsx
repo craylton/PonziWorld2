@@ -16,7 +16,7 @@ export default function InvestorSummary({ investor }: InvestorSummaryProps) {
     };
 
     return (
-        <div key={investor.id} className="investor-list__item">
+        <div className="investor-list__item">
             <div className="investor-list__name">{investor.name}</div>
             <div className="investor-list__amount">
                 {formatCurrency(investor.amountInvested)}

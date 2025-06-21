@@ -5,6 +5,11 @@ Create a test database
 Create a middleware folder
     The CORS stuff can go in there
     other things like auth will also end up in there
+Defensive programming when retrieving data from DB
+    Documents could be the wrong shape
+    even if my app always write the right shape
+    for now only need to check username and bank name
+    the capital fields will eventually be located somewhere else
 
 HIGH LEVEL THINGS:
 

@@ -48,7 +48,7 @@ export default function InvestorList() {
       
       <div className="investor-list__items">
         {sortedInvestors.map((investor) => (
-          <InvestorSummary investor={investor} />
+          <InvestorSummary key={investor.id} investor={investor} />
         ))}
       </div>
     </div>
