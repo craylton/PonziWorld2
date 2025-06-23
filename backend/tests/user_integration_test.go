@@ -29,11 +29,14 @@ func TestUserCreationAndLogin(test *testing.T) {
 	timestamp := time.Now().Unix()
 	testUsername := fmt.Sprintf("testuser_%d", timestamp)
 	testBankName := fmt.Sprintf("Test Bank %d", timestamp)
+	testPassword := "testpassword123"
+	var authToken string
 
 	test.Run("Create User", func(t *testing.T) {
 		// arrange
 		createUserData := map[string]string{
 			"username": testUsername,
+			"password": testPassword,
 			"bankName": testBankName,
 		}
 		jsonData, err := json.Marshal(createUserData)
@@ -73,11 +76,11 @@ func TestUserCreationAndLogin(test *testing.T) {
 			t.Errorf("Expected actual capital %d, got %d", defaultCapital, createdUser.ActualCapital)
 		}
 	})
-
 	test.Run("Login User", func(t *testing.T) {
 		// Test user login
 		loginData := map[string]string{
 			"username": testUsername,
+			"password": testPassword,
 		}
 		jsonData, _ := json.Marshal(loginData)
 
@@ -90,11 +93,29 @@ func TestUserCreationAndLogin(test *testing.T) {
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("Expected status 200, got %d", resp.StatusCode)
 		}
-	})
 
+		// Parse the response to get the JWT token
+		var loginResponse map[string]interface{}
+		if err := json.NewDecoder(resp.Body).Decode(&loginResponse); err != nil {
+			t.Fatalf("Failed to decode login response: %v", err)
+		}
+
+		token, ok := loginResponse["token"].(string)
+		if !ok {
+			t.Fatalf("Login response did not contain token")
+		}
+		authToken = token
+	})
 	test.Run("Get User Details", func(t *testing.T) {
-		// Now fetch the user object
-		resp, err := http.Get(server.URL + "/api/user?username=" + testUsername)
+		// Now fetch the user object with authentication
+		req, err := http.NewRequest("GET", server.URL+"/api/user", nil)
+		if err != nil {
+			t.Fatalf("Failed to create request: %v", err)
+		}
+		req.Header.Set("Authorization", "Bearer "+authToken)
+
+		client := &http.Client{}
+		resp, err := client.Do(req)
 		if err != nil {
 			t.Fatalf("Failed to fetch user after login: %v", err)
 		}
@@ -147,10 +168,10 @@ func TestUserCreationDuplicateUsername(test *testing.T) {
 	timestamp := time.Now().Unix()
 	testUsername := fmt.Sprintf("dupuser_%d", timestamp)
 	testBankName := fmt.Sprintf("Dup Bank %d", timestamp)
-
 	// Create first user
 	createUserData := map[string]string{
 		"username": testUsername,
+		"password": "testpassword123",
 		"bankName": testBankName,
 	}
 	jsonData, err := json.Marshal(createUserData)
@@ -199,10 +220,10 @@ func TestLoginNonExistentUser(test *testing.T) {
 	routes.RegisterRoutes(mux)
 	server := httptest.NewServer(mux)
 	defer server.Close()
-
 	// Try to login with non-existent user
 	loginData := map[string]string{
 		"username": "nonexistentuser_123456789",
+		"password": "somepassword",
 	}
 	jsonData, err := json.Marshal(loginData)
 	if err != nil {

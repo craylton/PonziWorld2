@@ -4,6 +4,7 @@ import "./NewBank.css";
 
 const NewBank: React.FC = () => {
   const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [bankName, setBankName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +20,7 @@ const NewBank: React.FC = () => {
       const res = await fetch("/api/user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, bankName }),
+        body: JSON.stringify({ username, password, bankName }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -27,6 +28,7 @@ const NewBank: React.FC = () => {
       } else {
         setSuccess(true);
         setUsername("");
+        setPassword("");
         setBankName("");
       }
     } catch {
@@ -39,14 +41,23 @@ const NewBank: React.FC = () => {
   return (
     <div className="new-bank-container">
       <form className="new-bank-form" onSubmit={handleSubmit}>
-        <h2>Create a New Bank</h2>
-        <label>
+        <h2>Create a New Bank</h2>        <label>
           Username
           <input
             type="text"
             value={username}
             onChange={e => setUsername(e.target.value)}
             placeholder="Enter your username"
+            required
+          />
+        </label>
+        <label>
+          Password
+          <input
+            type="password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            placeholder="Enter your password"
             required
           />
         </label>
@@ -63,7 +74,7 @@ const NewBank: React.FC = () => {
         <button
           type="submit"
           className="confirm-btn"
-          disabled={!username || !bankName || loading}
+          disabled={!username || !password || !bankName || loading}
         >
           {loading ? "Creating..." : "Confirm"}
         </button>

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './Login.css';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '../User';
+import { removeAuthToken } from '../auth';
 
 interface LoginProps {
   onLogin: (user: User) => void;
@@ -9,20 +10,34 @@ interface LoginProps {
 
 export default function Login({ onLogin }: LoginProps) {
   const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    // Clear any existing auth token when visiting login page
+    removeAuthToken();
+  }, []);
+
+  useEffect(() => {
+    // Clear any existing auth token when visiting login page
+    removeAuthToken();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (username.trim()) {
+    if (username.trim() && password.trim()) {
       setLoading(true);
       try {
         const res = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: username.trim() }),
+          body: JSON.stringify({ 
+            username: username.trim(), 
+            password: password.trim() 
+          }),
         });
         if (!res.ok) {
           let data;
@@ -33,20 +48,11 @@ export default function Login({ onLogin }: LoginProps) {
           }
           setError(`Login failed: ${data.error || 'Unknown error'}`);
         } else {
-          // Now fetch the user object
-          const userRes = await fetch(`/api/user?username=${encodeURIComponent(username.trim())}`);
-          if (!userRes.ok) {
-            let data;
-            try {
-              data = await userRes.json();
-            } catch {
-              data = {};
-            }
-            setError(`Failed to fetch user: ${data.error || 'Unknown error'}`);
-          } else {
-            const userData = await userRes.json();
-            onLogin(userData);
-          }
+          const data = await res.json();
+          // Store the JWT token in localStorage
+          localStorage.setItem('authToken', data.token);
+          // Call onLogin with the user data
+          onLogin(data.user);
         }
       } catch (error) {
         console.error('Login error:', error);
@@ -60,12 +66,18 @@ export default function Login({ onLogin }: LoginProps) {
   return (
     <div className="login-container">
       <form className="login-form" onSubmit={handleSubmit}>
-        <h2>Login</h2>
-        <input
+        <h2>Login</h2>        <input
           type="text"
           placeholder="Enter username"
           value={username}
           onChange={e => setUsername(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Enter password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
           required
         />
         {error && <div className="error-msg">{error}</div>}
