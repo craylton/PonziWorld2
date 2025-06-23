@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import './Login.css';
 import { useNavigate } from 'react-router-dom';
-import type { User } from '../User';
 import { removeAuthToken, setAuthToken } from '../auth';
 
 interface LoginProps {
-  onLogin: (user: User) => void;
+  onLogin: () => Promise<void>;
 }
 
 export default function Login({ onLogin }: LoginProps) {
@@ -44,10 +43,11 @@ export default function Login({ onLogin }: LoginProps) {
           setError(`Login failed: ${data.error || 'Unknown error'}`);
         } else {
           const data = await res.json();
-          // Store the JWT token in localStorage
+          // Store the JWT token
           setAuthToken(data.token);
-          // Call onLogin with the user data
-          onLogin(data.user);
+          // Initialize user state in App and navigate to dashboard
+          await onLogin();
+          navigate('/');
         }
       } catch (error) {
         console.error('Login error:', error);

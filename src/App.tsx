@@ -36,6 +36,22 @@ function App() {
     initializeAuth();
   }, []);
 
+  // Handler to fetch user after login
+  const handleLogin = async () => {
+    try {
+      const response = await makeAuthenticatedRequest('/api/user');
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+      } else {
+        removeAuthToken();
+      }
+    } catch (error) {
+      console.error('Failed to fetch user data after login:', error);
+      removeAuthToken();
+    }
+  };
+
   const handleLogout = () => {
     removeAuthToken();
     setUser(null);
@@ -49,7 +65,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={
-          user ? <Navigate to="/" replace /> : <Login onLogin={setUser} />
+          user ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />
         } />
         <Route path="/new" element={
           user ? <Navigate to="/" replace /> : <NewBank />

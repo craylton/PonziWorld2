@@ -15,12 +15,15 @@ func ConnectDB() (*mongo.Client, context.Context, context.CancelFunc) {
 	if uri == "" {
 		uri = "mongodb://localhost:27017"
 	}
+	// Set up timeout context for connection and ping
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	clientOpts := options.Client().ApplyURI(uri)
 	client, err := mongo.Connect(clientOpts)
 	if err != nil {
+		cancel()
 		log.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	// Ping to verify connection
 	if err := client.Ping(ctx, nil); err != nil {
 		cancel()
 		log.Fatalf("Failed to ping MongoDB: %v", err)

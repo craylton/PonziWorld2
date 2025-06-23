@@ -63,10 +63,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Return token and user data
-	response := map[string]any{
-		"token": token,
-		"user":  user,
-	}
+	// Return token only
+	response := map[string]string{"token": token}
 	json.NewEncoder(w).Encode(response)
 }
