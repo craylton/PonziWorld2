@@ -36,30 +36,22 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
             className={`dashboard-sidepanel-button--left`}
           />
           {mainContent}
-            <SidePanelButton
-              iconType="cog"
-              shouldAllowClose={isRightPanelOpen}
-              onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}
-              ariaLabel="Open settings panel"
-              className={`dashboard-sidepanel-button--right`}
-            />
-        </main>        <SidePanel side="right" visible={isRightPanelOpen}>
-          <div style={{ padding: '20px' }}>
-            <h3>Settings</h3>
-            <button 
-              onClick={onLogout}
-              style={{
-                padding: '10px 20px',
-                backgroundColor: '#dc3545',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-            >
-              Logout
-            </button>
-          </div>
+          <SidePanelButton
+            iconType="cog"
+            shouldAllowClose={isRightPanelOpen}
+            onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}
+            ariaLabel="Open settings panel"
+            className={`dashboard-sidepanel-button--right`}
+          />
+        </main>
+        <SidePanel side="right" visible={isRightPanelOpen}>
+          <h3>Settings</h3>
+          <button
+            onClick={onLogout}
+            className='dashboard-logout-button'
+          >
+            Logout
+          </button>
         </SidePanel>
       </div>
     </div>

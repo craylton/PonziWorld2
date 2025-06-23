@@ -64,7 +64,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Return token and user data
-	response := map[string]interface{}{
+	response := map[string]any{
 		"token": token,
 		"user":  user,
 	}

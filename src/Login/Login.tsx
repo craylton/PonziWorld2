@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import './Login.css';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '../User';
-import { removeAuthToken } from '../auth';
+import { removeAuthToken, setAuthToken } from '../auth';
 
 interface LoginProps {
   onLogin: (user: User) => void;
@@ -20,11 +20,6 @@ export default function Login({ onLogin }: LoginProps) {
     removeAuthToken();
   }, []);
 
-  useEffect(() => {
-    // Clear any existing auth token when visiting login page
-    removeAuthToken();
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -34,9 +29,9 @@ export default function Login({ onLogin }: LoginProps) {
         const res = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            username: username.trim(), 
-            password: password.trim() 
+          body: JSON.stringify({
+            username: username.trim(),
+            password: password.trim()
           }),
         });
         if (!res.ok) {
@@ -50,7 +45,7 @@ export default function Login({ onLogin }: LoginProps) {
         } else {
           const data = await res.json();
           // Store the JWT token in localStorage
-          localStorage.setItem('authToken', data.token);
+          setAuthToken(data.token);
           // Call onLogin with the user data
           onLogin(data.user);
         }

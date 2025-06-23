@@ -7,6 +7,7 @@ import (
 	"ponziworld/backend/db"
 	"ponziworld/backend/models"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"golang.org/x/crypto/bcrypt"
@@ -62,10 +63,10 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create user"})
 		return
 	}
-	json.NewEncoder(w).Encode(user)
+	w.WriteHeader(http.StatusCreated)
 }
 
-// GetUserHandler handles GET /api/user (now requires authentication)
+// GetUserHandler handles GET /api/user
 func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -83,7 +84,7 @@ func GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	collection := client.Database("ponziworld").Collection("users")
 
 	var user models.User
-	err := collection.FindOne(ctx, map[string]interface{}{"username": username}).Decode(&user)
+	err := collection.FindOne(ctx, bson.M{"username": username}).Decode(&user)
 	if err == mongo.ErrNoDocuments {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]string{"error": "User not found"})

@@ -53,8 +53,8 @@ func TestUserCreationAndLogin(test *testing.T) {
 		}
 		defer resp.Body.Close()
 
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status 200, got %d", resp.StatusCode)
+		if resp.StatusCode != http.StatusCreated {
+			t.Errorf("Expected status 201, got %d", resp.StatusCode)
 		}
 
 		var createdUser models.User
@@ -185,8 +185,8 @@ func TestUserCreationDuplicateUsername(test *testing.T) {
 	}
 	defer resp1.Body.Close()
 
-	if resp1.StatusCode != http.StatusOK {
-		test.Errorf("Expected status 200 for first user, got %d", resp1.StatusCode)
+	if resp1.StatusCode != http.StatusCreated {
+		test.Errorf("Expected status 201 for first user, got %d", resp1.StatusCode)
 	}
 
 	// Try to create duplicate user
