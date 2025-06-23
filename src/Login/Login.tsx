@@ -25,11 +25,28 @@ export default function Login({ onLogin }: LoginProps) {
           body: JSON.stringify({ username: username.trim() }),
         });
         if (!res.ok) {
-          const data = await res.json();
+          let data;
+          try {
+            data = await res.json();
+          } catch {
+            data = {};
+          }
           setError(`Login failed: ${data.error || 'Unknown error'}`);
         } else {
-          const userData = await res.json();
-          onLogin(userData);
+          // Now fetch the user object
+          const userRes = await fetch(`/api/user?username=${encodeURIComponent(username.trim())}`);
+          if (!userRes.ok) {
+            let data;
+            try {
+              data = await userRes.json();
+            } catch {
+              data = {};
+            }
+            setError(`Failed to fetch user: ${data.error || 'Unknown error'}`);
+          } else {
+            const userData = await userRes.json();
+            onLogin(userData);
+          }
         }
       } catch (error) {
         console.error('Login error:', error);

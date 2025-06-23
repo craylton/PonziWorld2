@@ -43,6 +43,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
 		return
 	}
-
-	json.NewEncoder(w).Encode(user)
+	// On success, return 200 with no body
+	w.WriteHeader(http.StatusOK)
 }

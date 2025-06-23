@@ -52,3 +52,31 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	json.NewEncoder(w).Encode(user)
 }
+
+// GetUserHandler handles GET /api/user?username=USERNAME
+func GetUserHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	username := r.URL.Query().Get("username")
+	if username == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Username required"})
+		return
+	}
+	client, ctx, cancel := db.ConnectDB()
+	defer cancel()
+	defer client.Disconnect(ctx)
+	collection := client.Database("ponziworld").Collection("users")
+
+	var user models.User
+	err := collection.FindOne(ctx, map[string]interface{}{"username": username}).Decode(&user)
+	if err == mongo.ErrNoDocuments {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]string{"error": "User not found"})
+		return
+	} else if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
+		return
+	}
+	json.NewEncoder(w).Encode(user)
+}

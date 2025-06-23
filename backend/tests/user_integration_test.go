@@ -90,13 +90,24 @@ func TestUserCreationAndLogin(test *testing.T) {
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("Expected status 200, got %d", resp.StatusCode)
 		}
+	})
 
+	test.Run("Get User Details", func(t *testing.T) {
+		// Now fetch the user object
+		resp, err := http.Get(server.URL + "/api/user?username=" + testUsername)
+		if err != nil {
+			t.Fatalf("Failed to fetch user after login: %v", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("Expected status 200 from /api/user, got %d", resp.StatusCode)
+		}
 		var loggedInUser models.User
 		if err := json.NewDecoder(resp.Body).Decode(&loggedInUser); err != nil {
 			t.Fatalf("Failed to decode logged in user: %v", err)
 		}
 
-		// Verify user data from login
+		// Verify user data from /api/user
 		if loggedInUser.Username != testUsername {
 			t.Errorf("Expected username %s, got %s", testUsername, loggedInUser.Username)
 		}
