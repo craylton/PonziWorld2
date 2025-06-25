@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"ponziworld/backend/db"
 	"ponziworld/backend/models"
@@ -26,6 +27,12 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
 		return
 	}
+	
+	// Trim whitespace and validate
+	req.Username = strings.TrimSpace(req.Username)
+	req.Password = strings.TrimSpace(req.Password)
+	req.BankName = strings.TrimSpace(req.BankName)
+	
 	if req.Username == "" || req.Password == "" || req.BankName == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Username, password, and bank name required"})
