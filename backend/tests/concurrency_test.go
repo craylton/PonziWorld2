@@ -28,7 +28,7 @@ func TestConcurrentUserCreation(t *testing.T) {
 		results := make(chan int, numUsers)
 		timestamp := time.Now().Unix()
 
-		for i := 0; i < numUsers; i++ {
+		for i := range numUsers {
 			wg.Add(1)
 			go func(userNum int) {
 				defer wg.Done()
