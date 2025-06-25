@@ -5,7 +5,7 @@ import InvestorList from './SidePanel/InvestorList/InvestorList';
 import SidePanelButton from './SidePanel/SidePanelButton';
 import SidePanel from './SidePanel/SidePanel';
 import type { User, Bank } from '../User';
-import { makeAuthenticatedRequest } from '../auth';
+import { makeAuthenticatedRequest, getUsernameFromToken } from '../auth';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -23,14 +23,13 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch user data
-        const userResponse = await makeAuthenticatedRequest('/api/user');
-        if (!userResponse.ok) {
+        // Get username from JWT and set user
+        const username = getUsernameFromToken();
+        if (!username) {
           onLogout();
           return;
         }
-        const userData: User = await userResponse.json();
-        setUser(userData);
+        setUser({ username });
 
         // Fetch bank data
         const bankResponse = await makeAuthenticatedRequest('/api/bank');

@@ -90,31 +90,22 @@ func TestFullUserWorkflow(t *testing.T) {
 	})
 	
 	t.Run("Get User Details", func(t *testing.T) {
-		// Now fetch the user object with authentication
-		req, err := http.NewRequest("GET", server.URL+"/api/user", nil)
-		if err != nil {
-			t.Fatalf("Failed to create request: %v", err)
-		}
-		req.Header.Set("Authorization", "Bearer "+authToken)
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			t.Fatalf("Failed to fetch user after login: %v", err)
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status 200 from /api/user, got %d", resp.StatusCode)
-		}
-		var userResponse map[string]string
-		if err := json.NewDecoder(resp.Body).Decode(&userResponse); err != nil {
-			t.Fatalf("Failed to decode user response: %v", err)
-		}
-
-		// Verify user data from /api/user
-		if userResponse["username"] != testUsername {
-			t.Errorf("Expected username %s, got %s", testUsername, userResponse["username"])
-		}
-		// Test /api/bank endpoint
+			// GET /api/user is removed; expect Method Not Allowed
+			req, err := http.NewRequest("GET", server.URL+"/api/user", nil)
+			if err != nil {
+				t.Fatalf("Failed to create request: %v", err)
+			}
+			req.Header.Set("Authorization", "Bearer "+authToken)
+			client := &http.Client{}
+			resp, err := client.Do(req)
+			if err != nil {
+				t.Fatalf("Failed to fetch user after login: %v", err)
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode != http.StatusMethodNotAllowed {
+				t.Errorf("Expected status %d from /api/user, got %d", http.StatusMethodNotAllowed, resp.StatusCode)
+			}
+        	// Test /api/bank endpoint
 		req, _ = http.NewRequest("GET", server.URL+"/api/bank", nil)
 		req.Header.Set("Authorization", "Bearer "+authToken)
 

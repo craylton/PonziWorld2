@@ -13,8 +13,6 @@ func RegisterRoutes(mux *http.ServeMux) {
 		switch r.Method {
 		case http.MethodPost:
 			handlers.CreateUserHandler(w, r)
-		case http.MethodGet:
-			middleware.JWTMiddleware(handlers.GetUserHandler)(w, r)
 		default:
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusMethodNotAllowed)

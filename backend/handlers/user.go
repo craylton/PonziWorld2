@@ -8,7 +8,6 @@ import (
 	"ponziworld/backend/db"
 	"ponziworld/backend/models"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"golang.org/x/crypto/bcrypt"
@@ -99,38 +98,4 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-}
-
-// GetUserHandler handles GET /api/user
-func GetUserHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	// Get username from the JWT token (set by middleware)
-	username := r.Header.Get("X-Username")
-	if username == "" {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Authentication required"})
-		return
-	}
-
-	client, ctx, cancel := db.ConnectDB()
-	defer cancel()
-	defer client.Disconnect(ctx)
-	usersCollection := client.Database("ponziworld").Collection("users")
-
-	var user models.User
-	err := usersCollection.FindOne(ctx, bson.M{"username": username}).Decode(&user)
-	if err == mongo.ErrNoDocuments {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "User not found"})
-		return
-	} else if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
-		return
-	}
-	
-	// Return only the username (other data comes from /api/bank)
-	response := map[string]string{"username": user.Username}
-	json.NewEncoder(w).Encode(response)
 }

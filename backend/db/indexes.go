@@ -25,8 +25,7 @@ func EnsureBankIndexes(client *mongo.Client) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	collection := client.Database("ponziworld").Collection("banks")
-	
-	// Index on userId
+	// Index on userId for fast lookup of assets by user
 	indexModel := mongo.IndexModel{
 		Keys:    bson.D{{Key: "userId", Value: 1}},
 	}
