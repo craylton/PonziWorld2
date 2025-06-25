@@ -3,25 +3,53 @@ import Login from './Login/Login';
 import Dashboard from './Dashboard/Dashboard';
 import NewBank from './NewBank/NewBank';
 import ProtectedRoute from './ProtectedRoute';
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
-import type { User } from './User';
+import { isAuthenticated, removeAuthToken } from './auth';
 
 function App() {
-  const [user, setUser] = useState<User | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    // Check if auth token exists on app start
+    const initializeAuth = () => {
+      if (isAuthenticated()) {
+        setIsLoggedIn(true);
+      }
+      setAuthLoading(false);
+    };
+
+    initializeAuth();
+  }, []);
+
+  // Handler after successful login
+  const handleLogin = async () => {
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    removeAuthToken();
+    setIsLoggedIn(false);
+  };
+
+  if (authLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={
-          user ? <Navigate to="/" replace /> : <Login onLogin={setUser} />
+          isLoggedIn ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />
         } />
         <Route path="/new" element={
-          user ? <Navigate to="/" replace /> : <NewBank />
+          isLoggedIn ? <Navigate to="/" replace /> : <NewBank />
         } />
-        <Route path="/" element={<ProtectedRoute isAuthenticated={!!user} />}>
-          <Route index element={<Dashboard user={user!} />} />
+        <Route path="/" element={<ProtectedRoute isAuthenticated={isLoggedIn} />}>
+          <Route index element={<Dashboard onLogout={handleLogout} />} />
         </Route>
-        <Route path="*" element={<Navigate to={user ? "/" : "/login"} replace />} />
+        <Route path="*" element={<Navigate to={isLoggedIn ? "/" : "/login"} replace />} />
       </Routes>
     </BrowserRouter>
   );

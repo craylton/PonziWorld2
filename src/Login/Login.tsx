@@ -1,35 +1,53 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './Login.css';
 import { useNavigate } from 'react-router-dom';
-import type { User } from '../User';
+import { removeAuthToken, setAuthToken } from '../auth';
 
 interface LoginProps {
-  onLogin: (user: User) => void;
+  onLogin: () => Promise<void>;
 }
 
 export default function Login({ onLogin }: LoginProps) {
   const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  useEffect(() => {
+    // Clear any existing auth token when visiting login page
+    removeAuthToken();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    if (username.trim()) {
+    if (username.trim() && password.trim()) {
       setLoading(true);
       try {
         const res = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: username.trim() }),
+          body: JSON.stringify({
+            username: username.trim(),
+            password: password.trim()
+          }),
         });
         if (!res.ok) {
-          const data = await res.json();
+          let data;
+          try {
+            data = await res.json();
+          } catch {
+            data = {};
+          }
           setError(`Login failed: ${data.error || 'Unknown error'}`);
         } else {
-          const userData = await res.json();
-          onLogin(userData);
+          const data = await res.json();
+          // Store the JWT token
+          setAuthToken(data.token);
+          // Initialize user state in App and navigate to dashboard
+          await onLogin();
+          navigate('/');
         }
       } catch (error) {
         console.error('Login error:', error);
@@ -43,12 +61,18 @@ export default function Login({ onLogin }: LoginProps) {
   return (
     <div className="login-container">
       <form className="login-form" onSubmit={handleSubmit}>
-        <h2>Login</h2>
-        <input
+        <h2>Login</h2>        <input
           type="text"
           placeholder="Enter username"
           value={username}
           onChange={e => setUsername(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Enter password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
           required
         />
         {error && <div className="error-msg">{error}</div>}

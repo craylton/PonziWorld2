@@ -7,6 +7,7 @@ import (
 	"os"
 
 	db "ponziworld/backend/db"
+	"ponziworld/backend/middleware"
 	routes "ponziworld/backend/routes"
 )
 
@@ -27,18 +28,5 @@ func main() {
 		port = "8080"
 	}
 	fmt.Printf("Backend listening on :%s\n", port)
-	log.Fatal(http.ListenAndServe(":"+port, corsMiddleware(mux)))
-}
-
-func corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-		next.ServeHTTP(w, r)
-	})
+	log.Fatal(http.ListenAndServe(":"+port, middleware.CorsMiddleware(mux)))
 }
