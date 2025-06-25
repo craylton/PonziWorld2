@@ -1,20 +1,46 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './Dashboard.css';
 import DashboardHeader from './DashboardHeader';
 import InvestorList from './SidePanel/InvestorList/InvestorList';
 import SidePanelButton from './SidePanel/SidePanelButton';
 import SidePanel from './SidePanel/SidePanel';
 import type { User } from '../User';
+import { makeAuthenticatedRequest } from '../auth';
 
 interface DashboardProps {
-  user: User;
   onLogout: () => void;
 }
 
-export default function Dashboard({ user, onLogout }: DashboardProps) {
+export default function Dashboard({ onLogout }: DashboardProps) {
+  const [user, setUser] = useState<User | null>(null);
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
-  const mainContent = `Welcome to the dashboard, ${user.username}!`;
+  const [loading, setLoading] = useState(true);
+
+  const mainContent = `Welcome to the dashboard, ${user?.username}!`;
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await makeAuthenticatedRequest('/api/user');
+        if (response.ok) {
+          const data: User = await response.json();
+          setUser(data);
+        } else {
+          onLogout();
+        }
+      } catch {
+        onLogout();
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUser();
+  }, [onLogout]);
+
+  if (loading || !user) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="dashboard-root">

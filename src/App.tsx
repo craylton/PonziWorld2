@@ -5,59 +5,35 @@ import NewBank from './NewBank/NewBank';
 import ProtectedRoute from './ProtectedRoute';
 import { useState, useEffect } from 'react'
 import './App.css'
-import type { User } from './User';
-import { isAuthenticated, makeAuthenticatedRequest, removeAuthToken } from './auth';
+import { isAuthenticated, removeAuthToken } from './auth';
 
 function App() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already authenticated on app start
-    const initializeAuth = async () => {
+    // Check if auth token exists on app start
+    const initializeAuth = () => {
       if (isAuthenticated()) {
-        try {
-          const response = await makeAuthenticatedRequest('/api/user');
-          if (response.ok) {
-            const userData = await response.json();
-            setUser(userData);
-          } else {
-            // Token is invalid, remove it
-            removeAuthToken();
-          }
-        } catch (error) {
-          console.error('Failed to fetch user data:', error);
-          removeAuthToken();
-        }
+        setIsLoggedIn(true);
       }
-      setLoading(false);
+      setAuthLoading(false);
     };
 
     initializeAuth();
   }, []);
 
-  // Handler to fetch user after login
+  // Handler after successful login
   const handleLogin = async () => {
-    try {
-      const response = await makeAuthenticatedRequest('/api/user');
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-      } else {
-        removeAuthToken();
-      }
-    } catch (error) {
-      console.error('Failed to fetch user data after login:', error);
-      removeAuthToken();
-    }
+    setIsLoggedIn(true);
   };
 
   const handleLogout = () => {
     removeAuthToken();
-    setUser(null);
+    setIsLoggedIn(false);
   };
 
-  if (loading) {
+  if (authLoading) {
     return <div>Loading...</div>;
   }
 
@@ -65,15 +41,15 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={
-          user ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />
+          isLoggedIn ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />
         } />
         <Route path="/new" element={
-          user ? <Navigate to="/" replace /> : <NewBank />
+          isLoggedIn ? <Navigate to="/" replace /> : <NewBank />
         } />
-        <Route path="/" element={<ProtectedRoute isAuthenticated={!!user} />}>
-          <Route index element={<Dashboard user={user!} onLogout={handleLogout} />} />
+        <Route path="/" element={<ProtectedRoute isAuthenticated={isLoggedIn} />}>
+          <Route index element={<Dashboard onLogout={handleLogout} />} />
         </Route>
-        <Route path="*" element={<Navigate to={user ? "/" : "/login"} replace />} />
+        <Route path="*" element={<Navigate to={isLoggedIn ? "/" : "/login"} replace />} />
       </Routes>
     </BrowserRouter>
   );

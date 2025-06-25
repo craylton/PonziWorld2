@@ -63,7 +63,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Return token only
+	// Return token
 	response := map[string]string{"token": token}
 	json.NewEncoder(w).Encode(response)
 }
