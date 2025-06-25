@@ -13,7 +13,6 @@ import (
 
 	"ponziworld/backend/auth"
 	"ponziworld/backend/db"
-	"ponziworld/backend/models"
 	"ponziworld/backend/routes"
 )
 
@@ -62,20 +61,10 @@ func TestGetUserEndpoint(t *testing.T) {
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("Expected status 200, got %d", resp.StatusCode)
 		}
-
-		var user models.User
-		json.NewDecoder(resp.Body).Decode(&user)
-				if user.Username != testUsername {
-			t.Errorf("Expected username %s, got %s", testUsername, user.Username)
-		}
-		if user.BankName != "Test Bank" {
-			t.Errorf("Expected bank name 'Test Bank', got %s", user.BankName)
-		}
-		if user.ClaimedCapital != 1000 {
-			t.Errorf("Expected claimed capital 1000, got %d", user.ClaimedCapital)
-		}
-		if user.ActualCapital != 1000 {
-			t.Errorf("Expected actual capital 1000, got %d", user.ActualCapital)
+		var userResponse map[string]string
+		json.NewDecoder(resp.Body).Decode(&userResponse)
+		if userResponse["username"] != testUsername {
+			t.Errorf("Expected username %s, got %s", testUsername, userResponse["username"])
 		}
 	})
 

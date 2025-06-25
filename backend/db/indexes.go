@@ -20,3 +20,30 @@ func EnsureUserIndexes(client *mongo.Client) error {
 	_, err := collection.Indexes().CreateOne(ctx, indexModel)
 	return err
 }
+
+func EnsureBankIndexes(client *mongo.Client) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	collection := client.Database("ponziworld").Collection("banks")
+	
+	// Index on userId (should be unique - one bank per user)
+	indexModel := mongo.IndexModel{
+		Keys:    bson.D{{Key: "userId", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	}
+	_, err := collection.Indexes().CreateOne(ctx, indexModel)
+	return err
+}
+
+func EnsureAssetIndexes(client *mongo.Client) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	collection := client.Database("ponziworld").Collection("assets")
+	
+	// Index on bankId for fast lookup of assets by bank
+	indexModel := mongo.IndexModel{
+		Keys: bson.D{{Key: "bankId", Value: 1}},
+	}
+	_, err := collection.Indexes().CreateOne(ctx, indexModel)
+	return err
+}

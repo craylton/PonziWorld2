@@ -4,7 +4,7 @@ import DashboardHeader from './DashboardHeader';
 import InvestorList from './SidePanel/InvestorList/InvestorList';
 import SidePanelButton from './SidePanel/SidePanelButton';
 import SidePanel from './SidePanel/SidePanel';
-import type { User } from '../User';
+import type { User, Bank } from '../User';
 import { makeAuthenticatedRequest } from '../auth';
 
 interface DashboardProps {
@@ -13,6 +13,7 @@ interface DashboardProps {
 
 export default function Dashboard({ onLogout }: DashboardProps) {
   const [user, setUser] = useState<User | null>(null);
+  const [bank, setBank] = useState<Bank | null>(null);
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -20,34 +21,43 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const mainContent = `Welcome to the dashboard, ${user?.username}!`;
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchData = async () => {
       try {
-        const response = await makeAuthenticatedRequest('/api/user');
-        if (response.ok) {
-          const data: User = await response.json();
-          setUser(data);
-        } else {
+        // Fetch user data
+        const userResponse = await makeAuthenticatedRequest('/api/user');
+        if (!userResponse.ok) {
           onLogout();
+          return;
         }
+        const userData: User = await userResponse.json();
+        setUser(userData);
+
+        // Fetch bank data
+        const bankResponse = await makeAuthenticatedRequest('/api/bank');
+        if (!bankResponse.ok) {
+          onLogout();
+          return;
+        }
+        const bankData: Bank = await bankResponse.json();
+        setBank(bankData);
       } catch {
         onLogout();
       } finally {
         setLoading(false);
       }
     };
-    fetchUser();
+    fetchData();
   }, [onLogout]);
 
-  if (loading || !user) {
+  if (loading || !user || !bank) {
     return <div>Loading...</div>;
   }
 
   return (
-    <div className="dashboard-root">
-      <DashboardHeader
-        bankName={user.bankName}
-        claimedCapital={user.claimedCapital}
-        actualCapital={user.actualCapital}
+    <div className="dashboard-root">      <DashboardHeader
+        bankName={bank.bankName}
+        claimedCapital={bank.claimedCapital}
+        actualCapital={bank.actualCapital}
       />
       <div className="dashboard-layout">
         <SidePanel side="left" visible={isLeftPanelOpen}>

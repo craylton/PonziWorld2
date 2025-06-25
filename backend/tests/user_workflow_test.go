@@ -96,7 +96,6 @@ func TestFullUserWorkflow(t *testing.T) {
 			t.Fatalf("Failed to create request: %v", err)
 		}
 		req.Header.Set("Authorization", "Bearer "+authToken)
-
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
@@ -106,23 +105,53 @@ func TestFullUserWorkflow(t *testing.T) {
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("Expected status 200 from /api/user, got %d", resp.StatusCode)
 		}
-		var loggedInUser models.User
-		if err := json.NewDecoder(resp.Body).Decode(&loggedInUser); err != nil {
-			t.Fatalf("Failed to decode logged in user: %v", err)
+		var userResponse map[string]string
+		if err := json.NewDecoder(resp.Body).Decode(&userResponse); err != nil {
+			t.Fatalf("Failed to decode user response: %v", err)
 		}
 
 		// Verify user data from /api/user
-		if loggedInUser.Username != testUsername {
-			t.Errorf("Expected username %s, got %s", testUsername, loggedInUser.Username)
+		if userResponse["username"] != testUsername {
+			t.Errorf("Expected username %s, got %s", testUsername, userResponse["username"])
 		}
-		if loggedInUser.BankName != testBankName {
-			t.Errorf("Expected bank name %s, got %s", testBankName, loggedInUser.BankName)
+		// Test /api/bank endpoint
+		req, _ = http.NewRequest("GET", server.URL+"/api/bank", nil)
+		req.Header.Set("Authorization", "Bearer "+authToken)
+
+		resp, err = client.Do(req)
+		if err != nil {
+			t.Fatalf("Failed to fetch bank info: %v", err)
 		}
-		if loggedInUser.ClaimedCapital != defaultCapital {
-			t.Errorf("Expected claimed capital %d, got %d", defaultCapital, loggedInUser.ClaimedCapital)
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("Expected status 200 from /api/bank, got %d", resp.StatusCode)
 		}
-		if loggedInUser.ActualCapital != defaultCapital {
-			t.Errorf("Expected actual capital %d, got %d", defaultCapital, loggedInUser.ActualCapital)
+
+		var bankResponse models.BankResponse
+		if err := json.NewDecoder(resp.Body).Decode(&bankResponse); err != nil {
+			t.Fatalf("Failed to decode bank response: %v", err)
+		}
+
+		// Verify bank data from /api/bank
+		if bankResponse.BankName != testBankName {
+			t.Errorf("Expected bank name %s, got %s", testBankName, bankResponse.BankName)
+		}
+		if bankResponse.ClaimedCapital != defaultCapital {
+			t.Errorf("Expected claimed capital %d, got %d", defaultCapital, bankResponse.ClaimedCapital)
+		}
+		if bankResponse.ActualCapital != defaultCapital {
+			t.Errorf("Expected actual capital %d, got %d", defaultCapital, bankResponse.ActualCapital)
+		}
+		if len(bankResponse.Assets) != 1 {
+			t.Errorf("Expected 1 asset, got %d", len(bankResponse.Assets))
+		}
+		if len(bankResponse.Assets) > 0 {
+			if bankResponse.Assets[0].AssetType != "Cash" {
+				t.Errorf("Expected asset type 'Cash', got %s", bankResponse.Assets[0].AssetType)
+			}
+			if bankResponse.Assets[0].Amount != defaultCapital {
+				t.Errorf("Expected asset amount %d, got %d", defaultCapital, bankResponse.Assets[0].Amount)
+			}
 		}
 	})
 
