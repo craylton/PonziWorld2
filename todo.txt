@@ -1,6 +1,3 @@
-In current branch:
-Remove GET /user and all things that use it
-    It only returns a username, and that username is already encoded in the jwt anyway
 
 Next up:
 Create some investment instruments
