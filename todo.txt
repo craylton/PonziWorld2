@@ -1,9 +1,8 @@
+In current branch:
+Remove GET /user and all things that use it
+    It only returns a username, and that username is already encoded in the jwt anyway
+
 Next up:
-Refactor the DB
-    Create a bank collection
-        This will contain the bank name and an ID
-    Create an assets collection
-        This will contain an amount (int), a bank ID and an asset type
 Create some investment instruments
     HYSA
         very safe but low returns, something like 5%
@@ -25,6 +24,9 @@ Defensive programming when retrieving data from DB
     even if my app always write the right shape
     for now only need to check username and bank name
     the capital fields will eventually be located somewhere else
+Incorporate investors into the database
+    Every time you invest in an asset, you might also become an investor
+    So I need to think about how I can model this relationship
 
 HIGH LEVEL THINGS:
 

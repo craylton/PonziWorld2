@@ -26,10 +26,9 @@ func EnsureBankIndexes(client *mongo.Client) error {
 	defer cancel()
 	collection := client.Database("ponziworld").Collection("banks")
 	
-	// Index on userId (should be unique - one bank per user)
+	// Index on userId
 	indexModel := mongo.IndexModel{
 		Keys:    bson.D{{Key: "userId", Value: 1}},
-		Options: options.Index().SetUnique(true),
 	}
 	_, err := collection.Indexes().CreateOne(ctx, indexModel)
 	return err
