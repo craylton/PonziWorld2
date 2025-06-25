@@ -8,7 +8,6 @@ import (
 	"ponziworld/backend/db"
 	"ponziworld/backend/models"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"golang.org/x/crypto/bcrypt"
@@ -46,20 +45,18 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to hash password"})
 		return
 	}
-
 	client, ctx, cancel := db.ConnectDB()
 	defer cancel()
 	defer client.Disconnect(ctx)
-	collection := client.Database("ponziworld").Collection("users")
+	
+	// Create the user first
+	usersCollection := client.Database("ponziworld").Collection("users")
 	user := models.User{
-		ID:             primitive.NewObjectID(),
-		Username:       req.Username,
-		Password:       string(hashedPassword),
-		BankName:       req.BankName,
-		ClaimedCapital: 1000,
-		ActualCapital:  1000,
+		ID:       primitive.NewObjectID(),
+		Username: req.Username,
+		Password: string(hashedPassword),
 	}
-	_, err = collection.InsertOne(ctx, user)
+	_, err = usersCollection.InsertOne(ctx, user)
 	if err != nil {
 		if mongo.IsDuplicateKeyError(err) {
 			w.WriteHeader(http.StatusBadRequest)
@@ -70,36 +67,35 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create user"})
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
-}
 
-// GetUserHandler handles GET /api/user
-func GetUserHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	// Get username from the JWT token (set by middleware)
-	username := r.Header.Get("X-Username")
-	if username == "" {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Authentication required"})
-		return
+	// Create the bank for this user
+	banksCollection := client.Database("ponziworld").Collection("banks")
+	bank := models.Bank{
+		ID:             primitive.NewObjectID(),
+		UserID:         user.ID,
+		BankName:       req.BankName,
+		ClaimedCapital: 1000,
 	}
-
-	client, ctx, cancel := db.ConnectDB()
-	defer cancel()
-	defer client.Disconnect(ctx)
-	collection := client.Database("ponziworld").Collection("users")
-
-	var user models.User
-	err := collection.FindOne(ctx, bson.M{"username": username}).Decode(&user)
-	if err == mongo.ErrNoDocuments {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "User not found"})
-		return
-	} else if err != nil {
+	_, err = banksCollection.InsertOne(ctx, bank)
+	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create bank"})
 		return
 	}
-	json.NewEncoder(w).Encode(user)
+
+	// Create initial cash asset
+	assetsCollection := client.Database("ponziworld").Collection("assets")
+	asset := models.Asset{
+		ID:        primitive.NewObjectID(),
+		BankID:    bank.ID,
+		Amount:    1000,
+		AssetType: "Cash",
+	}
+	_, err = assetsCollection.InsertOne(ctx, asset)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create initial asset"})
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
 }

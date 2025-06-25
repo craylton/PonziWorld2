@@ -1,21 +1,5 @@
+
 Next up:
-Create a test database
-    currently tests put test data straight into the real DB
-    there should ideally be an isolated test DB
-Create a middleware folder
-    The CORS stuff can go in there
-    other things like auth will also end up in there
-Defensive programming when retrieving data from DB
-    Documents could be the wrong shape
-    even if my app always write the right shape
-    for now only need to check username and bank name
-    the capital fields will eventually be located somewhere else
-Change login response
-    Best practice is to return a JWT token from /login
-    And then a subsequent call to get the user
-
-HIGH LEVEL THINGS:
-
 Create some investment instruments
     HYSA
         very safe but low returns, something like 5%
@@ -29,15 +13,24 @@ Create some investment instruments
     Lottery
         Each £ invested has lets say 100000:1 odds of winning
         Mean expected return is 1
+Create a test database
+    currently tests put test data straight into the real DB
+    there should ideally be an isolated test DB
+Defensive programming when retrieving data from DB
+    Documents could be the wrong shape
+    even if my app always write the right shape
+    for now only need to check username and bank name
+    the capital fields will eventually be located somewhere else
+Incorporate investors into the database
+    Every time you invest in an asset, you might also become an investor
+    So I need to think about how I can model this relationship
+
+HIGH LEVEL THINGS:
 
 Design the DB
     A user can log on at any time uring the day and make changes to their investments
     The following day (not immediately), those investments will be applied to other players
     So we need a kind of holding/staging part of the DB, which remembers the changes that need to be made, but doesn't actually make the changes yet
-
-Get actual authentication working
-    It should be fairly simple auth, no SSO or MFA or anything (yet)
-    I've never done auth stuff before though so I'm not sure where to start
 
 Make a dev-only button that manually advances to the next day
     At some point I need to think about what 'dev-only' actually means

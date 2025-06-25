@@ -77,7 +77,7 @@ func TestFullUserWorkflow(t *testing.T) {
 		}
 
 		// Parse the response to get the JWT token
-		var loginResponse map[string]interface{}
+		var loginResponse map[string]any
 		if err := json.NewDecoder(resp.Body).Decode(&loginResponse); err != nil {
 			t.Fatalf("Failed to decode login response: %v", err)
 		}
@@ -90,39 +90,59 @@ func TestFullUserWorkflow(t *testing.T) {
 	})
 	
 	t.Run("Get User Details", func(t *testing.T) {
-		// Now fetch the user object with authentication
-		req, err := http.NewRequest("GET", server.URL+"/api/user", nil)
-		if err != nil {
-			t.Fatalf("Failed to create request: %v", err)
-		}
+			// GET /api/user is removed; expect Method Not Allowed
+			req, err := http.NewRequest("GET", server.URL+"/api/user", nil)
+			if err != nil {
+				t.Fatalf("Failed to create request: %v", err)
+			}
+			req.Header.Set("Authorization", "Bearer "+authToken)
+			client := &http.Client{}
+			resp, err := client.Do(req)
+			if err != nil {
+				t.Fatalf("Failed to fetch user after login: %v", err)
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode != http.StatusMethodNotAllowed {
+				t.Errorf("Expected status %d from /api/user, got %d", http.StatusMethodNotAllowed, resp.StatusCode)
+			}
+        	// Test /api/bank endpoint
+		req, _ = http.NewRequest("GET", server.URL+"/api/bank", nil)
 		req.Header.Set("Authorization", "Bearer "+authToken)
 
-		client := &http.Client{}
-		resp, err := client.Do(req)
+		resp, err = client.Do(req)
 		if err != nil {
-			t.Fatalf("Failed to fetch user after login: %v", err)
+			t.Fatalf("Failed to fetch bank info: %v", err)
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status 200 from /api/user, got %d", resp.StatusCode)
-		}
-		var loggedInUser models.User
-		if err := json.NewDecoder(resp.Body).Decode(&loggedInUser); err != nil {
-			t.Fatalf("Failed to decode logged in user: %v", err)
+			t.Errorf("Expected status 200 from /api/bank, got %d", resp.StatusCode)
 		}
 
-		// Verify user data from /api/user
-		if loggedInUser.Username != testUsername {
-			t.Errorf("Expected username %s, got %s", testUsername, loggedInUser.Username)
+		var bankResponse models.BankResponse
+		if err := json.NewDecoder(resp.Body).Decode(&bankResponse); err != nil {
+			t.Fatalf("Failed to decode bank response: %v", err)
 		}
-		if loggedInUser.BankName != testBankName {
-			t.Errorf("Expected bank name %s, got %s", testBankName, loggedInUser.BankName)
+
+		// Verify bank data from /api/bank
+		if bankResponse.BankName != testBankName {
+			t.Errorf("Expected bank name %s, got %s", testBankName, bankResponse.BankName)
 		}
-		if loggedInUser.ClaimedCapital != defaultCapital {
-			t.Errorf("Expected claimed capital %d, got %d", defaultCapital, loggedInUser.ClaimedCapital)
+		if bankResponse.ClaimedCapital != defaultCapital {
+			t.Errorf("Expected claimed capital %d, got %d", defaultCapital, bankResponse.ClaimedCapital)
 		}
-		if loggedInUser.ActualCapital != defaultCapital {
-			t.Errorf("Expected actual capital %d, got %d", defaultCapital, loggedInUser.ActualCapital)
+		if bankResponse.ActualCapital != defaultCapital {
+			t.Errorf("Expected actual capital %d, got %d", defaultCapital, bankResponse.ActualCapital)
+		}
+		if len(bankResponse.Assets) != 1 {
+			t.Errorf("Expected 1 asset, got %d", len(bankResponse.Assets))
+		}
+		if len(bankResponse.Assets) > 0 {
+			if bankResponse.Assets[0].AssetType != "Cash" {
+				t.Errorf("Expected asset type 'Cash', got %s", bankResponse.Assets[0].AssetType)
+			}
+			if bankResponse.Assets[0].Amount != defaultCapital {
+				t.Errorf("Expected asset amount %d, got %d", defaultCapital, bankResponse.Assets[0].Amount)
+			}
 		}
 	})
 

@@ -39,3 +39,15 @@ export const makeAuthenticatedRequest = async (url: string, options: RequestInit
 
   return fetch(url, authOptions);
 };
+
+// Helper to extract username from JWT without an extra API call
+export const getUsernameFromToken = (): string | null => {
+  const token = getAuthToken();
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.username;
+  } catch {
+    return null;
+  }
+};

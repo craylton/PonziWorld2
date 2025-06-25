@@ -19,6 +19,14 @@ func main() {
 	if err := db.EnsureUserIndexes(client); err != nil {
 		log.Fatalf("Failed to ensure user indexes: %v", err)
 	}
+	
+	if err := db.EnsureBankIndexes(client); err != nil {
+		log.Fatalf("Failed to ensure bank indexes: %v", err)
+	}
+	
+	if err := db.EnsureAssetIndexes(client); err != nil {
+		log.Fatalf("Failed to ensure asset indexes: %v", err)
+	}
 
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux)
