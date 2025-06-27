@@ -141,6 +141,11 @@ func TestLoginEndpoint(t *testing.T) {
 	jsonData, _ := json.Marshal(createUserData)
 	http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
 
+	// Cleanup after all tests
+	t.Cleanup(func() {
+		CleanupTestData(createUserData["username"], createUserData["bankName"])
+	})
+
 	t.Run("Valid login", func(t *testing.T) {
 		loginData := map[string]string{
 			"username": createUserData["username"],

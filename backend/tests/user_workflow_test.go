@@ -9,9 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
-
-	"ponziworld/backend/db"
 	"ponziworld/backend/models"
 	"ponziworld/backend/routes"
 )
@@ -146,15 +143,8 @@ func TestFullUserWorkflow(t *testing.T) {
 		}
 	})
 
-	// Cleanup: Remove test user from database
+	// Cleanup: Remove test user, bank, and assets from database
 	t.Cleanup(func() {
-		client, ctx, cancel := db.ConnectDB()
-		defer cancel()
-		defer client.Disconnect(ctx)
-		collection := client.Database("ponziworld").Collection("users")
-		_, err := collection.DeleteOne(ctx, bson.M{"username": testUsername})
-		if err != nil {
-			t.Logf("Failed to cleanup test user: %v", err)
-		}
+		CleanupTestData(testUsername, testBankName)
 	})
 }

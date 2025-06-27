@@ -9,9 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
-
-	"ponziworld/backend/db"
 	"ponziworld/backend/routes"
 )
 
@@ -45,11 +42,7 @@ func TestUserCreation(t *testing.T) {
 
 	// Cleanup
 	t.Cleanup(func() {
-		client, ctx, cancel := db.ConnectDB()
-		defer cancel()
-		defer client.Disconnect(ctx)
-		collection := client.Database("ponziworld").Collection("users")
-		collection.DeleteOne(ctx, bson.M{"username": testUsername})
+		CleanupTestData(testUsername, "Test Bank Creation")
 	})
 
 	t.Run("Duplicate username", func(t *testing.T) {

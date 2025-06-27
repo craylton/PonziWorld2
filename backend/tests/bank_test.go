@@ -9,9 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
-
-	"ponziworld/backend/db"
 	"ponziworld/backend/models"
 	"ponziworld/backend/routes"
 )
@@ -114,22 +111,6 @@ func TestBankEndpoint(t *testing.T) {
 
 	// Cleanup only test data
 	t.Cleanup(func() {
-		client, ctx, cancel := db.ConnectDB()
-		defer cancel()
-		defer client.Disconnect(ctx)
-
-		usersCollection := client.Database("ponziworld").Collection("users")
-		usersCollection.DeleteMany(ctx, bson.M{"username": testUsername})
-
-		banksCollection := client.Database("ponziworld").Collection("banks")
-		cursor, err := banksCollection.Find(ctx, bson.M{"bankName": testBankName})
-		if err == nil {
-			for cursor.Next(ctx) {
-				var bank models.Bank
-				cursor.Decode(&bank)
-				client.Database("ponziworld").Collection("assets").DeleteMany(ctx, bson.M{"bankId": bank.ID})
-			}
-		}
-		banksCollection.DeleteMany(ctx, bson.M{"bankName": testBankName})
+		CleanupTestData(testUsername, testBankName)
 	})
 }

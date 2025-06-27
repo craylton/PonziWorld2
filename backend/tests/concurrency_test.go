@@ -10,9 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
-
-	"ponziworld/backend/db"
 	"ponziworld/backend/routes"
 )
 
@@ -65,15 +62,13 @@ func TestConcurrentUserCreation(t *testing.T) {
 		}
 
 		// Cleanup
-		client, ctx, cancel := db.ConnectDB()
-		defer cancel()
-		defer client.Disconnect(ctx)
-		collection := client.Database("ponziworld").Collection("users")
-		
+		usersAndBanks := make(map[string]string)
 		for i := 0; i < numUsers; i++ {
 			username := fmt.Sprintf("concurrent_%d_%d", timestamp, i)
-			collection.DeleteOne(ctx, bson.M{"username": username})
+			bankName := fmt.Sprintf("Bank %d", i)
+			usersAndBanks[username] = bankName
 		}
+		CleanupMultipleTestData(usersAndBanks)
 	})
 
 	t.Run("Duplicate username creation race condition", func(t *testing.T) {
@@ -128,10 +123,6 @@ func TestConcurrentUserCreation(t *testing.T) {
 		}
 
 		// Cleanup
-		client, ctx, cancel := db.ConnectDB()
-		defer cancel()
-		defer client.Disconnect(ctx)
-		collection := client.Database("ponziworld").Collection("users")
-		collection.DeleteOne(ctx, bson.M{"username": duplicateUsername})
+		CleanupTestData(duplicateUsername, "Race Test Bank")
 	})
 }
