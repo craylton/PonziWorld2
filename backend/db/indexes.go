@@ -9,7 +9,26 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-// ensureIndex installs a named index on the given collection, skipping creation if it already exists.
+func EnsureAllIndexes() error {
+	client, ctx, cancel := ConnectDB()
+	defer cancel()
+	defer client.Disconnect(ctx)
+	
+	if err := EnsureUserIndexes(client); err != nil {
+		return err
+	}
+	
+	if err := EnsureBankIndexes(client); err != nil {
+		return err
+	}
+	
+	if err := EnsureAssetIndexes(client); err != nil {
+		return err
+	}
+	
+	return nil
+}
+
 func ensureIndex(client *mongo.Client, collectionName, indexName string, model mongo.IndexModel) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

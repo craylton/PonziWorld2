@@ -1,3 +1,5 @@
+import type { Asset } from './Dashboard/AssetList/Asset';
+
 export interface User {
   username: string;
 }
@@ -7,9 +9,4 @@ export interface Bank {
   claimedCapital: number;
   actualCapital: number;
   assets: Asset[];
-}
-
-export interface Asset {
-  amount: number;
-  assetType: string;
 }

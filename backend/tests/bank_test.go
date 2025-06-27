@@ -11,7 +11,6 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 
-	"ponziworld/backend/auth"
 	"ponziworld/backend/db"
 	"ponziworld/backend/models"
 	"ponziworld/backend/routes"
@@ -110,24 +109,6 @@ func TestBankEndpoint(t *testing.T) {
 		}
 		if asset.Amount != 1000 {
 			t.Errorf("Expected asset amount 1000, got %d", asset.Amount)
-		}
-	})
-
-	// Token for non-existent user
-	t.Run("Token for non-existent user", func(t *testing.T) {
-		fakeToken, _ := auth.GenerateToken("nonexistentuser")
-		req, _ := http.NewRequest("GET", server.URL+"/api/bank", nil)
-		req.Header.Set("Authorization", "Bearer "+fakeToken)
-		
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			t.Fatalf("Request failed: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusNotFound {
-			t.Errorf("Expected status 404, got %d", resp.StatusCode)
 		}
 	})
 

@@ -4,33 +4,23 @@ import DashboardHeader from './DashboardHeader';
 import InvestorList from './SidePanel/InvestorList/InvestorList';
 import SidePanelButton from './SidePanel/SidePanelButton';
 import SidePanel from './SidePanel/SidePanel';
-import type { User, Bank } from '../User';
-import { makeAuthenticatedRequest, getUsernameFromToken } from '../auth';
+import AssetList from './AssetList/AssetList';
+import type { Bank } from '../User';
+import { makeAuthenticatedRequest } from '../auth';
 
 interface DashboardProps {
   onLogout: () => void;
 }
 
 export default function Dashboard({ onLogout }: DashboardProps) {
-  const [user, setUser] = useState<User | null>(null);
   const [bank, setBank] = useState<Bank | null>(null);
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const mainContent = `Welcome to the dashboard, ${user?.username}!`;
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Get username from JWT and set user
-        const username = getUsernameFromToken();
-        if (!username) {
-          onLogout();
-          return;
-        }
-        setUser({ username });
-
         // Fetch bank data
         const bankResponse = await makeAuthenticatedRequest('/api/bank');
         if (!bankResponse.ok) {
@@ -48,12 +38,13 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     fetchData();
   }, [onLogout]);
 
-  if (loading || !user || !bank) {
+  if (loading || !bank) {
     return <div>Loading...</div>;
   }
 
   return (
-    <div className="dashboard-root">      <DashboardHeader
+    <div className="dashboard-root">
+      <DashboardHeader
         bankName={bank.bankName}
         claimedCapital={bank.claimedCapital}
         actualCapital={bank.actualCapital}
@@ -70,7 +61,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             ariaLabel="Open left panel"
             className={`dashboard-sidepanel-button--left`}
           />
-          {mainContent}
+          <AssetList assets={bank.assets} />
           <SidePanelButton
             iconType="cog"
             shouldAllowClose={isRightPanelOpen}
