@@ -128,10 +128,21 @@ func TestPerformanceHistoryEndpoint(t *testing.T) {
 		t.Fatalf("Expected 30 days of claimed history, got %d", len(historyResponse.ClaimedHistory))
 	}
 
-	// Since actual history is not pre-populated, we only expect what actually exists
-	// For a newly created bank, this should be 0
-	if len(historyResponse.ActualHistory) != 0 {
-		t.Fatalf("Expected 0 days of actual history for new bank, got %d", len(historyResponse.ActualHistory))
+	// Since actual history should contain the initial entry for a new bank, we expect 1 entry
+	// For a newly created bank, this should be 1 (the initial £1000 entry)
+	if len(historyResponse.ActualHistory) != 1 {
+		t.Fatalf("Expected 1 day of actual history for new bank, got %d", len(historyResponse.ActualHistory))
+	}
+
+	// Verify the initial actual history entry is correct
+	if len(historyResponse.ActualHistory) > 0 {
+		initialEntry := historyResponse.ActualHistory[0]
+		if initialEntry.Day != 0 {
+			t.Fatalf("Expected initial actual history entry to be for day 0, got day %d", initialEntry.Day)
+		}
+		if initialEntry.Value != 1000 {
+			t.Fatalf("Expected initial actual history entry to have value 1000, got %d", initialEntry.Value)
+		}
 	}
 
 	// Verify that all entries are properly ordered by day

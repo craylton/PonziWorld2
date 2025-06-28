@@ -41,7 +41,7 @@ type BankResponse struct {
 // PerformanceHistoryResponse represents the response structure for performance history
 type PerformanceHistoryResponse struct {
 	ClaimedHistory []HistoricalPerformanceResponse `json:"claimedHistory"`
-	ActualHistory  []HistoricalPerformanceResponse `json:"actualHistory,omitempty"`
+	ActualHistory  []HistoricalPerformanceResponse `json:"actualHistory"`
 }
 
 // HistoricalPerformanceResponse represents a single day's performance value
