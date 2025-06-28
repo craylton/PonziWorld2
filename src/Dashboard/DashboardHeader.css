@@ -72,7 +72,7 @@
   color: #ff6cdc;
 }
 
-.dashboard-header__capital--clickable:hover .dashboard-header__capital-icon {
+.dashboard-header__capital--clickable:hover .dashboard-header__chevron-icon {
   transform: translateX(2px);
 }
 
@@ -86,13 +86,13 @@
   box-shadow: 0 0 0 3px rgba(255, 108, 220, 0.4);
 }
 
-.dashboard-header__capital-icon {
+.dashboard-header__chevron-icon {
   transition: transform 0.2s ease;
   color: rgba(255, 255, 255, 0.6);
   flex-shrink: 0;
 }
 
-.dashboard-header__capital--clickable:hover .dashboard-header__capital-icon {
+.dashboard-header__capital--clickable:hover .dashboard-header__chevron-icon {
   color: #ff6cdc;
 }
 

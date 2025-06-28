@@ -2,6 +2,7 @@ import { useState } from 'react';
 import './DashboardHeader.css';
 import CapitalPopup from './CapitalPopup';
 import type { PerformanceHistory } from '../User';
+import ChevronIcon from './ChevronIcon';
 
 interface DashboardHeaderProps {
   bankName: string;
@@ -52,9 +53,7 @@ export default function DashboardHeader({ bankName, claimedCapital, actualCapita
             <span className="dashboard-header__capital-label">Claimed Capital</span>
             <span className="dashboard-header__capital-value">
               {formatCurrency(claimedCapital)}
-              <svg className="dashboard-header__capital-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 18l6-6-6-6"/>
-              </svg>
+              <ChevronIcon />
             </span>
           </button>
           <button 
@@ -65,9 +64,7 @@ export default function DashboardHeader({ bankName, claimedCapital, actualCapita
             <span className="dashboard-header__capital-label">Actual Capital</span>
             <span className="dashboard-header__capital-value">
               {formatCurrency(actualCapital)}
-              <svg className="dashboard-header__capital-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M9 18l6-6-6-6"/>
-              </svg>
+              <ChevronIcon />
             </span>
           </button>
         </div>
