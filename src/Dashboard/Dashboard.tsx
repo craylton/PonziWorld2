@@ -5,7 +5,7 @@ import InvestorList from './SidePanel/InvestorList/InvestorList';
 import SidePanelButton from './SidePanel/SidePanelButton';
 import SidePanel from './SidePanel/SidePanel';
 import AssetList from './AssetList/AssetList';
-import type { Bank } from '../User';
+import type { Bank, PerformanceHistory } from '../User';
 import { makeAuthenticatedRequest } from '../auth';
 
 interface DashboardProps {
@@ -14,9 +14,11 @@ interface DashboardProps {
 
 export default function Dashboard({ onLogout }: DashboardProps) {
   const [bank, setBank] = useState<Bank | null>(null);
+  const [performanceHistory, setPerformanceHistory] = useState<PerformanceHistory | null>(null);
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [bankLoading, setBankLoading] = useState(true);
+  const [historyLoading, setHistoryLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -29,16 +31,24 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         }
         const bankData: Bank = await bankResponse.json();
         setBank(bankData);
+        setBankLoading(false);
+
+        // Fetch performance history
+        const historyResponse = await makeAuthenticatedRequest(`/api/performanceHistory/ownbank/${bankData.id}`);
+        if (historyResponse.ok) {
+          const historyData: PerformanceHistory = await historyResponse.json();
+          setPerformanceHistory(historyData);
+        }
       } catch {
         onLogout();
       } finally {
-        setLoading(false);
+        setHistoryLoading(false);
       }
     };
     fetchData();
   }, [onLogout]);
 
-  if (loading || !bank) {
+  if (bankLoading || !bank) {
     return <div>Loading...</div>;
   }
 
@@ -48,6 +58,8 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         bankName={bank.bankName}
         claimedCapital={bank.claimedCapital}
         actualCapital={bank.actualCapital}
+        performanceHistory={performanceHistory}
+        historyLoading={historyLoading}
       />
       <div className="dashboard-layout">
         <SidePanel side="left" visible={isLeftPanelOpen}>

@@ -26,6 +26,10 @@ func EnsureAllIndexes() error {
 		return err
 	}
 	
+	if err := EnsurePerformanceHistoryIndexes(client); err != nil {
+		return err
+	}
+	
 	return nil
 }
 
@@ -67,5 +71,22 @@ func EnsureAssetIndexes(client *mongo.Client) error {
 	return ensureIndex(client, "assets", "assets_bankId_idx", mongo.IndexModel{
 		Keys:    bson.D{{Key: "bankId", Value: 1}},
 		Options: options.Index().SetName("assets_bankId_idx"),
+	})
+}
+
+func EnsurePerformanceHistoryIndexes(client *mongo.Client) error {
+	// Index for efficient queries by bankId, isClaimed, and day
+	err := ensureIndex(client, "historicalPerformance", "performance_bankId_isClaimed_day_idx", mongo.IndexModel{
+		Keys:    bson.D{{Key: "bankId", Value: 1}, {Key: "isClaimed", Value: 1}, {Key: "day", Value: 1}},
+		Options: options.Index().SetName("performance_bankId_isClaimed_day_idx"),
+	})
+	if err != nil {
+		return err
+	}
+
+	// Unique index to prevent duplicate entries for the same bank, day, and claimed status
+	return ensureIndex(client, "historicalPerformance", "performance_unique_idx", mongo.IndexModel{
+		Keys:    bson.D{{Key: "bankId", Value: 1}, {Key: "day", Value: 1}, {Key: "isClaimed", Value: 1}},
+		Options: options.Index().SetUnique(true).SetName("performance_unique_idx"),
 	})
 }

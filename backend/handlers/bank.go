@@ -80,6 +80,7 @@ func GetBankHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Create response
 	response := models.BankResponse{
+		ID:             bank.ID.Hex(),
 		BankName:       bank.BankName,
 		ClaimedCapital: bank.ClaimedCapital,
 		ActualCapital:  actualCapital,

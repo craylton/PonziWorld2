@@ -97,5 +97,14 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create initial asset"})
 		return
 	}
+
+	// Create initial performance history (30 days of dummy claimed data + today's actual data)
+	err = CreateInitialPerformanceHistory(client, ctx, bank.ID, 0, asset.Amount) // Using day 0 as current day
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create performance history"})
+		return
+	}
+
 	w.WriteHeader(http.StatusCreated)
 }
