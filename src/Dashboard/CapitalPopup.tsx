@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import './CapitalPopup.css';
-import type { PerformanceHistory } from '../User';
+import type { PerformanceHistory } from '../models/PerformanceHistory';
 
 interface CapitalPopupProps {
   isOpen: boolean;

@@ -132,14 +132,14 @@ func TestLoginEndpoint(t *testing.T) {
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
-	// First create a user to test login with
+	// First create a player to test login with
 	createUserData := map[string]string{
 		"username": "logintest_" + string(rune(time.Now().Unix())),
 		"password": "testpassword123",
 		"bankName": "Test Bank",
 	}
 	jsonData, _ := json.Marshal(createUserData)
-	http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
+	http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
 
 	// Cleanup after all tests
 	t.Cleanup(func() {

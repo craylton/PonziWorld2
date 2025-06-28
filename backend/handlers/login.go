@@ -33,10 +33,10 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	client, ctx, cancel := db.ConnectDB()
 	defer cancel()
 	defer client.Disconnect(ctx)
-	collection := client.Database("ponziworld").Collection("users")
+	collection := client.Database("ponziworld").Collection("players")
 
-	var user models.User
-	err := collection.FindOne(ctx, bson.M{"username": req.Username}).Decode(&user)
+	var player models.Player
+	err := collection.FindOne(ctx, bson.M{"username": req.Username}).Decode(&player)
 	if err == mongo.ErrNoDocuments {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid username or password"})
@@ -48,7 +48,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Verify password
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(player.Password), []byte(req.Password))
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid username or password"})
@@ -56,7 +56,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate JWT token
-	token, err := auth.GenerateToken(user.Username)
+	token, err := auth.GenerateToken(player.Username)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to generate token"})

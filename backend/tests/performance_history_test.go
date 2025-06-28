@@ -28,7 +28,7 @@ func TestPerformanceHistoryEndpoint(t *testing.T) {
 		CleanupTestData(testUsername, testBankName)
 	})
 
-	// Create user and bank
+	// Create player and bank
 	createUserData := map[string]string{
 		"username": testUsername,
 		"password": "testpassword123",
@@ -36,14 +36,14 @@ func TestPerformanceHistoryEndpoint(t *testing.T) {
 	}
 	jsonData, _ := json.Marshal(createUserData)
 
-	resp, err := http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		t.Fatalf("Failed to create user: %v", err)
+		t.Fatalf("Failed to create player: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
-		t.Fatalf("Expected status 201 for user creation, got %d", resp.StatusCode)
+		t.Fatalf("Expected status 201 for player creation, got %d", resp.StatusCode)
 	}
 
 	// Login to get JWT token
@@ -217,7 +217,7 @@ func TestPerformanceHistoryInvalidBankID(t *testing.T) {
 		CleanupTestData(testUsername, testBankName)
 	})
 
-	// Create user and get token
+	// Create player and get token
 	createUserData := map[string]string{
 		"username": testUsername,
 		"password": "testpassword123",
@@ -225,9 +225,9 @@ func TestPerformanceHistoryInvalidBankID(t *testing.T) {
 	}
 	jsonData, _ := json.Marshal(createUserData)
 
-	resp, err := http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		t.Fatalf("Failed to create user: %v", err)
+		t.Fatalf("Failed to create player: %v", err)
 	}
 	defer resp.Body.Close()
 
@@ -266,119 +266,119 @@ func TestPerformanceHistoryInvalidBankID(t *testing.T) {
 	}
 }
 
-func TestPerformanceHistoryOtherUsersBank(t *testing.T) {
+func TestPerformanceHistoryOtherPlayersBank(t *testing.T) {
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
 	timestamp := time.Now().Unix()
-	user1Username := fmt.Sprintf("perfuser1_%d", timestamp)
-	user1BankName := "User 1 Bank"
-	user2Username := fmt.Sprintf("perfuser2_%d", timestamp)
-	user2BankName := "User 2 Bank"
+	player1Username := fmt.Sprintf("perfplayer1_%d", timestamp)
+	player1BankName := "Player 1 Bank"
+	player2Username := fmt.Sprintf("perfplayer2_%d", timestamp)
+	player2BankName := "Player 2 Bank"
 
 	// Setup cleanup
 	t.Cleanup(func() {
 		CleanupMultipleTestData(map[string]string{
-			user1Username: user1BankName,
-			user2Username: user2BankName,
+			player1Username: player1BankName,
+			player2Username: player2BankName,
 		})
 	})
 
-	// Create first user and bank
-	createUser1Data := map[string]string{
-		"username": user1Username,
+	// Create first player and bank
+	createPlayer1Data := map[string]string{
+		"username": player1Username,
 		"password": "testpassword123",
-		"bankName": user1BankName,
+		"bankName": player1BankName,
 	}
-	jsonData, _ := json.Marshal(createUser1Data)
+	jsonData, _ := json.Marshal(createPlayer1Data)
 
-	resp, err := http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		t.Fatalf("Failed to create user 1: %v", err)
+		t.Fatalf("Failed to create player 1: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
-		t.Fatalf("Expected status 201 for user 1 creation, got %d", resp.StatusCode)
+		t.Fatalf("Expected status 201 for player 1 creation, got %d", resp.StatusCode)
 	}
 
-	// Create second user and bank
-	createUser2Data := map[string]string{
-		"username": user2Username,
+	// Create second player and bank
+	createPlayer2Data := map[string]string{
+		"username": player2Username,
 		"password": "testpassword123",
-		"bankName": user2BankName,
+		"bankName": player2BankName,
 	}
-	jsonData, _ = json.Marshal(createUser2Data)
+	jsonData, _ = json.Marshal(createPlayer2Data)
 
-	resp, err = http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
+	resp, err = http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		t.Fatalf("Failed to create user 2: %v", err)
+		t.Fatalf("Failed to create player 2: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
-		t.Fatalf("Expected status 201 for user 2 creation, got %d", resp.StatusCode)
+		t.Fatalf("Expected status 201 for player 2 creation, got %d", resp.StatusCode)
 	}
 
-	// Login as user 1 to get token
+	// Login as player 1 to get token
 	loginData := map[string]string{
-		"username": user1Username,
+		"username": player1Username,
 		"password": "testpassword123",
 	}
 	jsonData, _ = json.Marshal(loginData)
 
 	resp, err = http.Post(server.URL+"/api/login", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		t.Fatalf("Failed to login user 1: %v", err)
+		t.Fatalf("Failed to login player 1: %v", err)
 	}
 	defer resp.Body.Close()
 
 	var loginResponse map[string]string
 	json.NewDecoder(resp.Body).Decode(&loginResponse)
-	user1Token := loginResponse["token"]
+	player1Token := loginResponse["token"]
 
-	// Login as user 2 to get their bank ID
+	// Login as player 2 to get their bank ID
 	loginData = map[string]string{
-		"username": user2Username,
+		"username": player2Username,
 		"password": "testpassword123",
 	}
 	jsonData, _ = json.Marshal(loginData)
 
 	resp, err = http.Post(server.URL+"/api/login", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		t.Fatalf("Failed to login user 2: %v", err)
+		t.Fatalf("Failed to login player 2: %v", err)
 	}
 	defer resp.Body.Close()
 
 	json.NewDecoder(resp.Body).Decode(&loginResponse)
-	user2Token := loginResponse["token"]
+	player2Token := loginResponse["token"]
 
-	// Get user 2's bank details to get bank ID
+	// Get player 2's bank details to get bank ID
 	req, err := http.NewRequest("GET", server.URL+"/api/bank", nil)
 	if err != nil {
 		t.Fatalf("Failed to create bank request: %v", err)
 	}
-	req.Header.Set("Authorization", "Bearer "+user2Token)
+	req.Header.Set("Authorization", "Bearer "+player2Token)
 
 	client := &http.Client{}
 	resp, err = client.Do(req)
 	if err != nil {
-		t.Fatalf("Failed to get user 2's bank: %v", err)
+		t.Fatalf("Failed to get player 2's bank: %v", err)
 	}
 	defer resp.Body.Close()
 
 	var bankResponse models.BankResponse
 	json.NewDecoder(resp.Body).Decode(&bankResponse)
-	user2BankID := bankResponse.ID
+	player2BankID := bankResponse.ID
 
-	// Now, as user 1, try to access user 2's bank performance history
-	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/"+user2BankID, nil)
+	// Now, as player 1, try to access player 2's bank performance history
+	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/"+player2BankID, nil)
 	if err != nil {
 		t.Fatalf("Failed to create performance history request: %v", err)
 	}
-	req.Header.Set("Authorization", "Bearer "+user1Token)
+	req.Header.Set("Authorization", "Bearer "+player1Token)
 
 	resp, err = client.Do(req)
 	if err != nil {
@@ -386,9 +386,9 @@ func TestPerformanceHistoryOtherUsersBank(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	// Should now return 401 Unauthorized since user 1 doesn't own user 2's bank
+	// Should now return 401 Unauthorized since player 1 doesn't own player 2's bank
 	if resp.StatusCode != http.StatusUnauthorized {
-		t.Fatalf("Expected status 401 Unauthorized for other user's bank, got %d", resp.StatusCode)
+		t.Fatalf("Expected status 401 Unauthorized for other player's bank, got %d", resp.StatusCode)
 	}
 }
 
@@ -407,7 +407,7 @@ func TestPerformanceHistoryDataPersistence(t *testing.T) {
 		CleanupTestData(testUsername, testBankName)
 	})
 
-	// Create user and bank
+	// Create player and bank
 	createUserData := map[string]string{
 		"username": testUsername,
 		"password": "testpassword123",
@@ -415,9 +415,9 @@ func TestPerformanceHistoryDataPersistence(t *testing.T) {
 	}
 	jsonData, _ := json.Marshal(createUserData)
 
-	resp, err := http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		t.Fatalf("Failed to create user: %v", err)
+		t.Fatalf("Failed to create player: %v", err)
 	}
 	defer resp.Body.Close()
 

@@ -55,11 +55,11 @@ To start the React UI locally:
 ## API Endpoints
 
 ### Authentication
-- `POST /api/user` - Create a new user and bank
+- `POST /api/newPlayer` - Create a new player and bank
 - `POST /api/login` - Login and get JWT token
 
 ### Bank Management
-- `GET /api/bank` - Get user's bank details and assets
+- `GET /api/bank` - Get player's bank details and assets
 - `GET /api/performanceHistory/ownbank/{bankId}` - Get 30 days of performance history for a bank you own
 
 ### Notes

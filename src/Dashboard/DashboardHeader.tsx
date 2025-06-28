@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import './DashboardHeader.css';
 import CapitalPopup from './CapitalPopup';
-import type { PerformanceHistory } from '../User';
 import ChevronIcon from './ChevronIcon';
+import type { PerformanceHistory } from '../models/PerformanceHistory';
 
 interface DashboardHeaderProps {
   bankName: string;

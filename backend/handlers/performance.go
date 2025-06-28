@@ -45,13 +45,13 @@ func GetPerformanceHistoryHandler(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 	defer client.Disconnect(ctx)
 
-	// First, find the user to get their ID
-	usersCollection := client.Database("ponziworld").Collection("users")
-	var user models.User
-	err = usersCollection.FindOne(ctx, bson.M{"username": username}).Decode(&user)
+	// First, find the player to get their ID
+	playersCollection := client.Database("ponziworld").Collection("players")
+	var player models.Player
+	err = playersCollection.FindOne(ctx, bson.M{"username": username}).Decode(&player)
 	if err == mongo.ErrNoDocuments {
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "User not found"})
+		json.NewEncoder(w).Encode(map[string]string{"error": "Player not found"})
 		return
 	} else if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -73,8 +73,8 @@ func GetPerformanceHistoryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the user owns the bank - reject if they don't
-	if bank.UserID != user.ID {
+	// Check if the player owns the bank - reject if they don't
+	if bank.PlayerId != player.Id {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized: You can only view your own bank's performance history"})
 		return

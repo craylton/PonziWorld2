@@ -1,8 +1,5 @@
 
-
 Next up:
-Need to rename/refactor the models in frontend and backend
-Need to rename user into player
 Create some investment instruments
     HYSA
         very safe but low returns, something like 5%
@@ -33,15 +30,19 @@ Separate 'New Player' and 'New Bank' pages
 HIGH LEVEL THINGS:
 
 Design the DB
-    A user can log on at any time uring the day and make changes to their investments
+    A player can log on at any time during the day and make changes to their investments
     The following day (not immediately), those investments will be applied to other players
     So we need a kind of holding/staging part of the DB, which remembers the changes that need to be made, but doesn't actually make the changes yet
 
 Make a dev-only button that manually advances to the next day
     At some point I need to think about what 'dev-only' actually means
 
+Make sure /bank caters to multiple banks per player
+    Currently it does a FindOne to get the only bank for this player
+    this will break later on
+
 After everything above is in place, there's nothing stopping me from implementing the actual game
-    As in, allowing a user to log in, invest in some investments, advance to the next day, make more changes etc
+    As in, allowing a player to log in, invest in some investments, advance to the next day, make more changes etc
     Allow adding investments, modifying existing investments, removing investments
     Also this is where I'd need to create fake banks that you can invest in
     Also fake other players who can invest in your bank

@@ -13,8 +13,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// CreateUserHandler handles POST /api/user
-func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
+// CreateNewPlayerHandler handles POST /api/newPlayer
+func CreateNewPlayerHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var req struct {
 		Username string `json:"username"`
@@ -49,14 +49,14 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 	defer client.Disconnect(ctx)
 	
-	// Create the user first
-	usersCollection := client.Database("ponziworld").Collection("users")
-	user := models.User{
-		ID:       primitive.NewObjectID(),
+	// Create the player first
+	playersCollection := client.Database("ponziworld").Collection("players")
+	player := models.Player{
+		Id:       primitive.NewObjectID(),
 		Username: req.Username,
 		Password: string(hashedPassword),
 	}
-	_, err = usersCollection.InsertOne(ctx, user)
+	_, err = playersCollection.InsertOne(ctx, player)
 	if err != nil {
 		if mongo.IsDuplicateKeyError(err) {
 			w.WriteHeader(http.StatusBadRequest)
@@ -64,15 +64,15 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create user"})
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create player"})
 		return
 	}
 
-	// Create the bank for this user
+	// Create the bank for this player
 	banksCollection := client.Database("ponziworld").Collection("banks")
 	bank := models.Bank{
-		ID:             primitive.NewObjectID(),
-		UserID:         user.ID,
+		Id:             primitive.NewObjectID(),
+		PlayerId:         player.Id,
 		BankName:       req.BankName,
 		ClaimedCapital: 1000,
 	}
@@ -87,7 +87,7 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	assetsCollection := client.Database("ponziworld").Collection("assets")
 	asset := models.Asset{
 		ID:        primitive.NewObjectID(),
-		BankID:    bank.ID,
+		BankID:    bank.Id,
 		Amount:    1000,
 		AssetType: "Cash",
 	}
@@ -99,7 +99,7 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create initial performance history (30 days of dummy claimed data + today's actual data)
-	err = CreateInitialPerformanceHistory(client, ctx, bank.ID, 0, asset.Amount) // Using day 0 as current day
+	err = CreateInitialPerformanceHistory(client, ctx, bank.Id, 0, asset.Amount) // Using day 0 as current day
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create performance history"})

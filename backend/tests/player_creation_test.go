@@ -9,10 +9,16 @@ import (
 	"testing"
 	"time"
 
+	"ponziworld/backend/db"
 	"ponziworld/backend/routes"
 )
 
-func TestUserCreation(t *testing.T) {
+func TestPlayerCreation(t *testing.T) {
+	// Ensure database indexes are created before running tests
+	if err := db.EnsureAllIndexes(); err != nil {
+		t.Fatalf("Failed to ensure database indexes: %v", err)
+	}
+	
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux)
 	server := httptest.NewServer(mux)
@@ -21,7 +27,7 @@ func TestUserCreation(t *testing.T) {
 	timestamp := time.Now().Unix()
 	testUsername := fmt.Sprintf("createtest_%d", timestamp)
 
-	t.Run("Valid user creation", func(t *testing.T) {
+	t.Run("Valid player creation", func(t *testing.T) {
 		createUserData := map[string]string{
 			"username": testUsername,
 			"password": "testpassword123",
@@ -29,9 +35,9 @@ func TestUserCreation(t *testing.T) {
 		}
 		jsonData, _ := json.Marshal(createUserData)
 
-		resp, err := http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
+		resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
 		if err != nil {
-			t.Fatalf("Failed to create user: %v", err)
+			t.Fatalf("Failed to create player: %v", err)
 		}
 		defer resp.Body.Close()
 
@@ -46,7 +52,7 @@ func TestUserCreation(t *testing.T) {
 	})
 
 	t.Run("Duplicate username", func(t *testing.T) {
-		// Try to create the same user again
+		// Try to create the same player again
 		createUserData := map[string]string{
 			"username": testUsername,
 			"password": "testpassword123",
@@ -54,9 +60,9 @@ func TestUserCreation(t *testing.T) {
 		}
 		jsonData, _ := json.Marshal(createUserData)
 
-		resp, err := http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
+		resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
 		if err != nil {
-			t.Fatalf("Failed to attempt duplicate user creation: %v", err)
+			t.Fatalf("Failed to attempt duplicate player creation: %v", err)
 		}
 		defer resp.Body.Close()
 
@@ -72,9 +78,9 @@ func TestUserCreation(t *testing.T) {
 		}
 		jsonData, _ := json.Marshal(createUserData)
 
-		resp, err := http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
+		resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
 		if err != nil {
-			t.Fatalf("Failed to attempt user creation: %v", err)
+			t.Fatalf("Failed to attempt player creation: %v", err)
 		}
 		defer resp.Body.Close()
 
@@ -90,9 +96,9 @@ func TestUserCreation(t *testing.T) {
 		}
 		jsonData, _ := json.Marshal(createUserData)
 
-		resp, err := http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
+		resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
 		if err != nil {
-			t.Fatalf("Failed to attempt user creation: %v", err)
+			t.Fatalf("Failed to attempt player creation: %v", err)
 		}
 		defer resp.Body.Close()
 
@@ -108,9 +114,9 @@ func TestUserCreation(t *testing.T) {
 		}
 		jsonData, _ := json.Marshal(createUserData)
 
-		resp, err := http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
+		resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
 		if err != nil {
-			t.Fatalf("Failed to attempt user creation: %v", err)
+			t.Fatalf("Failed to attempt player creation: %v", err)
 		}
 		defer resp.Body.Close()
 
@@ -127,9 +133,9 @@ func TestUserCreation(t *testing.T) {
 		}
 		jsonData, _ := json.Marshal(createUserData)
 
-		resp, err := http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
+		resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
 		if err != nil {
-			t.Fatalf("Failed to attempt user creation: %v", err)
+			t.Fatalf("Failed to attempt player creation: %v", err)
 		}
 		defer resp.Body.Close()
 
@@ -146,9 +152,9 @@ func TestUserCreation(t *testing.T) {
 		}
 		jsonData, _ := json.Marshal(createUserData)
 
-		resp, err := http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
+		resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
 		if err != nil {
-			t.Fatalf("Failed to attempt user creation: %v", err)
+			t.Fatalf("Failed to attempt player creation: %v", err)
 		}
 		defer resp.Body.Close()
 
@@ -165,9 +171,9 @@ func TestUserCreation(t *testing.T) {
 		}
 		jsonData, _ := json.Marshal(createUserData)
 
-		resp, err := http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
+		resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
 		if err != nil {
-			t.Fatalf("Failed to attempt user creation: %v", err)
+			t.Fatalf("Failed to attempt player creation: %v", err)
 		}
 		defer resp.Body.Close()
 
@@ -177,9 +183,9 @@ func TestUserCreation(t *testing.T) {
 	})
 
 	t.Run("Invalid JSON", func(t *testing.T) {
-		resp, err := http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer([]byte("{invalid json")))
+		resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer([]byte("{invalid json")))
 		if err != nil {
-			t.Fatalf("Failed to attempt user creation: %v", err)
+			t.Fatalf("Failed to attempt player creation: %v", err)
 		}
 		defer resp.Body.Close()
 

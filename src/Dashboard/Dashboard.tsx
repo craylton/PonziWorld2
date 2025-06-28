@@ -5,8 +5,9 @@ import InvestorList from './SidePanel/InvestorList/InvestorList';
 import SidePanelButton from './SidePanel/SidePanelButton';
 import SidePanel from './SidePanel/SidePanel';
 import AssetList from './AssetList/AssetList';
-import type { Bank, PerformanceHistory } from '../User';
 import { makeAuthenticatedRequest } from '../auth';
+import type { Bank } from '../models/Bank';
+import type { PerformanceHistory } from '../models/PerformanceHistory';
 
 interface DashboardProps {
   onLogout: () => void;

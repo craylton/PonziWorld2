@@ -17,25 +17,25 @@ func CleanupTestData(username, bankName string) {
 	defer cancel()
 	defer client.Disconnect(ctx)
 
-	// Delete user
-	usersCollection := client.Database("ponziworld").Collection("users")
-	usersCollection.DeleteOne(ctx, bson.M{"username": username})
+	// Delete player
+	playersCollection := client.Database("ponziworld").Collection("players")
+	playersCollection.DeleteOne(ctx, bson.M{"username": username})
 
 	// Delete bank and associated assets
 	cleanupBankAndAssets(ctx, client, bankName)
 }
 
-// CleanupMultipleTestData removes multiple test users and their data
-func CleanupMultipleTestData(usersAndBanks map[string]string) {
+// CleanupMultipleTestData removes multiple test players and their data
+func CleanupMultipleTestData(playersAndBanks map[string]string) {
 	client, ctx, cancel := db.ConnectDB()
 	defer cancel()
 	defer client.Disconnect(ctx)
 
-	usersCollection := client.Database("ponziworld").Collection("users")
+	playersCollection := client.Database("ponziworld").Collection("players")
 
-	for username, bankName := range usersAndBanks {
-		// Delete user
-		usersCollection.DeleteOne(ctx, bson.M{"username": username})
+	for username, bankName := range playersAndBanks {
+		// Delete player
+		playersCollection.DeleteOne(ctx, bson.M{"username": username})
 		
 		// Delete bank and associated assets
 		cleanupBankAndAssets(ctx, client, bankName)
@@ -55,9 +55,9 @@ func cleanupBankAndAssets(ctx context.Context, client *mongo.Client, bankName st
 			var bank models.Bank
 			cursor.Decode(&bank)
 			// Delete associated assets
-			assetsCollection.DeleteMany(ctx, bson.M{"bankId": bank.ID})
+			assetsCollection.DeleteMany(ctx, bson.M{"bankId": bank.Id})
 			// Delete associated performance history
-			historyCollection.DeleteMany(ctx, bson.M{"bankId": bank.ID})
+			historyCollection.DeleteMany(ctx, bson.M{"bankId": bank.Id})
 		}
 		cursor.Close(ctx)
 	}

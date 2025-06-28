@@ -13,7 +13,7 @@ import (
 	"ponziworld/backend/routes"
 )
 
-// TestFullUserWorkflow tests the complete end-to-end user workflow
+// TestFullUserWorkflow tests the complete end-to-end player workflow
 func TestFullUserWorkflow(t *testing.T) {
 	// Setup test server
 	mux := http.NewServeMux()
@@ -29,7 +29,7 @@ func TestFullUserWorkflow(t *testing.T) {
 	testPassword := "testpassword123"
 	var authToken string
 
-	t.Run("Create User", func(t *testing.T) {
+	t.Run("Create Player", func(t *testing.T) {
 		// arrange
 		createUserData := map[string]string{
 			"username": testUsername,
@@ -38,15 +38,15 @@ func TestFullUserWorkflow(t *testing.T) {
 		}
 		jsonData, err := json.Marshal(createUserData)
 		if err != nil {
-			t.Fatalf("Failed to marshal create user data: %v", err)
+			t.Fatalf("Failed to marshal create player data: %v", err)
 		}
 
 		// act
-		resp, err := http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
+		resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
 
 		// assert
 		if err != nil {
-			t.Fatalf("Failed to create user: %v", err)
+			t.Fatalf("Failed to create player: %v", err)
 		}
 		defer resp.Body.Close()
 
@@ -55,8 +55,8 @@ func TestFullUserWorkflow(t *testing.T) {
 		}
 	})
 	
-	t.Run("Login User", func(t *testing.T) {
-		// Test user login
+	t.Run("Login Player", func(t *testing.T) {
+		// Test player login
 		loginData := map[string]string{
 			"username": testUsername,
 			"password": testPassword,
@@ -65,7 +65,7 @@ func TestFullUserWorkflow(t *testing.T) {
 
 		resp, err := http.Post(server.URL+"/api/login", "application/json", bytes.NewBuffer(jsonData))
 		if err != nil {
-			t.Fatalf("Failed to login user: %v", err)
+			t.Fatalf("Failed to login player: %v", err)
 		}
 		defer resp.Body.Close()
 
@@ -86,9 +86,9 @@ func TestFullUserWorkflow(t *testing.T) {
 		authToken = token
 	})
 	
-	t.Run("Get User Details", func(t *testing.T) {
-			// GET /api/user is removed; expect Method Not Allowed
-			req, err := http.NewRequest("GET", server.URL+"/api/user", nil)
+	t.Run("Get Player Details", func(t *testing.T) {
+			// GET /api/newPlayer is removed; expect Method Not Allowed
+			req, err := http.NewRequest("GET", server.URL+"/api/newPlayer", nil)
 			if err != nil {
 				t.Fatalf("Failed to create request: %v", err)
 			}
@@ -96,11 +96,11 @@ func TestFullUserWorkflow(t *testing.T) {
 			client := &http.Client{}
 			resp, err := client.Do(req)
 			if err != nil {
-				t.Fatalf("Failed to fetch user after login: %v", err)
+				t.Fatalf("Failed to fetch player after login: %v", err)
 			}
 			defer resp.Body.Close()
 			if resp.StatusCode != http.StatusMethodNotAllowed {
-				t.Errorf("Expected status %d from /api/user, got %d", http.StatusMethodNotAllowed, resp.StatusCode)
+				t.Errorf("Expected status %d from /api/newPlayer, got %d", http.StatusMethodNotAllowed, resp.StatusCode)
 			}
         	// Test /api/bank endpoint
 		req, _ = http.NewRequest("GET", server.URL+"/api/bank", nil)
@@ -143,7 +143,7 @@ func TestFullUserWorkflow(t *testing.T) {
 		}
 	})
 
-	// Cleanup: Remove test user, bank, and assets from database
+	// Cleanup: Remove test player, bank, and assets from database
 	t.Cleanup(func() {
 		CleanupTestData(testUsername, testBankName)
 	})

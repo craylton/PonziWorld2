@@ -23,22 +23,22 @@ func TestBankEndpoint(t *testing.T) {
 	testUsername := fmt.Sprintf("banktest_%d", timestamp)
 	testBankName := "Test Bank API"
 
-	// Create user
-	createUserData := map[string]string{
+	// Create player
+	createPlayerData := map[string]string{
 		"username": testUsername,
 		"password": "testpassword123",
 		"bankName": testBankName,
 	}
-	jsonData, _ := json.Marshal(createUserData)
+	jsonData, _ := json.Marshal(createPlayerData)
 
-	resp, err := http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		t.Fatalf("Failed to create user: %v", err)
+		t.Fatalf("Failed to create player: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
-		t.Fatalf("Expected status 201 for user creation, got %d", resp.StatusCode)
+		t.Fatalf("Expected status 201 for player creation, got %d", resp.StatusCode)
 	}
 
 	// Login to get JWT token
@@ -50,7 +50,7 @@ func TestBankEndpoint(t *testing.T) {
 
 	resp, err = http.Post(server.URL+"/api/login", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
-		t.Fatalf("Failed to login user: %v", err)
+		t.Fatalf("Failed to login player: %v", err)
 	}
 	defer resp.Body.Close()
 

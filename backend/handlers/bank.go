@@ -27,13 +27,13 @@ func GetBankHandler(w http.ResponseWriter, r *http.Request) {
 	defer cancel()
 	defer client.Disconnect(ctx)
 
-	// First, find the user to get their ID
-	usersCollection := client.Database("ponziworld").Collection("users")
-	var user models.User
-	err := usersCollection.FindOne(ctx, bson.M{"username": username}).Decode(&user)
+	// First, find the player to get their ID
+	playersCollection := client.Database("ponziworld").Collection("players")
+	var player models.Player
+	err := playersCollection.FindOne(ctx, bson.M{"username": username}).Decode(&player)
 	if err == mongo.ErrNoDocuments {
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "User not found"})
+		json.NewEncoder(w).Encode(map[string]string{"error": "Player not found"})
 		return
 	} else if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -41,10 +41,10 @@ func GetBankHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Find the bank for this user
+	// Find the bank for this player
 	banksCollection := client.Database("ponziworld").Collection("banks")
 	var bank models.Bank
-	err = banksCollection.FindOne(ctx, bson.M{"userId": user.ID}).Decode(&bank)
+	err = banksCollection.FindOne(ctx, bson.M{"playerId": player.Id}).Decode(&bank)
 	if err == mongo.ErrNoDocuments {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Bank not found"})
@@ -57,7 +57,7 @@ func GetBankHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Find all assets for this bank
 	assetsCollection := client.Database("ponziworld").Collection("assets")
-	cursor, err := assetsCollection.Find(ctx, bson.M{"bankId": bank.ID})
+	cursor, err := assetsCollection.Find(ctx, bson.M{"bankId": bank.Id})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
@@ -80,7 +80,7 @@ func GetBankHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Create response
 	response := models.BankResponse{
-		ID:             bank.ID.Hex(),
+		ID:             bank.Id.Hex(),
 		BankName:       bank.BankName,
 		ClaimedCapital: bank.ClaimedCapital,
 		ActualCapital:  actualCapital,
