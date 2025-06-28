@@ -19,5 +19,5 @@ export interface PerformanceHistoryEntry {
 
 export interface PerformanceHistory {
   claimedHistory: PerformanceHistoryEntry[];
-  actualHistory?: PerformanceHistoryEntry[];
+  actualHistory: PerformanceHistoryEntry[];
 }

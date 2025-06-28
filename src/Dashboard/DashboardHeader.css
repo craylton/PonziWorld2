@@ -96,6 +96,29 @@
   color: #ff6cdc;
 }
 
+/* Disabled state for when history is loading */
+.dashboard-header__capital--loading {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.dashboard-header__capital--loading:hover {
+  background-color: rgba(148, 153, 243, 0.05);
+  border-color: rgba(148, 153, 243, 0.2);
+  transform: none;
+  box-shadow: none;
+}
+
+.dashboard-header__capital--loading .dashboard-header__capital-value {
+  color: #9499f3;
+}
+
+.dashboard-header__capital--loading .dashboard-header__chevron-icon {
+  color: rgba(255, 255, 255, 0.6);
+  transform: none;
+}
+
 @media (max-width: 900px) {
   .dashboard-header {
     padding: 0.5rem 0rem 0.7rem 0rem;
