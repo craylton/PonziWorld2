@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -13,7 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-// GetPerformanceHistoryHandler handles GET /api/performanceHistory/ownbank/{bankID}
+// GetPerformanceHistoryHandler handles GET /api/performanceHistory/ownbank/{bankId}
 func GetPerformanceHistoryHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -26,14 +27,14 @@ func GetPerformanceHistoryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Extract bank ID from URL path parameter
-	bankIDStr := r.PathValue("bankID")
-	if bankIDStr == "" {
+	bankIdStr := r.PathValue("bankId")
+	if bankIdStr == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Bank ID required"})
 		return
 	}
 
-	bankID, err := primitive.ObjectIDFromHex(bankIDStr)
+	bankId, err := primitive.ObjectIDFromHex(bankIdStr)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid bank ID"})
@@ -61,7 +62,7 @@ func GetPerformanceHistoryHandler(w http.ResponseWriter, r *http.Request) {
 	// Check if the bank exists and get bank details
 	banksCollection := client.Database("ponziworld").Collection("banks")
 	var bank models.Bank
-	err = banksCollection.FindOne(ctx, bson.M{"_id": bankID}).Decode(&bank)
+	err = banksCollection.FindOne(ctx, bson.M{"_id": bankId}).Decode(&bank)
 	if err == mongo.ErrNoDocuments {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Bank not found"})
@@ -81,10 +82,10 @@ func GetPerformanceHistoryHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get the current day (for now, we'll use 0 as the current day - this can be made dynamic later)
 	currentDay := 0
-	startDay := currentDay - 29 // Get past 30 days (including today)
+	startDay := currentDay - 30 // Get past 30 days (including today)
 
 	// Get performance history
-	claimedHistory, actualHistory, err := getPerformanceHistory(bankID, startDay, currentDay)
+	claimedHistory, actualHistory, err := getPerformanceHistory(client, ctx, bankId, startDay, currentDay)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
@@ -100,17 +101,16 @@ func GetPerformanceHistoryHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // getPerformanceHistory retrieves existing performance history and ensures claimed history exists for 30 days
-func getPerformanceHistory(bankID primitive.ObjectID, startDay, endDay int) ([]models.HistoricalPerformance, []models.HistoricalPerformance, error) {
-	client, ctx, cancel := db.ConnectDB()
-	defer cancel()
-	defer client.Disconnect(ctx)
-
+func getPerformanceHistory(client *mongo.Client, ctx context.Context, bankId primitive.ObjectID, startDay, endDay int) (
+	[]models.HistoricalPerformance,
+	[]models.HistoricalPerformance, error,
+) {
 	historyCollection := client.Database("ponziworld").Collection("historicalPerformance")
 
 	// Get all existing history for this bank in the date range
 	filter := bson.M{
-		"bankId": bankID,
-		"day":    bson.M{"$gte": startDay, "$lte": endDay},
+		"bankId": bankId,
+		"day":    bson.M{"$gt": startDay, "$lte": endDay},
 	}
 
 	cursor, err := historyCollection.Find(ctx, filter, options.Find().SetSort(bson.M{"day": 1}))
@@ -137,7 +137,7 @@ func getPerformanceHistory(bankID primitive.ObjectID, startDay, endDay int) ([]m
 	}
 
 	// Ensure we have claimed history for all 30 days - create missing entries
-	claimedHistory, err = ensureClaimedHistory(bankID, startDay, endDay, claimedHistory)
+	claimedHistory, err = ensureClaimedHistory(client, ctx, bankId, startDay, endDay, claimedHistory)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -146,7 +146,14 @@ func getPerformanceHistory(bankID primitive.ObjectID, startDay, endDay int) ([]m
 }
 
 // ensureClaimedHistory creates missing claimed history entries if needed
-func ensureClaimedHistory(bankID primitive.ObjectID, startDay, endDay int, existingClaimed []models.HistoricalPerformance) ([]models.HistoricalPerformance, error) {
+func ensureClaimedHistory(
+	client *mongo.Client,
+	ctx context.Context,
+	bankId primitive.ObjectID,
+	startDay,
+	endDay int,
+	existingClaimed []models.HistoricalPerformance,
+) ([]models.HistoricalPerformance, error) {
 	// Create map of existing claimed days for quick lookup
 	existingClaimedDays := make(map[int]models.HistoricalPerformance)
 	for _, entry := range existingClaimed {
@@ -154,10 +161,10 @@ func ensureClaimedHistory(bankID primitive.ObjectID, startDay, endDay int, exist
 	}
 
 	var finalClaimedHistory []models.HistoricalPerformance
-	var newEntries []interface{}
+	var newEntries []any
 
 	// Ensure we have claimed history for all days in range
-	for day := startDay; day <= endDay; day++ {
+	for day := startDay + 1; day <= endDay; day++ {
 		if claimedEntry, exists := existingClaimedDays[day]; exists {
 			finalClaimedHistory = append(finalClaimedHistory, claimedEntry)
 		} else {
@@ -165,7 +172,7 @@ func ensureClaimedHistory(bankID primitive.ObjectID, startDay, endDay int, exist
 			newClaimedEntry := models.HistoricalPerformance{
 				ID:        primitive.NewObjectID(),
 				Day:       day,
-				BankID:    bankID,
+				BankID:    bankId,
 				Value:     1000, // Dummy value
 				IsClaimed: true,
 			}
@@ -176,10 +183,6 @@ func ensureClaimedHistory(bankID primitive.ObjectID, startDay, endDay int, exist
 
 	// Insert new claimed entries if any
 	if len(newEntries) > 0 {
-		client, ctx, cancel := db.ConnectDB()
-		defer cancel()
-		defer client.Disconnect(ctx)
-
 		historyCollection := client.Database("ponziworld").Collection("historicalPerformance")
 		_, err := historyCollection.InsertMany(ctx, newEntries)
 		if err != nil {
@@ -190,11 +193,11 @@ func ensureClaimedHistory(bankID primitive.ObjectID, startDay, endDay int, exist
 	return finalClaimedHistory, nil
 }
 
-// convertToResponse converts HistoricalPerformance to DayValue response format
-func convertToResponse(history []models.HistoricalPerformance) []models.DayValue {
-	result := make([]models.DayValue, len(history))
+// convertToResponse converts HistoricalPerformance to useful response format
+func convertToResponse(history []models.HistoricalPerformance) []models.HistoricalPerformanceResponse {
+	result := make([]models.HistoricalPerformanceResponse, len(history))
 	for i, entry := range history {
-		result[i] = models.DayValue{
+		result[i] = models.HistoricalPerformanceResponse{
 			Day:   entry.Day,
 			Value: entry.Value,
 		}
@@ -203,8 +206,8 @@ func convertToResponse(history []models.HistoricalPerformance) []models.DayValue
 }
 
 // CreateInitialPerformanceHistory creates 30 days of initial claimed performance history for a new bank
-func CreateInitialPerformanceHistory(bankID primitive.ObjectID, currentDay int) error {
-	startDay := currentDay - 29
-	_, err := ensureClaimedHistory(bankID, startDay, currentDay, []models.HistoricalPerformance{})
+func CreateInitialPerformanceHistory(client *mongo.Client, ctx context.Context, bankId primitive.ObjectID, currentDay int) error {
+	startDay := currentDay - 30
+	_, err := ensureClaimedHistory(client, ctx, bankId, startDay, currentDay, []models.HistoricalPerformance{})
 	return err
 }

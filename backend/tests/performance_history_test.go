@@ -96,13 +96,13 @@ func TestPerformanceHistoryEndpoint(t *testing.T) {
 		t.Fatalf("Failed to decode bank response: %v", err)
 	}
 
-	bankID := bankResponse.ID
-	if bankID == "" {
+	bankId := bankResponse.ID
+	if bankId == "" {
 		t.Fatal("No bank ID received")
 	}
 
 	// Test performance history endpoint
-	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/"+bankID, nil)
+	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/"+bankId, nil)
 	if err != nil {
 		t.Fatalf("Failed to create performance history request: %v", err)
 	}
@@ -442,10 +442,10 @@ func TestPerformanceHistoryDataPersistence(t *testing.T) {
 
 	var bankResponse models.BankResponse
 	json.NewDecoder(resp.Body).Decode(&bankResponse)
-	bankID := bankResponse.ID
+	bankId := bankResponse.ID
 
 	// First call to performance history endpoint
-	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/"+bankID, nil)
+	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/"+bankId, nil)
 	if err != nil {
 		t.Fatalf("Failed to create performance history request: %v", err)
 	}
@@ -461,7 +461,7 @@ func TestPerformanceHistoryDataPersistence(t *testing.T) {
 	json.NewDecoder(resp.Body).Decode(&firstResponse)
 
 	// Second call to performance history endpoint (should return identical data)
-	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/"+bankID, nil)
+	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/"+bankId, nil)
 	if err != nil {
 		t.Fatalf("Failed to create second performance history request: %v", err)
 	}

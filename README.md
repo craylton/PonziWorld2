@@ -60,7 +60,7 @@ To start the React UI locally:
 
 ### Bank Management
 - `GET /api/bank` - Get user's bank details and assets
-- `GET /api/performanceHistory/ownbank/{bankID}` - Get 30 days of performance history for a bank you own
+- `GET /api/performanceHistory/ownbank/{bankId}` - Get 30 days of performance history for a bank you own
 
 ### Notes
 - All authenticated endpoints require a Bearer token in the Authorization header

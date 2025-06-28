@@ -99,7 +99,7 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create initial performance history (30 days of dummy data)
-	err = CreateInitialPerformanceHistory(bank.ID, 0) // Using day 0 as current day
+	err = CreateInitialPerformanceHistory(client, ctx, bank.ID, 0) // Using day 0 as current day
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create performance history"})
