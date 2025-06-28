@@ -206,24 +206,30 @@ func convertToResponse(history []models.HistoricalPerformance) []models.Historic
 }
 
 // CreateInitialPerformanceHistory creates 30 days of initial claimed performance history for a new bank
-func CreateInitialPerformanceHistory(client *mongo.Client, ctx context.Context, bankId primitive.ObjectID, currentDay int) error {
+func CreateInitialPerformanceHistory(
+	client *mongo.Client,
+	ctx context.Context,
+	bankId primitive.ObjectID,
+	currentDay int,
+	initialCapital int64,
+) error {
 	startDay := currentDay - 30
 	_, err := ensureClaimedHistory(client, ctx, bankId, startDay, currentDay, []models.HistoricalPerformance{})
-	return err
-}
+	if err != nil {
+		return err
+	}
 
-// CreateActualPerformanceEntry creates an actual performance history entry for a specific day
-func CreateActualPerformanceEntry(client *mongo.Client, ctx context.Context, bankId primitive.ObjectID, day int, value int64) error {
+	// Create actual performance history for the current day
 	historyCollection := client.Database("ponziworld").Collection("historicalPerformance")
 
 	actualEntry := models.HistoricalPerformance{
 		ID:        primitive.NewObjectID(),
-		Day:       day,
+		Day:       currentDay,
 		BankID:    bankId,
-		Value:     value,
-		IsClaimed: false, // This is actual data, not claimed
+		Value:     initialCapital,
+		IsClaimed: false,
 	}
 
-	_, err := historyCollection.InsertOne(ctx, actualEntry)
+	_, err = historyCollection.InsertOne(ctx, actualEntry)
 	return err
 }
