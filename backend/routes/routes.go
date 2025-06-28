@@ -10,4 +10,5 @@ func RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/user", handlers.CreateUserHandler)
 	mux.HandleFunc("/api/bank", middleware.JWTMiddleware(handlers.GetBankHandler))
 	mux.HandleFunc("/api/login", handlers.LoginHandler)
+	mux.HandleFunc("/api/performanceHistory/bank/{bankID}", middleware.JWTMiddleware(handlers.GetPerformanceHistoryHandler))
 }

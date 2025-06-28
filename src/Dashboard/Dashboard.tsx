@@ -5,7 +5,7 @@ import InvestorList from './SidePanel/InvestorList/InvestorList';
 import SidePanelButton from './SidePanel/SidePanelButton';
 import SidePanel from './SidePanel/SidePanel';
 import AssetList from './AssetList/AssetList';
-import type { Bank } from '../User';
+import type { Bank, PerformanceHistory } from '../User';
 import { makeAuthenticatedRequest } from '../auth';
 
 interface DashboardProps {
@@ -14,6 +14,7 @@ interface DashboardProps {
 
 export default function Dashboard({ onLogout }: DashboardProps) {
   const [bank, setBank] = useState<Bank | null>(null);
+  const [performanceHistory, setPerformanceHistory] = useState<PerformanceHistory | null>(null);
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -29,6 +30,13 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         }
         const bankData: Bank = await bankResponse.json();
         setBank(bankData);
+
+        // Fetch performance history
+        const historyResponse = await makeAuthenticatedRequest(`/api/performanceHistory/bank/${bankData.id}`);
+        if (historyResponse.ok) {
+          const historyData: PerformanceHistory = await historyResponse.json();
+          setPerformanceHistory(historyData);
+        }
       } catch {
         onLogout();
       } finally {
@@ -48,6 +56,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         bankName={bank.bankName}
         claimedCapital={bank.claimedCapital}
         actualCapital={bank.actualCapital}
+        performanceHistory={performanceHistory}
       />
       <div className="dashboard-layout">
         <SidePanel side="left" visible={isLeftPanelOpen}>

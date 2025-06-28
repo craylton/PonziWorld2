@@ -9,7 +9,7 @@ type User struct {
 }
 
 type Bank struct {
-	ID             primitive.ObjectID `bson:"_id" json:"-"` // Omit ID from JSON response
+	ID             primitive.ObjectID `bson:"_id" json:"id"` // Include ID in JSON response for frontend
 	UserID         primitive.ObjectID `bson:"userId" json:"-"` // Link to User
 	BankName       string             `bson:"bankName" json:"bankName"`
 	ClaimedCapital int64              `bson:"claimedCapital" json:"claimedCapital"`
@@ -22,10 +22,31 @@ type Asset struct {
 	AssetType string            `bson:"assetType" json:"assetType"` // Using string for asset type (Cash, Stocks, Bonds, Crypto, etc.)
 }
 
+type HistoricalPerformance struct {
+	ID        primitive.ObjectID `bson:"_id" json:"-"`
+	Day       int               `bson:"day" json:"day"`
+	BankID    primitive.ObjectID `bson:"bankId" json:"-"`
+	Value     int64             `bson:"value" json:"value"`
+	IsClaimed bool              `bson:"isClaimed" json:"isClaimed"`
+}
+
 // BankResponse represents the response structure for bank data
 type BankResponse struct {
+	ID             string  `json:"id"` // Include bank ID for frontend
 	BankName       string  `json:"bankName"`
 	ClaimedCapital int64   `json:"claimedCapital"`
 	ActualCapital  int64   `json:"actualCapital"` // Calculated from assets
 	Assets         []Asset `json:"assets"`
+}
+
+// PerformanceHistoryResponse represents the response structure for performance history
+type PerformanceHistoryResponse struct {
+	ClaimedHistory []DayValue `json:"claimedHistory"`
+	ActualHistory  []DayValue `json:"actualHistory,omitempty"` // Only included for own bank
+}
+
+// DayValue represents a single day's performance value
+type DayValue struct {
+	Day   int   `json:"day"`
+	Value int64 `json:"value"`
 }

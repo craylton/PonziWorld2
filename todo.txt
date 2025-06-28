@@ -1,3 +1,6 @@
+Test is testing things that don't need testing
+Need to rename user into player
+Need to rename/refactor the models in frontend and backend
 
 Next up:
 Create some investment instruments
@@ -24,6 +27,8 @@ Defensive programming when retrieving data from DB
 Incorporate investors into the database
     Every time you invest in an asset, you might also become an investor
     So I need to think about how I can model this relationship
+Separate 'New Player' and 'New Bank' pages
+    One day players will be able to create multiple banks
 
 HIGH LEVEL THINGS:
 

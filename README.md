@@ -51,3 +51,21 @@ To start the React UI locally:
    npm run dev
    ```
 3. Open your browser and go to the URL shown in the terminal (usually http://localhost:5173).
+
+## API Endpoints
+
+### Authentication
+- `POST /api/user` - Create a new user and bank
+- `POST /api/login` - Login and get JWT token
+
+### Bank Management
+- `GET /api/bank` - Get user's bank details and assets
+- `GET /api/performanceHistory/bank/{bankID}` - Get 30 days of performance history for a bank
+  - Returns claimed capital history for all requests
+  - Returns actual capital history only if the user owns the bank
+  - Pads missing data with dummy values to ensure 30 days are always returned
+
+### Notes
+- All authenticated endpoints require a Bearer token in the Authorization header
+- Performance history tracks daily bank values and differentiates between claimed vs actual capital
+- Game operates on a daily cycle (currently using day 0 as reference point)

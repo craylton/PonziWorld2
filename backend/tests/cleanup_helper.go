@@ -46,8 +46,9 @@ func CleanupMultipleTestData(usersAndBanks map[string]string) {
 func cleanupBankAndAssets(ctx context.Context, client *mongo.Client, bankName string) {
 	banksCollection := client.Database("ponziworld").Collection("banks")
 	assetsCollection := client.Database("ponziworld").Collection("assets")
+	historyCollection := client.Database("ponziworld").Collection("historicalPerformance")
 
-	// Find all banks with the given name and delete their assets
+	// Find all banks with the given name and delete their assets and performance history
 	cursor, err := banksCollection.Find(ctx, bson.M{"bankName": bankName})
 	if err == nil {
 		for cursor.Next(ctx) {
@@ -55,6 +56,8 @@ func cleanupBankAndAssets(ctx context.Context, client *mongo.Client, bankName st
 			cursor.Decode(&bank)
 			// Delete associated assets
 			assetsCollection.DeleteMany(ctx, bson.M{"bankId": bank.ID})
+			// Delete associated performance history
+			historyCollection.DeleteMany(ctx, bson.M{"bankId": bank.ID})
 		}
 		cursor.Close(ctx)
 	}
