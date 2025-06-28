@@ -3,11 +3,11 @@ package models
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type HistoricalPerformance struct {
-	ID        primitive.ObjectID `bson:"_id" json:"-"`
-	Day       int               `bson:"day" json:"day"`
-	BankID    primitive.ObjectID `bson:"bankId" json:"-"`
-	Value     int64             `bson:"value" json:"value"`
-	IsClaimed bool              `bson:"isClaimed" json:"isClaimed"`
+	Id        primitive.ObjectID `bson:"_id" json:"-"`
+	Day       int                `bson:"day" json:"day"`
+	BankId    primitive.ObjectID `bson:"bankId" json:"-"`
+	Value     int64              `bson:"value" json:"value"`
+	IsClaimed bool               `bson:"isClaimed" json:"isClaimed"`
 }
 
 type PerformanceHistoryResponse struct {

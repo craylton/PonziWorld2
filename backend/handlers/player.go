@@ -15,7 +15,14 @@ import (
 
 // CreateNewPlayerHandler handles POST /api/newPlayer
 func CreateNewPlayerHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodPost {		
+		w.Header().Set("Allow", http.MethodPost)
+        http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
+
 	w.Header().Set("Content-Type", "application/json")
+
 	var req struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -30,8 +37,7 @@ func CreateNewPlayerHandler(w http.ResponseWriter, r *http.Request) {
 	// Trim whitespace and validate
 	req.Username = strings.TrimSpace(req.Username)
 	req.Password = strings.TrimSpace(req.Password)
-	req.BankName = strings.TrimSpace(req.BankName)
-	
+	req.BankName = strings.TrimSpace(req.BankName)	
 	if req.Username == "" || req.Password == "" || req.BankName == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Username, password, and bank name required"})
@@ -45,6 +51,7 @@ func CreateNewPlayerHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to hash password"})
 		return
 	}
+
 	client, ctx, cancel := db.ConnectDB()
 	defer cancel()
 	defer client.Disconnect(ctx)
@@ -56,6 +63,7 @@ func CreateNewPlayerHandler(w http.ResponseWriter, r *http.Request) {
 		Username: req.Username,
 		Password: string(hashedPassword),
 	}
+
 	_, err = playersCollection.InsertOne(ctx, player)
 	if err != nil {
 		if mongo.IsDuplicateKeyError(err) {
@@ -76,6 +84,7 @@ func CreateNewPlayerHandler(w http.ResponseWriter, r *http.Request) {
 		BankName:       req.BankName,
 		ClaimedCapital: 1000,
 	}
+
 	_, err = banksCollection.InsertOne(ctx, bank)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -86,11 +95,12 @@ func CreateNewPlayerHandler(w http.ResponseWriter, r *http.Request) {
 	// Create initial cash asset
 	assetsCollection := client.Database("ponziworld").Collection("assets")
 	asset := models.Asset{
-		ID:        primitive.NewObjectID(),
-		BankID:    bank.Id,
+		Id:        primitive.NewObjectID(),
+		BankId:    bank.Id,
 		Amount:    1000,
 		AssetType: "Cash",
 	}
+	
 	_, err = assetsCollection.InsertOne(ctx, asset)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

@@ -13,9 +13,15 @@ import (
 
 // GetBankHandler handles GET /api/bank
 func GetBankHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
+        http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
+
 	w.Header().Set("Content-Type", "application/json")
 
-	// Get username from the JWT token (set by middleware)
+	// Get username from the JWT (set by middleware)
 	username := r.Header.Get("X-Username")
 	if username == "" {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -80,7 +86,7 @@ func GetBankHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Create response
 	response := models.BankResponse{
-		ID:             bank.Id.Hex(),
+		Id:             bank.Id.Hex(),
 		BankName:       bank.BankName,
 		ClaimedCapital: bank.ClaimedCapital,
 		ActualCapital:  actualCapital,

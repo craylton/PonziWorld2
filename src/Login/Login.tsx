@@ -43,7 +43,7 @@ export default function Login({ onLogin }: LoginProps) {
           setError(`Login failed: ${data.error || 'Unknown error'}`);
         } else {
           const data = await res.json();
-          // Store the JWT token
+          // Store the JWT
           setAuthToken(data.token);
           // Navigate to dashboard
           await onLogin();

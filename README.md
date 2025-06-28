@@ -56,7 +56,7 @@ To start the React UI locally:
 
 ### Authentication
 - `POST /api/newPlayer` - Create a new player and bank
-- `POST /api/login` - Login and get JWT token
+- `POST /api/login` - Login and get JWT
 
 ### Bank Management
 - `GET /api/bank` - Get player's bank details and assets

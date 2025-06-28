@@ -1,3 +1,4 @@
+Sort out duplicated code when getting players in various handlers
 
 Next up:
 Create some investment instruments
@@ -24,8 +25,6 @@ Defensive programming when retrieving data from DB
 Incorporate investors into the database
     Every time you invest in an asset, you might also become an investor
     So I need to think about how I can model this relationship
-Separate 'New Player' and 'New Bank' pages
-    One day players will be able to create multiple banks
 
 HIGH LEVEL THINGS:
 
@@ -56,6 +55,14 @@ Make a tutorial
     Important to not make the tutorial too long, since each 'turn' is a day
         Don't want it to take a week before you can even play the game
         So need to think of a way to cram lots of changes into the first couple of 'turns'
+
+JWT secret
+    What is this?
+    Need to do some research
+
+Add support for multiple banks per player
+    Create a separate /newBank endpoint
+    The dashboard really should list all the player's banks, and then you can look into one to see performance
 
 Other things to consider
     Inflation

@@ -7,7 +7,7 @@ import (
 )
 
 func RegisterRoutes(mux *http.ServeMux) {	
-	mux.HandleFunc("POST /api/newPlayer", handlers.CreateNewPlayerHandler)
+	mux.HandleFunc("/api/newPlayer", handlers.CreateNewPlayerHandler)
 	mux.HandleFunc("/api/bank", middleware.JWTMiddleware(handlers.GetBankHandler))
 	mux.HandleFunc("/api/login", handlers.LoginHandler)
 	mux.HandleFunc(

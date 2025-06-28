@@ -73,7 +73,7 @@ func TestFullUserWorkflow(t *testing.T) {
 			t.Errorf("Expected status 200, got %d", resp.StatusCode)
 		}
 
-		// Parse the response to get the JWT token
+		// Parse the response to get the JWT
 		var loginResponse map[string]any
 		if err := json.NewDecoder(resp.Body).Decode(&loginResponse); err != nil {
 			t.Fatalf("Failed to decode login response: %v", err)

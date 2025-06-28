@@ -15,7 +15,14 @@ import (
 
 // LoginHandler handles POST /api/login
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodPost {
+		w.Header().Set("Allow", http.MethodPost)
+        http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
+
 	w.Header().Set("Content-Type", "application/json")
+
 	var req struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -30,6 +37,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"error": "Username and password required"})
 		return
 	}
+
 	client, ctx, cancel := db.ConnectDB()
 	defer cancel()
 	defer client.Disconnect(ctx)
@@ -55,7 +63,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Generate JWT token
+	// Generate JWT
 	token, err := auth.GenerateToken(player.Username)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

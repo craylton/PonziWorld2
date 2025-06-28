@@ -46,7 +46,7 @@ func TestPerformanceHistoryEndpoint(t *testing.T) {
 		t.Fatalf("Expected status 201 for player creation, got %d", resp.StatusCode)
 	}
 
-	// Login to get JWT token
+	// Login to get JWT
 	loginData := map[string]string{
 		"username": testUsername,
 		"password": "testpassword123",
@@ -96,7 +96,7 @@ func TestPerformanceHistoryEndpoint(t *testing.T) {
 		t.Fatalf("Failed to decode bank response: %v", err)
 	}
 
-	bankId := bankResponse.ID
+	bankId := bankResponse.Id
 	if bankId == "" {
 		t.Fatal("No bank ID received")
 	}
@@ -371,10 +371,10 @@ func TestPerformanceHistoryOtherPlayersBank(t *testing.T) {
 
 	var bankResponse models.BankResponse
 	json.NewDecoder(resp.Body).Decode(&bankResponse)
-	player2BankID := bankResponse.ID
+	player2BankId := bankResponse.Id
 
 	// Now, as player 1, try to access player 2's bank performance history
-	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/"+player2BankID, nil)
+	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/"+player2BankId, nil)
 	if err != nil {
 		t.Fatalf("Failed to create performance history request: %v", err)
 	}
@@ -453,7 +453,7 @@ func TestPerformanceHistoryDataPersistence(t *testing.T) {
 
 	var bankResponse models.BankResponse
 	json.NewDecoder(resp.Body).Decode(&bankResponse)
-	bankId := bankResponse.ID
+	bankId := bankResponse.Id
 
 	// First call to performance history endpoint
 	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/"+bankId, nil)

@@ -14,7 +14,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-// GenerateToken creates a JWT token for the given username
+// GenerateToken creates a JWT for the given username
 func GenerateToken(username string) (string, error) {
 	expirationTime := time.Now().Add(24 * time.Hour) // Token expires in 24 hours
 	claims := &Claims{
@@ -29,7 +29,7 @@ func GenerateToken(username string) (string, error) {
 	return token.SignedString(jwtSecret)
 }
 
-// ValidateToken validates a JWT token and returns the username
+// ValidateToken validates a JWT and returns the username
 func ValidateToken(tokenString string) (string, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {

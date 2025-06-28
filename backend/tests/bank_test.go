@@ -41,7 +41,7 @@ func TestBankEndpoint(t *testing.T) {
 		t.Fatalf("Expected status 201 for player creation, got %d", resp.StatusCode)
 	}
 
-	// Login to get JWT token
+	// Login to get JWT
 	loginData := map[string]string{
 		"username": testUsername,
 		"password": "testpassword123",

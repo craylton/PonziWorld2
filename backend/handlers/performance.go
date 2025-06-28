@@ -16,9 +16,14 @@ import (
 
 // GetPerformanceHistoryHandler handles GET /api/performanceHistory/ownbank/{bankId}
 func GetPerformanceHistoryHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
+        http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
 	w.Header().Set("Content-Type", "application/json")
 
-	// Get username from the JWT token (set by middleware)
+	// Get username from JWT
 	username := r.Header.Get("X-Username")
 	if username == "" {
 		w.WriteHeader(http.StatusUnauthorized)
@@ -170,9 +175,9 @@ func ensureClaimedHistory(
 		} else {
 			// Create new claimed entry
 			newClaimedEntry := models.HistoricalPerformance{
-				ID:        primitive.NewObjectID(),
+				Id:        primitive.NewObjectID(),
 				Day:       day,
-				BankID:    bankId,
+				BankId:    bankId,
 				Value:     1000, // Dummy value
 				IsClaimed: true,
 			}
@@ -223,9 +228,9 @@ func CreateInitialPerformanceHistory(
 	historyCollection := client.Database("ponziworld").Collection("historicalPerformance")
 
 	actualEntry := models.HistoricalPerformance{
-		ID:        primitive.NewObjectID(),
+		Id:        primitive.NewObjectID(),
 		Day:       currentDay,
-		BankID:    bankId,
+		BankId:    bankId,
 		Value:     initialCapital,
 		IsClaimed: false,
 	}
