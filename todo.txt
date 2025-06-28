@@ -1,8 +1,8 @@
-Test is testing things that don't need testing
-Need to rename user into player
-Need to rename/refactor the models in frontend and backend
+
 
 Next up:
+Need to rename/refactor the models in frontend and backend
+Need to rename user into player
 Create some investment instruments
     HYSA
         very safe but low returns, something like 5%

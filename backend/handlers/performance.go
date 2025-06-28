@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-// GetPerformanceHistoryHandler handles GET /api/performanceHistory/bank/{bankID}
+// GetPerformanceHistoryHandler handles GET /api/performanceHistory/ownbank/{bankID}
 func GetPerformanceHistoryHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -72,15 +72,19 @@ func GetPerformanceHistoryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if the user owns the bank
-	isOwnBank := bank.UserID == user.ID
+	// Check if the user owns the bank - reject if they don't
+	if bank.UserID != user.ID {
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized: You can only view your own bank's performance history"})
+		return
+	}
 
 	// Get the current day (for now, we'll use 0 as the current day - this can be made dynamic later)
 	currentDay := 0
 	startDay := currentDay - 29 // Get past 30 days (including today)
 
-	// Get all performance history in a single query
-	claimedHistory, actualHistory, err := getOrCreatePerformanceHistory(bankID, startDay, currentDay, isOwnBank)
+	// Get performance history
+	claimedHistory, actualHistory, err := getPerformanceHistory(bankID, startDay, currentDay)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
@@ -89,37 +93,24 @@ func GetPerformanceHistoryHandler(w http.ResponseWriter, r *http.Request) {
 
 	response := models.PerformanceHistoryResponse{
 		ClaimedHistory: convertToResponse(claimedHistory),
-	}
-
-	// If user owns the bank, also return actual history
-	if isOwnBank {
-		response.ActualHistory = convertToResponse(actualHistory)
+		ActualHistory:  convertToResponse(actualHistory),
 	}
 
 	json.NewEncoder(w).Encode(response)
 }
 
-// getOrCreatePerformanceHistory retrieves existing performance history or creates it if missing
-func getOrCreatePerformanceHistory(bankID primitive.ObjectID, startDay, endDay int, includeActual bool) ([]models.HistoricalPerformance, []models.HistoricalPerformance, error) {
+// getPerformanceHistory retrieves existing performance history and ensures claimed history exists for 30 days
+func getPerformanceHistory(bankID primitive.ObjectID, startDay, endDay int) ([]models.HistoricalPerformance, []models.HistoricalPerformance, error) {
 	client, ctx, cancel := db.ConnectDB()
 	defer cancel()
 	defer client.Disconnect(ctx)
 
 	historyCollection := client.Database("ponziworld").Collection("historicalPerformance")
 
-	// Build query to get both claimed and actual in one call if needed
-	var filter bson.M
-	if includeActual {
-		filter = bson.M{
-			"bankId": bankID,
-			"day":    bson.M{"$gte": startDay, "$lte": endDay},
-		}
-	} else {
-		filter = bson.M{
-			"bankId":    bankID,
-			"isClaimed": true,
-			"day":       bson.M{"$gte": startDay, "$lte": endDay},
-		}
+	// Get all existing history for this bank in the date range
+	filter := bson.M{
+		"bankId": bankID,
+		"day":    bson.M{"$gte": startDay, "$lte": endDay},
 	}
 
 	cursor, err := historyCollection.Find(ctx, filter, options.Find().SetSort(bson.M{"day": 1}))
@@ -145,51 +136,28 @@ func getOrCreatePerformanceHistory(bankID primitive.ObjectID, startDay, endDay i
 		}
 	}
 
-	// Check if we need to create missing data and store it in database
-	missingData := false
-	expectedDays := endDay - startDay + 1
-	
-	if len(claimedHistory) < expectedDays || (includeActual && len(actualHistory) < expectedDays) {
-		missingData = true
-	}
-
-	if missingData {
-		// Create and store missing performance history
-		claimedHistory, actualHistory, err = createAndStoreMissingHistory(bankID, startDay, endDay, claimedHistory, actualHistory, includeActual)
-		if err != nil {
-			return nil, nil, err
-		}
+	// Ensure we have claimed history for all 30 days - create missing entries
+	claimedHistory, err = ensureClaimedHistory(bankID, startDay, endDay, claimedHistory)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	return claimedHistory, actualHistory, nil
 }
 
-// createAndStoreMissingHistory creates missing performance history entries and stores them in the database
-func createAndStoreMissingHistory(bankID primitive.ObjectID, startDay, endDay int, existingClaimed, existingActual []models.HistoricalPerformance, includeActual bool) ([]models.HistoricalPerformance, []models.HistoricalPerformance, error) {
-	client, ctx, cancel := db.ConnectDB()
-	defer cancel()
-	defer client.Disconnect(ctx)
-
-	historyCollection := client.Database("ponziworld").Collection("historicalPerformance")
-
-	// Create maps of existing days for quick lookup
+// ensureClaimedHistory creates missing claimed history entries if needed
+func ensureClaimedHistory(bankID primitive.ObjectID, startDay, endDay int, existingClaimed []models.HistoricalPerformance) ([]models.HistoricalPerformance, error) {
+	// Create map of existing claimed days for quick lookup
 	existingClaimedDays := make(map[int]models.HistoricalPerformance)
-	existingActualDays := make(map[int]models.HistoricalPerformance)
-
 	for _, entry := range existingClaimed {
 		existingClaimedDays[entry.Day] = entry
 	}
-	for _, entry := range existingActual {
-		existingActualDays[entry.Day] = entry
-	}
 
-	// Prepare new entries to insert
-	var newEntries []interface{}
 	var finalClaimedHistory []models.HistoricalPerformance
-	var finalActualHistory []models.HistoricalPerformance
+	var newEntries []interface{}
 
+	// Ensure we have claimed history for all days in range
 	for day := startDay; day <= endDay; day++ {
-		// Handle claimed history
 		if claimedEntry, exists := existingClaimedDays[day]; exists {
 			finalClaimedHistory = append(finalClaimedHistory, claimedEntry)
 		} else {
@@ -204,35 +172,22 @@ func createAndStoreMissingHistory(bankID primitive.ObjectID, startDay, endDay in
 			newEntries = append(newEntries, newClaimedEntry)
 			finalClaimedHistory = append(finalClaimedHistory, newClaimedEntry)
 		}
-
-		// Handle actual history if needed
-		if includeActual {
-			if actualEntry, exists := existingActualDays[day]; exists {
-				finalActualHistory = append(finalActualHistory, actualEntry)
-			} else {
-				// Create new actual entry (same value as claimed for consistency)
-				newActualEntry := models.HistoricalPerformance{
-					ID:        primitive.NewObjectID(),
-					Day:       day,
-					BankID:    bankID,
-					Value:     1000, // Same dummy value as claimed
-					IsClaimed: false,
-				}
-				newEntries = append(newEntries, newActualEntry)
-				finalActualHistory = append(finalActualHistory, newActualEntry)
-			}
-		}
 	}
 
-	// Insert new entries if any
+	// Insert new claimed entries if any
 	if len(newEntries) > 0 {
+		client, ctx, cancel := db.ConnectDB()
+		defer cancel()
+		defer client.Disconnect(ctx)
+
+		historyCollection := client.Database("ponziworld").Collection("historicalPerformance")
 		_, err := historyCollection.InsertMany(ctx, newEntries)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 	}
 
-	return finalClaimedHistory, finalActualHistory, nil
+	return finalClaimedHistory, nil
 }
 
 // convertToResponse converts HistoricalPerformance to DayValue response format
@@ -247,10 +202,9 @@ func convertToResponse(history []models.HistoricalPerformance) []models.DayValue
 	return result
 }
 
-// CreateInitialPerformanceHistory creates 30 days of dummy performance history for a new bank
+// CreateInitialPerformanceHistory creates 30 days of initial claimed performance history for a new bank
 func CreateInitialPerformanceHistory(bankID primitive.ObjectID, currentDay int) error {
 	startDay := currentDay - 29
-	// Create empty slices to simulate no existing data, and include actual history
-	_, _, err := createAndStoreMissingHistory(bankID, startDay, currentDay, []models.HistoricalPerformance{}, []models.HistoricalPerformance{}, true)
+	_, err := ensureClaimedHistory(bankID, startDay, currentDay, []models.HistoricalPerformance{})
 	return err
 }

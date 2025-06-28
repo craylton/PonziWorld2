@@ -32,7 +32,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         setBank(bankData);
 
         // Fetch performance history
-        const historyResponse = await makeAuthenticatedRequest(`/api/performanceHistory/bank/${bankData.id}`);
+        const historyResponse = await makeAuthenticatedRequest(`/api/performanceHistory/ownbank/${bankData.id}`);
         if (historyResponse.ok) {
           const historyData: PerformanceHistory = await historyResponse.json();
           setPerformanceHistory(historyData);

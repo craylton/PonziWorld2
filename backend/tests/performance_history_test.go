@@ -102,7 +102,7 @@ func TestPerformanceHistoryEndpoint(t *testing.T) {
 	}
 
 	// Test performance history endpoint
-	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/bank/"+bankID, nil)
+	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/"+bankID, nil)
 	if err != nil {
 		t.Fatalf("Failed to create performance history request: %v", err)
 	}
@@ -128,8 +128,10 @@ func TestPerformanceHistoryEndpoint(t *testing.T) {
 		t.Fatalf("Expected 30 days of claimed history, got %d", len(historyResponse.ClaimedHistory))
 	}
 
-	if len(historyResponse.ActualHistory) != 30 {
-		t.Fatalf("Expected 30 days of actual history for own bank, got %d", len(historyResponse.ActualHistory))
+	// Since actual history is not pre-populated, we only expect what actually exists
+	// For a newly created bank, this should be 0
+	if len(historyResponse.ActualHistory) != 0 {
+		t.Fatalf("Expected 0 days of actual history for new bank, got %d", len(historyResponse.ActualHistory))
 	}
 
 	// Verify that all entries are properly ordered by day
@@ -139,19 +141,28 @@ func TestPerformanceHistoryEndpoint(t *testing.T) {
 		}
 	}
 
+	// For actual history, only verify if we have entries
 	for i := 1; i < len(historyResponse.ActualHistory); i++ {
 		if historyResponse.ActualHistory[i].Day <= historyResponse.ActualHistory[i-1].Day {
 			t.Fatal("Actual history is not properly ordered by day")
 		}
 	}
 
-	// Verify that claimed and actual history have the same values (since they're dummy data)
-	for i := 0; i < 30; i++ {
-		if historyResponse.ClaimedHistory[i].Day != historyResponse.ActualHistory[i].Day {
-			t.Fatalf("Day mismatch at index %d: claimed=%d, actual=%d", i, historyResponse.ClaimedHistory[i].Day, historyResponse.ActualHistory[i].Day)
+	// Verify that claimed and actual history have the same values for the days that exist
+	// Since actual history might not exist for all days, we can't assume they're the same length
+	for i := 0; i < len(historyResponse.ActualHistory); i++ {
+		found := false
+		for j := 0; j < len(historyResponse.ClaimedHistory); j++ {
+			if historyResponse.ClaimedHistory[j].Day == historyResponse.ActualHistory[i].Day {
+				if historyResponse.ClaimedHistory[j].Value != historyResponse.ActualHistory[i].Value {
+					t.Fatalf("Claimed and actual history values don't match for day %d", historyResponse.ActualHistory[i].Day)
+				}
+				found = true
+				break
+			}
 		}
-		if historyResponse.ClaimedHistory[i].Value != historyResponse.ActualHistory[i].Value {
-			t.Fatalf("Value mismatch at index %d: claimed=%d, actual=%d", i, historyResponse.ClaimedHistory[i].Value, historyResponse.ActualHistory[i].Value)
+		if !found {
+			t.Fatalf("Actual history day %d not found in claimed history", historyResponse.ActualHistory[i].Day)
 		}
 	}
 }
@@ -163,7 +174,7 @@ func TestPerformanceHistoryUnauthorized(t *testing.T) {
 	defer server.Close()
 
 	// Test without authentication
-	req, err := http.NewRequest("GET", server.URL+"/api/performanceHistory/bank/507f1f77bcf86cd799439011", nil)
+	req, err := http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/507f1f77bcf86cd799439011", nil)
 	if err != nil {
 		t.Fatalf("Failed to create request: %v", err)
 	}
@@ -226,7 +237,7 @@ func TestPerformanceHistoryInvalidBankID(t *testing.T) {
 	token := loginResponse["token"]
 
 	// Test with invalid bank ID
-	req, err := http.NewRequest("GET", server.URL+"/api/performanceHistory/bank/invalid", nil)
+	req, err := http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/invalid", nil)
 	if err != nil {
 		t.Fatalf("Failed to create request: %v", err)
 	}
@@ -352,7 +363,7 @@ func TestPerformanceHistoryOtherUsersBank(t *testing.T) {
 	user2BankID := bankResponse.ID
 
 	// Now, as user 1, try to access user 2's bank performance history
-	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/bank/"+user2BankID, nil)
+	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/"+user2BankID, nil)
 	if err != nil {
 		t.Fatalf("Failed to create performance history request: %v", err)
 	}
@@ -364,29 +375,9 @@ func TestPerformanceHistoryOtherUsersBank(t *testing.T) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("Expected status 200 for performance history, got %d", resp.StatusCode)
-	}
-
-	var historyResponse models.PerformanceHistoryResponse
-	if err := json.NewDecoder(resp.Body).Decode(&historyResponse); err != nil {
-		t.Fatalf("Failed to decode performance history response: %v", err)
-	}
-
-	// Verify that we get claimed history but NOT actual history (since it's not user 1's bank)
-	if len(historyResponse.ClaimedHistory) != 30 {
-		t.Fatalf("Expected 30 days of claimed history, got %d", len(historyResponse.ClaimedHistory))
-	}
-
-	if len(historyResponse.ActualHistory) != 0 {
-		t.Fatalf("Expected 0 days of actual history for other user's bank, got %d", len(historyResponse.ActualHistory))
-	}
-
-	// Verify that all claimed entries are properly ordered by day
-	for i := 1; i < len(historyResponse.ClaimedHistory); i++ {
-		if historyResponse.ClaimedHistory[i].Day <= historyResponse.ClaimedHistory[i-1].Day {
-			t.Fatal("Claimed history is not properly ordered by day")
-		}
+	// Should now return 401 Unauthorized since user 1 doesn't own user 2's bank
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("Expected status 401 Unauthorized for other user's bank, got %d", resp.StatusCode)
 	}
 }
 
@@ -454,7 +445,7 @@ func TestPerformanceHistoryDataPersistence(t *testing.T) {
 	bankID := bankResponse.ID
 
 	// First call to performance history endpoint
-	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/bank/"+bankID, nil)
+	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/"+bankID, nil)
 	if err != nil {
 		t.Fatalf("Failed to create performance history request: %v", err)
 	}
@@ -470,7 +461,7 @@ func TestPerformanceHistoryDataPersistence(t *testing.T) {
 	json.NewDecoder(resp.Body).Decode(&firstResponse)
 
 	// Second call to performance history endpoint (should return identical data)
-	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/bank/"+bankID, nil)
+	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/"+bankID, nil)
 	if err != nil {
 		t.Fatalf("Failed to create second performance history request: %v", err)
 	}
