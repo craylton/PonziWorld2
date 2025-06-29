@@ -1,52 +1,38 @@
-Sort out duplicated code when getting players in various handlers
 
 Next up:
 Create some investment instruments
-    HYSA
-        very safe but low returns, something like 5%
-        This requires some kind of Central bank rate for it to follow
-    Bonds
-        Higher volatility but higher returns, around 8%
-    Stocks
-        Higher volatility again, but gives around 10%
-    Crypto
-        Very high volatility, returns essentially same as HYSA
-    Lottery
-        Each £ invested has lets say 100000:1 odds of winning
-        Mean expected return is 1
+    HYSA - very safe but low returns, something like 5%
+    Bonds - Higher volatility but higher returns, around 8%
+    Stocks - Higher volatility again, but gives around 10%
+    Crypto - Very high volatility, returns essentially same as HYSA
 Create a test database
     currently tests put test data straight into the real DB
     there should ideally be an isolated test DB
+Make a dev-only button that manually advances to the next day
+    At some point I need to think about what 'dev-only' actually means
+Design the DB
+    A player can log on at any time during the day and make changes to their investments
+        Need some kind of holding area
+    Every time you invest in an asset, you might also become an investor
+        So need some kind of investor -> investee collection
+Think about how the profits etc work
+    Like how do I handle chains of banks all investing in each other
+    does it work itself numerically
+    do the percentages make sense
+
+FUTURE THINGS:
+
 Defensive programming when retrieving data from DB
     Documents could be the wrong shape
     even if my app always write the right shape
     for now only need to check username and bank name
     the capital fields will eventually be located somewhere else
-Incorporate investors into the database
-    Every time you invest in an asset, you might also become an investor
-    So I need to think about how I can model this relationship
-
-HIGH LEVEL THINGS:
-
-Design the DB
-    A player can log on at any time during the day and make changes to their investments
-    The following day (not immediately), those investments will be applied to other players
-    So we need a kind of holding/staging part of the DB, which remembers the changes that need to be made, but doesn't actually make the changes yet
-
-Make a dev-only button that manually advances to the next day
-    At some point I need to think about what 'dev-only' actually means
 
 Make sure /bank caters to multiple banks per player
     Currently it does a FindOne to get the only bank for this player
     this will break later on
-
-After everything above is in place, there's nothing stopping me from implementing the actual game
-    As in, allowing a player to log in, invest in some investments, advance to the next day, make more changes etc
-    Allow adding investments, modifying existing investments, removing investments
-    Also this is where I'd need to create fake banks that you can invest in
-    Also fake other players who can invest in your bank
-    And of course all the other stuff like lawyers etc
-    When I get to this stage, this bullet point will probably be split into like 50 bullet points
+    Create a separate /newBank endpoint
+    The dashboard really should list all the player's banks, and then you can look into one to see performance
 
 Make a tutorial
     When you first log in, Grandma lends you some money so you can get started
@@ -60,16 +46,14 @@ JWT secret
     What is this?
     Need to do some research
 
-Add support for multiple banks per player
-    Create a separate /newBank endpoint
-    The dashboard really should list all the player's banks, and then you can look into one to see performance
-
 Other things to consider
     Inflation
         If you put your money in a HYSA and never lie, you'll keep making more money
         So the total amount of money in the system will keep going up
         So do lawyers etc need to become more expensive over time?
-        What about when £1m is eventually considered a tiny amount? Do I just routinely divide everyone's money by 1000 or something?
+        What about when £1m is eventually considered a tiny amount?
+        Do I just routinely divide everyone's money by 1000 or something?
+        or maybe whenever the cheapest thing in the game reaches £1000, divide everything by 1000
     Rewards for logging in each day
         Sometimes people might find simply leaving their money in stocks and never managing anything might be a reasonable strategy
         So I guess every day there's a chance of something bad happening that the player needs to avoid
