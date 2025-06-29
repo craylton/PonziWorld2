@@ -18,8 +18,8 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [performanceHistory, setPerformanceHistory] = useState<PerformanceHistory | null>(null);
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
-  const [bankLoading, setBankLoading] = useState(true);
-  const [historyLoading, setHistoryLoading] = useState(true);
+  const [isBankLoading, setIsBankLoading] = useState(true);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,7 +32,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         }
         const bankData: Bank = await bankResponse.json();
         setBank(bankData);
-        setBankLoading(false);
+        setIsBankLoading(false);
 
         // Fetch performance history
         const historyResponse = await makeAuthenticatedRequest(`/api/performanceHistory/ownbank/${bankData.id}`);
@@ -43,13 +43,13 @@ export default function Dashboard({ onLogout }: DashboardProps) {
       } catch {
         onLogout();
       } finally {
-        setHistoryLoading(false);
+        setIsHistoryLoading(false);
       }
     };
     fetchData();
   }, [onLogout]);
 
-  if (bankLoading || !bank) {
+  if (isBankLoading || !bank) {
     return <div>Loading...</div>;
   }
 
@@ -60,7 +60,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         claimedCapital={bank.claimedCapital}
         actualCapital={bank.actualCapital}
         performanceHistory={performanceHistory}
-        historyLoading={historyLoading}
+        isHistoryLoading={isHistoryLoading}
       />
       <div className="dashboard-layout">
         <SidePanel side="left" visible={isLeftPanelOpen}>

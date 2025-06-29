@@ -1,20 +1,12 @@
 import type { Asset } from './Asset';
 import './AssetList.css';
+import { formatCurrency } from '../../utils/currency';
 
 interface AssetSummaryProps {
     asset: Asset;
 }
 
 export default function AssetSummary({ asset }: AssetSummaryProps) {
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-GB', {
-            style: 'currency',
-            currency: 'GBP',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0,
-        }).format(amount);
-    };
-
     return (
         <div className="asset-list__item">
             <div className="asset-list__content">
