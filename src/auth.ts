@@ -15,7 +15,7 @@ export const removeAuthToken = (): void => {
 export const isAuthenticated = (): boolean => {
   const token = getAuthToken();
   if (!token) return false;
-  
+
   try {
     // Simple JWT expiration check
     const payload = JSON.parse(atob(token.split('.')[1]));
@@ -28,7 +28,7 @@ export const isAuthenticated = (): boolean => {
 
 export const makeAuthenticatedRequest = async (url: string, options: RequestInit = {}): Promise<Response> => {
   const token = getAuthToken();
-  
+
   const authOptions: RequestInit = {
     ...options,
     headers: {

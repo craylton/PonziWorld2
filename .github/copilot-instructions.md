@@ -18,12 +18,12 @@ This project is a monorepo with a Vite+React+TypeScript frontend and a Go backen
 ## The Application Layout
 
 The app contains the following screens:
-- Login - for existing users to log in
+- Login - for existing players to log in
 - New Bank - for registering a new player
-- Dashboard - the main screen for logged-in users, showing their bank details and transactions
+- Dashboard - the main screen for logged-in players, showing their bank details and transactions
 The dashboard is the main screen and is divided into several sections:
   - Bank Details - shows the player's bank details at the top
-  - Bank information - shows the user's investments and stats in the middle
+  - Bank information - shows the player's investments and stats in the middle
   - Investors - shows the list of investors at the left side
   - Settings - shows the settings at the right side
 Much of this is still in development, so you may not see all features implemented yet. And there is still more to come.

@@ -6,16 +6,19 @@ import (
 
 	"ponziworld/backend/auth"
 	"ponziworld/backend/db"
-	"ponziworld/backend/models"
-
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo"
-	"golang.org/x/crypto/bcrypt"
+	"ponziworld/backend/services"
 )
 
 // LoginHandler handles POST /api/login
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
+    if r.Method != http.MethodPost {
+		w.Header().Set("Allow", http.MethodPost)
+        http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+        return
+    }
+
 	w.Header().Set("Content-Type", "application/json")
+
 	var req struct {
 		Username string `json:"username"`
 		Password string `json:"password"`
@@ -30,33 +33,29 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"error": "Username and password required"})
 		return
 	}
+
 	client, ctx, cancel := db.ConnectDB()
 	defer cancel()
 	defer client.Disconnect(ctx)
-	collection := client.Database("ponziworld").Collection("users")
 
-	var user models.User
-	err := collection.FindOne(ctx, bson.M{"username": req.Username}).Decode(&user)
-	if err == mongo.ErrNoDocuments {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid username or password"})
-		return
-	} else if err != nil {
+	// Create service manager
+	serviceManager := services.NewServiceManager(client.Database("ponziworld"))
+
+	// Attempt login
+	_, err := serviceManager.Auth.Login(ctx, req.Username, req.Password)
+	if err != nil {
+		if err == services.ErrInvalidCredentials {
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Invalid username or password"})
+			return
+		}
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
 		return
 	}
 
-	// Verify password
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid username or password"})
-		return
-	}
-
-	// Generate JWT token
-	token, err := auth.GenerateToken(user.Username)
+	// Generate JWT
+	token, err := auth.GenerateToken(req.Username)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to generate token"})

@@ -8,7 +8,7 @@ import (
 	"ponziworld/backend/auth"
 )
 
-// JWTMiddleware validates JWT tokens for protected routes
+// JWTMiddleware validates JWT for protected routes
 func JWTMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")

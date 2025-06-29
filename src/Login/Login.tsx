@@ -43,9 +43,9 @@ export default function Login({ onLogin }: LoginProps) {
           setError(`Login failed: ${data.error || 'Unknown error'}`);
         } else {
           const data = await res.json();
-          // Store the JWT token
+          // Store the JWT
           setAuthToken(data.token);
-          // Initialize user state in App and navigate to dashboard
+          // Navigate to dashboard
           await onLogin();
           navigate('/');
         }
@@ -88,7 +88,7 @@ export default function Login({ onLogin }: LoginProps) {
           className="new-bank-btn"
           onClick={() => navigate('/new')}
         >
-          New user? Click here to start a new bank
+          New player? Click here to start a new bank
         </button>
       </form>
     </div>

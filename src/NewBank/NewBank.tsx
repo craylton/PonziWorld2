@@ -17,14 +17,14 @@ const NewBank: React.FC = () => {
     setError(null);
     setSuccess(false);
     try {
-      const res = await fetch("/api/user", {
+      const res = await fetch("/api/newPlayer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password, bankName }),
       });
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || "Failed to create user");
+        setError(data.error || "Failed to create player");
       } else {
         setSuccess(true);
         setUsername("");

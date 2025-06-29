@@ -14,7 +14,7 @@ func EnsureAllIndexes() error {
 	defer cancel()
 	defer client.Disconnect(ctx)
 	
-	if err := EnsureUserIndexes(client); err != nil {
+	if err := EnsurePlayerIndexes(client); err != nil {
 		return err
 	}
 	
@@ -53,17 +53,17 @@ func ensureIndex(client *mongo.Client, collectionName, indexName string, model m
 	return err
 }
 
-func EnsureUserIndexes(client *mongo.Client) error {
-	return ensureIndex(client, "users", "username_idx", mongo.IndexModel{
+func EnsurePlayerIndexes(client *mongo.Client) error {
+	return ensureIndex(client, "players", "username_idx", mongo.IndexModel{
 		Keys:    bson.D{{Key: "username", Value: 1}},
 		Options: options.Index().SetUnique(true).SetName("username_idx"),
 	})
 }
 
 func EnsureBankIndexes(client *mongo.Client) error {
-	return ensureIndex(client, "banks", "banks_userId_idx", mongo.IndexModel{
-		Keys:    bson.D{{Key: "userId", Value: 1}},
-		Options: options.Index().SetName("banks_userId_idx"),
+	return ensureIndex(client, "banks", "banks_playerId_idx", mongo.IndexModel{
+		Keys:    bson.D{{Key: "playerId", Value: 1}},
+		Options: options.Index().SetName("banks_playerId_idx"),
 	})
 }
 

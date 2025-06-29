@@ -10,22 +10,28 @@ import (
 	"testing"
 	"time"
 
+	"ponziworld/backend/db"
 	"ponziworld/backend/routes"
 )
 
 func TestConcurrentUserCreation(t *testing.T) {
+	// Ensure database indexes are created before running tests
+	if err := db.EnsureAllIndexes(); err != nil {
+		t.Fatalf("Failed to ensure database indexes: %v", err)
+	}
+	
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
-	t.Run("Multiple users created simultaneously", func(t *testing.T) {
-		const numUsers = 10
+	t.Run("Multiple players created simultaneously", func(t *testing.T) {
+		const numPlayers = 10
 		var wg sync.WaitGroup
-		results := make(chan int, numUsers)
+		results := make(chan int, numPlayers)
 		timestamp := time.Now().Unix()
 
-		for i := range numUsers {
+		for i := range numPlayers {
 			wg.Add(1)
 			go func(userNum int) {
 				defer wg.Done()
@@ -37,7 +43,7 @@ func TestConcurrentUserCreation(t *testing.T) {
 				}
 				jsonData, _ := json.Marshal(createUserData)
 
-				resp, err := http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
+				resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
 				if err != nil {
 					results <- 500
 					return
@@ -57,18 +63,18 @@ func TestConcurrentUserCreation(t *testing.T) {
 			}
 		}
 
-		if successCount != numUsers {
-			t.Errorf("Expected %d successful user creations, got %d", numUsers, successCount)
+		if successCount != numPlayers {
+			t.Errorf("Expected %d successful player creations, got %d", numPlayers, successCount)
 		}
 
 		// Cleanup
-		usersAndBanks := make(map[string]string)
-		for i := 0; i < numUsers; i++ {
+		playersAndBanks := make(map[string]string)
+		for i := 0; i < numPlayers; i++ {
 			username := fmt.Sprintf("concurrent_%d_%d", timestamp, i)
 			bankName := fmt.Sprintf("Bank %d", i)
-			usersAndBanks[username] = bankName
+			playersAndBanks[username] = bankName
 		}
-		CleanupMultipleTestData(usersAndBanks)
+		CleanupMultipleTestData(playersAndBanks)
 	})
 
 	t.Run("Duplicate username creation race condition", func(t *testing.T) {
@@ -91,7 +97,7 @@ func TestConcurrentUserCreation(t *testing.T) {
 				}
 				jsonData, _ := json.Marshal(createUserData)
 
-				resp, err := http.Post(server.URL+"/api/user", "application/json", bytes.NewBuffer(jsonData))
+				resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
 				if err != nil {
 					results <- 500
 					return
