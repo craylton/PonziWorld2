@@ -30,6 +30,10 @@ func EnsureAllIndexes() error {
 		return err
 	}
 	
+	if err := EnsureGameIndexes(client); err != nil {
+		return err
+	}
+	
 	return nil
 }
 
@@ -88,5 +92,14 @@ func EnsurePerformanceHistoryIndexes(client *mongo.Client) error {
 	return ensureIndex(client, "historicalPerformance", "performance_unique_idx", mongo.IndexModel{
 		Keys:    bson.D{{Key: "bankId", Value: 1}, {Key: "day", Value: 1}, {Key: "isClaimed", Value: 1}},
 		Options: options.Index().SetUnique(true).SetName("performance_unique_idx"),
+	})
+}
+
+func EnsureGameIndexes(client *mongo.Client) error {
+	// For the game collection, we don't need specific indexes as there's only one document
+	// But we can ensure the collection exists by creating a basic index on _id
+	return ensureIndex(client, "game", "game_id_idx", mongo.IndexModel{
+		Keys:    bson.D{{Key: "_id", Value: 1}},
+		Options: options.Index().SetName("game_id_idx"),
 	})
 }

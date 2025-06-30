@@ -11,20 +11,22 @@ import (
 const (
 	PerformanceHistoryDays  = 30
 	DefaultPerformanceValue = 1000
-	CurrentDay              = 0 // TODO: Make this dynamic
 )
 
 type PerformanceService struct {
 	bankService *BankService
+	gameService *GameService
 	historyRepo repositories.HistoricalPerformanceRepository
 }
 
 func NewPerformanceService(
 	bankService *BankService,
+	gameService *GameService,
 	historyRepo repositories.HistoricalPerformanceRepository,
 ) *PerformanceService {
 	return &PerformanceService{
 		bankService: bankService,
+		gameService: gameService,
 		historyRepo: historyRepo,
 	}
 }
@@ -35,7 +37,10 @@ func (s *PerformanceService) GetPerformanceHistory(ctx context.Context, username
 		return nil, err
 	}
 
-	currentDay := CurrentDay
+	currentDay, err := s.gameService.GetCurrentDay(ctx)
+	if err != nil {
+		return nil, err
+	}
 	startDay := currentDay - PerformanceHistoryDays
 
 	// Get performance data
@@ -129,11 +134,15 @@ func (s *PerformanceService) ensureClaimedHistory(
 func (s *PerformanceService) CreateInitialPerformanceHistory(
 	ctx context.Context,
 	bankID primitive.ObjectID,
-	currentDay int,
 	initialCapital int64,
 ) error {
+	currentDay, err := s.gameService.GetCurrentDay(ctx)
+	if err != nil {
+		return err
+	}
+
 	startDay := currentDay - PerformanceHistoryDays
-	_, err := s.ensureClaimedHistory(ctx, bankID, startDay, currentDay, []models.HistoricalPerformance{})
+	_, err = s.ensureClaimedHistory(ctx, bankID, startDay, currentDay, []models.HistoricalPerformance{})
 	if err != nil {
 		return err
 	}

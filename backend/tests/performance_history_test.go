@@ -14,6 +14,9 @@ import (
 )
 
 func TestPerformanceHistoryEndpoint(t *testing.T) {
+	// Reset game state to ensure consistent test environment
+	ResetGameState()
+
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux)
 	server := httptest.NewServer(mux)

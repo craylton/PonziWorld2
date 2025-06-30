@@ -13,6 +13,7 @@ type ServiceManager struct {
 	Asset       *AssetService
 	Performance *PerformanceService
 	Player      *PlayerService
+	Game        *GameService
 }
 
 // NewServiceManager creates and wires up all services
@@ -22,12 +23,14 @@ func NewServiceManager(db *mongo.Database) *ServiceManager {
 	bankRepo := repositories.NewBankRepository(db)
 	assetRepo := repositories.NewAssetRepository(db)
 	historyRepo := repositories.NewHistoricalPerformanceRepository(db)
+	gameRepo := repositories.NewGameRepository(db)
 
 	// Create services
 	authService := NewAuthService(playerRepo)
 	bankService := NewBankService(playerRepo, bankRepo, assetRepo)
 	assetService := NewAssetService(assetRepo)
-	performanceService := NewPerformanceService(bankService, historyRepo)
+	gameService := NewGameService(gameRepo)
+	performanceService := NewPerformanceService(bankService, gameService, historyRepo)
 	playerService := NewPlayerService(authService, bankService, assetService, performanceService)
 
 	return &ServiceManager{
@@ -36,5 +39,6 @@ func NewServiceManager(db *mongo.Database) *ServiceManager {
 		Asset:       assetService,
 		Performance: performanceService,
 		Player:      playerService,
+		Game:        gameService,
 	}
 }

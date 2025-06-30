@@ -15,6 +15,9 @@ import (
 
 // TestFullUserWorkflow tests the complete end-to-end player workflow
 func TestFullUserWorkflow(t *testing.T) {
+	// Reset game state to ensure consistent test environment
+	ResetGameState()
+	
 	// Setup test server
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux)

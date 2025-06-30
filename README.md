@@ -62,6 +62,9 @@ To start the React UI locally:
 - `GET /api/bank` - Get player's bank details and assets
 - `GET /api/performanceHistory/ownbank/{bankId}` - Get 30 days of performance history for a bank you own
 
+### Game Management
+- `POST /api/nextDay` - Increment the current game day
+
 ### Notes
 - All authenticated endpoints require a Bearer token in the Authorization header
-- Game operates on a daily cycle (currently using day 0 as reference point)
+- Game operates on a daily cycle

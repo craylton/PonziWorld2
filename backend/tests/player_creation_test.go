@@ -19,6 +19,9 @@ func TestPlayerCreation(t *testing.T) {
 		t.Fatalf("Failed to ensure database indexes: %v", err)
 	}
 	
+	// Reset game state to ensure consistent test environment
+	ResetGameState()
+	
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux)
 	server := httptest.NewServer(mux)
