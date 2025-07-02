@@ -62,3 +62,37 @@ func CreateNewPlayerHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 }
+
+// GetPlayerHandler handles GET /api/player - returns current player info
+func GetPlayerHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	// Get username from JWT middleware
+	username := r.Header.Get("X-Username")
+	if username == "" {
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Username not found in token"})
+		return
+	}
+
+	client, ctx, cancel := db.ConnectDB()
+	defer cancel()
+	defer client.Disconnect(ctx)
+
+	serviceManager := services.NewServiceManager(client.Database("ponziworld"))
+	player, err := serviceManager.Auth.GetPlayerByUsername(ctx, username)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to fetch player data"})
+		return
+	}
+
+	// Return player data (password field is already excluded by JSON tag)
+	json.NewEncoder(w).Encode(player)
+}

@@ -8,6 +8,7 @@ import AssetList from './AssetList/AssetList';
 import { makeAuthenticatedRequest } from '../auth';
 import type { Bank } from '../models/Bank';
 import type { PerformanceHistory } from '../models/PerformanceHistory';
+import type { Player } from '../models/User';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -15,15 +16,25 @@ interface DashboardProps {
 
 export default function Dashboard({ onLogout }: DashboardProps) {
   const [bank, setBank] = useState<Bank | null>(null);
+  const [player, setPlayer] = useState<Player | null>(null);
   const [performanceHistory, setPerformanceHistory] = useState<PerformanceHistory | null>(null);
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
-  const [isBankLoading, setIsBankLoading] = useState(true);
+  const [isInitialDataLoading, setIsInitialDataLoading] = useState(true);
   const [isHistoryLoading, setIsHistoryLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch player data
+        const playerResponse = await makeAuthenticatedRequest('/api/player');
+        if (!playerResponse.ok) {
+          onLogout();
+          return;
+        }
+        const playerData: Player = await playerResponse.json();
+        setPlayer(playerData);
+
         // Fetch bank data
         const bankResponse = await makeAuthenticatedRequest('/api/bank');
         if (!bankResponse.ok) {
@@ -32,9 +43,11 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         }
         const bankData: Bank = await bankResponse.json();
         setBank(bankData);
-        setIsBankLoading(false);
 
-        // Fetch performance history
+        // Both essential data pieces loaded
+        setIsInitialDataLoading(false);
+
+        // Fetch performance history (non-essential, can load separately)
         const historyResponse = await makeAuthenticatedRequest(`/api/performanceHistory/ownbank/${bankData.id}`);
         if (historyResponse.ok) {
           const historyData: PerformanceHistory = await historyResponse.json();
@@ -49,7 +62,25 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     fetchData();
   }, [onLogout]);
 
-  if (isBankLoading || !bank) {
+  const handleAdvanceDay = async () => {
+    try {
+      const response = await makeAuthenticatedRequest('/api/nextDay', {
+        method: 'POST',
+      });
+      
+      if (response.ok) {
+        // Optionally refresh the page or show a success message
+        window.location.reload();
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to advance day: ${errorData.error || 'Unknown error'}`);
+      }
+    } catch {
+      alert('Failed to advance day: Network error');
+    }
+  };
+
+  if (isInitialDataLoading || !bank || !player) {
     return <div>Loading...</div>;
   }
 
@@ -93,6 +124,16 @@ export default function Dashboard({ onLogout }: DashboardProps) {
           </button>
         </SidePanel>
       </div>
+      {player.isAdmin && (
+        <div className="dashboard-admin-section">
+          <button
+            onClick={handleAdvanceDay}
+            className="dashboard-admin-button"
+          >
+            Advance to next day
+          </button>
+        </div>
+      )}
     </div>
   );
 }

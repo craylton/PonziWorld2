@@ -56,6 +56,7 @@ func (s *AuthService) CreatePlayer(ctx context.Context, username, password strin
 		Id:       primitive.NewObjectID(),
 		Username: username,
 		Password: string(hashedPassword),
+		IsAdmin:  false,
 	}
 
 	err = s.playerRepo.Create(ctx, player)
@@ -66,5 +67,13 @@ func (s *AuthService) CreatePlayer(ctx context.Context, username, password strin
 		return nil, err
 	}
 
+	return player, nil
+}
+
+func (s *AuthService) GetPlayerByUsername(ctx context.Context, username string) (*models.Player, error) {
+	player, err := s.playerRepo.FindByUsername(ctx, username)
+	if err != nil {
+		return nil, err
+	}
 	return player, nil
 }

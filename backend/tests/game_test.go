@@ -31,11 +31,19 @@ func TestNextDayEndpoint(t *testing.T) {
 	db := client.Database("ponziworld")
 	db.Collection("game").DeleteMany(ctx, bson.M{})
 
+	// Create admin user for testing
+	adminToken, err := CreateAdminUserForTest("testadmin", "password123", "TestAdminBank")
+	if err != nil {
+		t.Fatalf("Failed to create admin user: %v", err)
+	}
+	defer CleanupTestData("testadmin", "TestAdminBank")
+
 	t.Run("should create initial day 0 and increment to day 1", func(t *testing.T) {
 		req, err := http.NewRequest("POST", server.URL+"/api/nextDay", nil)
 		if err != nil {
 			t.Fatal(err)
 		}
+		req.Header.Set("Authorization", "Bearer "+adminToken)
 
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
@@ -66,6 +74,7 @@ func TestNextDayEndpoint(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		req.Header.Set("Authorization", "Bearer "+adminToken)
 
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
@@ -94,6 +103,7 @@ func TestNextDayEndpoint(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+		req.Header.Set("Authorization", "Bearer "+adminToken)
 
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
@@ -103,6 +113,31 @@ func TestNextDayEndpoint(t *testing.T) {
 
 		if resp.StatusCode != http.StatusMethodNotAllowed {
 			t.Errorf("Expected status code %d, got %d", http.StatusMethodNotAllowed, resp.StatusCode)
+		}
+	})
+
+	t.Run("should reject non-admin users", func(t *testing.T) {
+		// Create a regular (non-admin) user
+		regularToken, err := CreateRegularUserForTest("regularuser", "password123", "RegularBank")
+		if err != nil {
+			t.Fatal("Failed to create regular user:", err)
+		}
+		defer CleanupTestData("regularuser", "RegularBank")
+
+		req, err := http.NewRequest("POST", server.URL+"/api/nextDay", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		req.Header.Set("Authorization", "Bearer "+regularToken)
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusForbidden {
+			t.Errorf("Expected status code %d, got %d", http.StatusForbidden, resp.StatusCode)
 		}
 	})
 }

@@ -88,6 +88,33 @@
   cursor: pointer;
 }
 
+.dashboard-admin-section {
+  display: flex;
+  justify-content: center;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.dashboard-admin-button {
+  padding: 12px 24px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.dashboard-admin-button:hover {
+  background-color: #218838;
+}
+
+.dashboard-admin-button:active {
+  background-color: #1e7e34;
+}
+
 @media (max-width: 900px) {
   .dashboard-layout {
     flex-direction: column;

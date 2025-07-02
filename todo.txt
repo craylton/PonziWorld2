@@ -60,4 +60,29 @@ Other things to consider
         But I feel like there should be a good thing for logging in too, like a new investor or reduced fixed costs
     Monetisation?
         Probably way too early to think about this but who knows, maybe this project will actually get finished some day
-        
+
+
+FIGURING OUT HOW MUCH MONEY EACH BANK HAS
+This is complicated because A can invest in B, who can then invest in A again
+And this could be a really complicated loop with hundreds of banks all investing in one another
+So think about it this way: we have a list of 'resolved' banks
+    Each resolved bank is just a bank ID, its previous value and its resolved value
+    At first the list is empty
+1. We loop through each bank
+    Get a list of everything this bank has invested in
+    If everything in that list is either non-player or in the resolved list,
+        We can resolve this bank and add it to the resolved banks list
+2. We then do step 1 again
+Each time we do this, we need to keep track of whether we actually resolved anything
+When we finally do an iteration where nothing is resolved, got the step 3
+3. Find a bank which meets all these criteria:
+    is not in the resolved list
+    has other banks investing in it
+    is invested in a resolved or non player asset
+4. For each bank found in step 3:
+    find all of the resolved banks and apply them
+    find all of the partially resolved banks and apply them
+    assume that any unresolved investments are unchanged
+    store the bank as partially resolved level 1
+5. Repeat step 4 a few times until it converges
+    On each iteration we should increment the partial resolution level
