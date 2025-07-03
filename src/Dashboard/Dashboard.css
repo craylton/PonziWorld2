@@ -81,23 +81,27 @@
 
 .dashboard-logout-button {
   padding: 10px 20px;
-  background-color: #dc3545;
+  background-color: #bd3f9f;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  width: 100%;
+  margin-bottom: 1rem;
+  transition: background-color 0.2s;
+}
+
+.dashboard-logout-button:hover {
+  background-color: #f058c8;
 }
 
 .dashboard-admin-section {
-  display: flex;
-  justify-content: center;
-  padding: 1rem;
-  margin-top: 1rem;
+  padding-top: 1rem;
 }
 
 .dashboard-admin-button {
   padding: 12px 24px;
-  background-color: #28a745;
+  background-color: #bd3f9f;
   color: white;
   border: none;
   border-radius: 4px;
@@ -105,14 +109,15 @@
   font-size: 16px;
   font-weight: 500;
   transition: background-color 0.2s;
+  width: 100%;
 }
 
 .dashboard-admin-button:hover {
-  background-color: #218838;
+  background-color: #f058c8;
 }
 
 .dashboard-admin-button:active {
-  background-color: #1e7e34;
+  background-color: #e048b8;
 }
 
 @media (max-width: 900px) {
