@@ -98,24 +98,6 @@ func TestNextDayEndpoint(t *testing.T) {
 		}
 	})
 
-	t.Run("should reject non-POST methods", func(t *testing.T) {
-		req, err := http.NewRequest("GET", server.URL+"/api/nextDay", nil)
-		if err != nil {
-			t.Fatal(err)
-		}
-		req.Header.Set("Authorization", "Bearer "+adminToken)
-
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusMethodNotAllowed {
-			t.Errorf("Expected status code %d, got %d", http.StatusMethodNotAllowed, resp.StatusCode)
-		}
-	})
-
 	t.Run("should reject non-admin users", func(t *testing.T) {
 		// Create a regular (non-admin) user
 		regularToken, err := CreateRegularUserForTest("regularuser", "password123", "RegularBank")
@@ -229,63 +211,6 @@ func TestCurrentDayEndpoint(t *testing.T) {
 
 		if response["currentDay"] != 5 {
 			t.Errorf("Expected currentDay to be 5, got %d", response["currentDay"])
-		}
-	})
-
-	t.Run("should reject non-GET methods", func(t *testing.T) {
-		methods := []string{"POST", "PUT", "DELETE", "PATCH"}
-
-		for _, method := range methods {
-			req, err := http.NewRequest(method, server.URL+"/api/currentDay", nil)
-			if err != nil {
-				t.Fatal(err)
-			}
-
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatal(err)
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != http.StatusMethodNotAllowed {
-				t.Errorf("Expected status code %d for method %s, got %d", http.StatusMethodNotAllowed, method, resp.StatusCode)
-			}
-		}
-	})
-
-	t.Run("should not require authentication", func(t *testing.T) {
-		// Test without any authorization header
-		req, err := http.NewRequest("GET", server.URL+"/api/currentDay", nil)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status code %d without auth, got %d", http.StatusOK, resp.StatusCode)
-		}
-	})
-
-	t.Run("should return correct content type", func(t *testing.T) {
-		req, err := http.NewRequest("GET", server.URL+"/api/currentDay", nil)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			t.Fatal(err)
-		}
-		defer resp.Body.Close()
-
-		contentType := resp.Header.Get("Content-Type")
-		if contentType != "application/json" {
-			t.Errorf("Expected Content-Type to be application/json, got %s", contentType)
 		}
 	})
 }

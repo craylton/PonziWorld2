@@ -64,6 +64,7 @@ To start the React UI locally:
 - `GET /api/performanceHistory/ownbank/{bankId}` - Get 30 days of performance history for a bank you own
 
 ### Game Management
+- `GET /api/currentDay` - Gets the current game day
 - `POST /api/nextDay` - Increment the current game day (Admin only)
 
 ### Notes

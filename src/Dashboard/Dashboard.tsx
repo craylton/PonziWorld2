@@ -129,15 +129,16 @@ export default function Dashboard({ onLogout }: DashboardProps) {
           <h3>Settings</h3>
           <button
             onClick={onLogout}
-            className='dashboard-logout-button'
+            className='dashboard-settings-button'
           >
             Logout
           </button>
           {player.isAdmin && (
             <div className="dashboard-admin-section">
+              <p>Admin only</p>
               <button
                 onClick={handleAdvanceDay}
-                className="dashboard-admin-button"
+                className="dashboard-settings-button"
               >
                 Advance to next day
               </button>

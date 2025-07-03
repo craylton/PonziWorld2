@@ -10,8 +10,8 @@ import (
 	"ponziworld/backend/services"
 )
 
-// validateJWT extracts and validates JWT token from request, returns username
-func validateJWT(w http.ResponseWriter, r *http.Request) (string, bool) {
+// validateJwt extracts and validates JWT token from request, returns username
+func validateJwt(w http.ResponseWriter, r *http.Request) (string, bool) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		w.Header().Set("Content-Type", "application/json")
@@ -39,10 +39,10 @@ func validateJWT(w http.ResponseWriter, r *http.Request) (string, bool) {
 	return username, true
 }
 
-// JWTMiddleware validates JWT for protected routes
-func JWTMiddleware(next http.HandlerFunc) http.HandlerFunc {
+// JwtMiddleware validates JWT for protected routes
+func JwtMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		username, ok := validateJWT(w, r)
+		username, ok := validateJwt(w, r)
 		if !ok {
 			return
 		}
@@ -53,10 +53,10 @@ func JWTMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// AdminMiddleware validates that the user is an admin
-func AdminMiddleware(next http.HandlerFunc) http.HandlerFunc {
+// AdminJwtMiddleware validates that the user is an admin
+func AdminJwtMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		username, ok := validateJWT(w, r)
+		username, ok := validateJwt(w, r)
 		if !ok {
 			return
 		}
