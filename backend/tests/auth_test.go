@@ -13,7 +13,7 @@ import (
 	"ponziworld/backend/routes"
 )
 
-func TestJWTAuth(t *testing.T) {
+func TestJwtAuth(t *testing.T) {
 	t.Run("Generate and validate token", func(t *testing.T) {
 		username := "testuser"
 		token, err := auth.GenerateToken(username)
@@ -46,7 +46,7 @@ func TestJWTAuth(t *testing.T) {
 	})
 }
 
-func TestJWTMiddleware(t *testing.T) {
+func TestJwtMiddleware(t *testing.T) {
 	// Create a test handler that the middleware will protect
 	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		username := r.Header.Get("X-Username")
@@ -65,7 +65,7 @@ func TestJWTMiddleware(t *testing.T) {
 		req.Header.Set("Authorization", "Bearer "+token)
 		rec := httptest.NewRecorder()
 
-		middleware.JWTMiddleware(testHandler)(rec, req)
+		middleware.JwtMiddleware(testHandler)(rec, req)
 
 		if rec.Code != http.StatusOK {
 			t.Errorf("Expected status 200, got %d", rec.Code)
@@ -82,7 +82,7 @@ func TestJWTMiddleware(t *testing.T) {
 		req := httptest.NewRequest("GET", "/test", nil)
 		rec := httptest.NewRecorder()
 
-		middleware.JWTMiddleware(testHandler)(rec, req)
+		middleware.JwtMiddleware(testHandler)(rec, req)
 
 		if rec.Code != http.StatusUnauthorized {
 			t.Errorf("Expected status 401, got %d", rec.Code)
@@ -94,7 +94,7 @@ func TestJWTMiddleware(t *testing.T) {
 		req.Header.Set("Authorization", "Invalid token-format")
 		rec := httptest.NewRecorder()
 
-		middleware.JWTMiddleware(testHandler)(rec, req)
+		middleware.JwtMiddleware(testHandler)(rec, req)
 
 		if rec.Code != http.StatusUnauthorized {
 			t.Errorf("Expected status 401, got %d", rec.Code)
@@ -106,7 +106,7 @@ func TestJWTMiddleware(t *testing.T) {
 		req.Header.Set("Authorization", "Bearer invalid.token.here")
 		rec := httptest.NewRecorder()
 
-		middleware.JWTMiddleware(testHandler)(rec, req)
+		middleware.JwtMiddleware(testHandler)(rec, req)
 
 		if rec.Code != http.StatusUnauthorized {
 			t.Errorf("Expected status 401, got %d", rec.Code)
@@ -118,7 +118,7 @@ func TestJWTMiddleware(t *testing.T) {
 		req.Header.Set("Authorization", "Bearer ")
 		rec := httptest.NewRecorder()
 
-		middleware.JWTMiddleware(testHandler)(rec, req)
+		middleware.JwtMiddleware(testHandler)(rec, req)
 
 		if rec.Code != http.StatusUnauthorized {
 			t.Errorf("Expected status 401, got %d", rec.Code)

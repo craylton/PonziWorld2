@@ -14,6 +14,9 @@ This project is a monorepo with a Vite+React+TypeScript frontend and a Go backen
   - When reviewing your own changes you might realise you've missed something or that you can improve/tidy your code.
 7. After making backend changes, run the backend tests to ensure everything is still working.
   - You can run the tests with `go test -v ./tests/` in the `backend` directory.
+8. Do not implement a proposed solution that you believe to be suboptimal or not in line with best practice.
+  - Instead, make your suggestion and see what the team thinks.
+  - This is to avoid introducing potential issues or technical debt.
 
 ## The Application Layout
 

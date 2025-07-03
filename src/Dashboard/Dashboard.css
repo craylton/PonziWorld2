@@ -79,13 +79,27 @@
   display: none;
 }
 
-.dashboard-logout-button {
-  padding: 10px 20px;
-  background-color: #dc3545;
+.dashboard-admin-section {
+  margin-top: 1rem;
+  border: 3px dotted #3d1540;
+  border-radius: 12px;
+}
+
+.dashboard-settings-button {
+  padding: 12px 24px;
+  background-color: #bd3f9f;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  transition: background-color 0.2s;
+  margin-bottom: 1rem;
+  width: 280px;
+  transition: background-color 0.4s;
+}
+
+.dashboard-settings-button:hover {
+  background-color: #f058c8;
 }
 
 @media (max-width: 900px) {

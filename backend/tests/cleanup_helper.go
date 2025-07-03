@@ -10,6 +10,17 @@ import (
 	"ponziworld/backend/models"
 )
 
+// ResetGameState resets the game state to day 0
+func ResetGameState() {
+	client, ctx, cancel := db.ConnectDB()
+	defer cancel()
+	defer client.Disconnect(ctx)
+
+	// Delete game state to reset to initial state
+	gameCollection := client.Database("ponziworld").Collection("game")
+	gameCollection.DeleteMany(ctx, bson.M{})
+}
+
 // CleanupTestData removes test data from the database
 // This function should be called in t.Cleanup() for each test
 func CleanupTestData(username, bankName string) {

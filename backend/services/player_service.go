@@ -57,7 +57,7 @@ func (s *PlayerService) CreateNewPlayer(ctx context.Context, username, password,
 	}
 
 	// Create initial performance history
-	err = s.performanceService.CreateInitialPerformanceHistory(ctx, bank.Id, 0, initialCapital)
+	err = s.performanceService.CreateInitialPerformanceHistory(ctx, bank.Id, initialCapital)
 	if err != nil {
 		return err
 	}

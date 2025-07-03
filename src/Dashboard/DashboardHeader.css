@@ -11,6 +11,14 @@
   margin: 1.5rem auto 1.5rem auto;
   width: 100%;
 }
+.dashboard-header__day {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #cecece;
+  margin-bottom: 0.25rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
 .dashboard-header__bank {
   font-size: 2rem;
   font-weight: 700;
