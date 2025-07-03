@@ -46,6 +46,11 @@ JWT secret
     What is this?
     Need to do some research
 
+Caching
+    Very little changes throughout the day
+    Making the same request twice will almost always return the same thing
+    Might as well put everything in a cache
+
 Other things to consider
     Inflation
         If you put your money in a HYSA and never lie, you'll keep making more money

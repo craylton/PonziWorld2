@@ -142,73 +142,150 @@ func TestNextDayEndpoint(t *testing.T) {
 	})
 }
 
-func TestGameService(t *testing.T) {
+func TestCurrentDayEndpoint(t *testing.T) {
 	// Ensure database indexes are created before running tests
 	if err := db.EnsureAllIndexes(); err != nil {
 		t.Fatalf("Failed to ensure database indexes: %v", err)
 	}
 
+	mux := http.NewServeMux()
+	routes.RegisterRoutes(mux)
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
 	// Clean up game collection before test
 	client, ctx, cancel := db.ConnectDB()
 	defer cancel()
 	defer client.Disconnect(ctx)
+	db := client.Database("ponziworld")
+	db.Collection("game").DeleteMany(ctx, bson.M{})
 
-	database := client.Database("ponziworld")
-	database.Collection("game").DeleteMany(ctx, bson.M{})
-
-	serviceManager := services.NewServiceManager(database)
-
-	t.Run("should return 0 for initial day", func(t *testing.T) {
-		day, err := serviceManager.Game.GetCurrentDay(ctx)
+	t.Run("should return day 0 when no game state exists", func(t *testing.T) {
+		req, err := http.NewRequest("GET", server.URL+"/api/currentDay", nil)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if day != 0 {
-			t.Errorf("Expected initial day to be 0, got %d", day)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			bodyBytes, _ := io.ReadAll(resp.Body)
+			t.Errorf("Expected status code %d, got %d. Response: %s", http.StatusOK, resp.StatusCode, string(bodyBytes))
+			return
+		}
+
+		var response map[string]int
+		err = json.NewDecoder(resp.Body).Decode(&response)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if response["currentDay"] != 0 {
+			t.Errorf("Expected currentDay to be 0, got %d", response["currentDay"])
 		}
 	})
 
-	t.Run("should increment day correctly", func(t *testing.T) {
-		day, err := serviceManager.Game.NextDay(ctx)
+	t.Run("should return current day when game state exists", func(t *testing.T) {
+		// Create a game state with day 5
+		serviceManager := services.NewServiceManager(db)
+		_, err := serviceManager.Game.NextDay(ctx) // Creates day 1
+		if err != nil {
+			t.Fatal(err)
+		}
+		// Advance to day 5
+		for i := 0; i < 4; i++ {
+			_, err = serviceManager.Game.NextDay(ctx)
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		req, err := http.NewRequest("GET", server.URL+"/api/currentDay", nil)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if day != 1 {
-			t.Errorf("Expected day to be 1 after increment, got %d", day)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			bodyBytes, _ := io.ReadAll(resp.Body)
+			t.Errorf("Expected status code %d, got %d. Response: %s", http.StatusOK, resp.StatusCode, string(bodyBytes))
+			return
 		}
 
-		// Verify with GetCurrentDay
-		currentDay, err := serviceManager.Game.GetCurrentDay(ctx)
+		var response map[string]int
+		err = json.NewDecoder(resp.Body).Decode(&response)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if currentDay != 1 {
-			t.Errorf("Expected current day to be 1, got %d", currentDay)
+		if response["currentDay"] != 5 {
+			t.Errorf("Expected currentDay to be 5, got %d", response["currentDay"])
 		}
 	})
 
-	t.Run("should increment day multiple times", func(t *testing.T) {
-		// Increment to day 2
-		day, err := serviceManager.Game.NextDay(ctx)
+	t.Run("should reject non-GET methods", func(t *testing.T) {
+		methods := []string{"POST", "PUT", "DELETE", "PATCH"}
+
+		for _, method := range methods {
+			req, err := http.NewRequest(method, server.URL+"/api/currentDay", nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusMethodNotAllowed {
+				t.Errorf("Expected status code %d for method %s, got %d", http.StatusMethodNotAllowed, method, resp.StatusCode)
+			}
+		}
+	})
+
+	t.Run("should not require authentication", func(t *testing.T) {
+		// Test without any authorization header
+		req, err := http.NewRequest("GET", server.URL+"/api/currentDay", nil)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if day != 2 {
-			t.Errorf("Expected day to be 2, got %d", day)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
 		}
+		defer resp.Body.Close()
 
-		// Increment to day 3
-		day, err = serviceManager.Game.NextDay(ctx)
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("Expected status code %d without auth, got %d", http.StatusOK, resp.StatusCode)
+		}
+	})
+
+	t.Run("should return correct content type", func(t *testing.T) {
+		req, err := http.NewRequest("GET", server.URL+"/api/currentDay", nil)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if day != 3 {
-			t.Errorf("Expected day to be 3, got %d", day)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+
+		contentType := resp.Header.Get("Content-Type")
+		if contentType != "application/json" {
+			t.Errorf("Expected Content-Type to be application/json, got %s", contentType)
 		}
 	})
 }

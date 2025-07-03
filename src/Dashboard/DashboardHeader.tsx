@@ -6,6 +6,7 @@ import { formatCurrency } from '../utils/currency';
 import type { PerformanceHistory } from '../models/PerformanceHistory';
 
 interface DashboardHeaderProps {
+  currentDay: number;
   bankName: string;
   claimedCapital: number;
   actualCapital: number;
@@ -16,6 +17,7 @@ interface DashboardHeaderProps {
 type PopupType = 'claimed' | 'actual' | null;
 
 export default function DashboardHeader({
+  currentDay,
   bankName,
   claimedCapital,
   actualCapital,
@@ -51,6 +53,7 @@ export default function DashboardHeader({
   return (
     <>
       <header className="dashboard-header">
+        <div className="dashboard-header__day">Day {currentDay}</div>
         <div className="dashboard-header__bank">{bankName}</div>
         <div className="dashboard-header__capitals">
           <button

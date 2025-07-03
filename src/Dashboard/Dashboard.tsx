@@ -18,6 +18,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [bank, setBank] = useState<Bank | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
   const [performanceHistory, setPerformanceHistory] = useState<PerformanceHistory | null>(null);
+  const [currentDay, setCurrentDay] = useState<number | null>(null);
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
   const [isInitialDataLoading, setIsInitialDataLoading] = useState(true);
@@ -26,6 +27,15 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch current day (non-authenticated)
+        const currentDayResponse = await fetch('/api/currentDay');
+        if (!currentDayResponse.ok) {
+          onLogout();
+          return;
+        }
+        const currentDayData: { currentDay: number } = await currentDayResponse.json();
+        setCurrentDay(currentDayData.currentDay);
+
         // Fetch player data
         const playerResponse = await makeAuthenticatedRequest('/api/player');
         if (!playerResponse.ok) {
@@ -44,7 +54,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         const bankData: Bank = await bankResponse.json();
         setBank(bankData);
 
-        // Both essential data pieces loaded
+        // All essential data pieces loaded
         setIsInitialDataLoading(false);
 
         // Fetch performance history (non-essential, can load separately)
@@ -80,13 +90,14 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     }
   };
 
-  if (isInitialDataLoading || !bank || !player) {
+  if (isInitialDataLoading || !bank || !player || currentDay === null) {
     return <div>Loading...</div>;
   }
 
   return (
     <div className="dashboard-root">
       <DashboardHeader
+        currentDay={currentDay}
         bankName={bank.bankName}
         claimedCapital={bank.claimedCapital}
         actualCapital={bank.actualCapital}
