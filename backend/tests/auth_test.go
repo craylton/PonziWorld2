@@ -127,8 +127,12 @@ func TestJwtMiddleware(t *testing.T) {
 }
 
 func TestLoginEndpoint(t *testing.T) {
+	// Create test dependencies
+	deps := CreateTestDependencies("bank")
+	defer CleanupTestDependencies(deps)
+	
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux)
+	routes.RegisterRoutes(mux,deps)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 

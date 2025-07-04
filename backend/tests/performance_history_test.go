@@ -14,11 +14,12 @@ import (
 )
 
 func TestPerformanceHistoryEndpoint(t *testing.T) {
-	// Reset game state to ensure consistent test environment
-	ResetGameState()
-
+	// Create test dependencies
+	deps := CreateTestDependencies("bank")
+	defer CleanupTestDependencies(deps)
+	
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux)
+	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
@@ -182,8 +183,12 @@ func TestPerformanceHistoryEndpoint(t *testing.T) {
 }
 
 func TestPerformanceHistoryUnauthorized(t *testing.T) {
+	// Create test dependencies
+	deps := CreateTestDependencies("bank")
+	defer CleanupTestDependencies(deps)
+	
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux)
+	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
@@ -206,8 +211,12 @@ func TestPerformanceHistoryUnauthorized(t *testing.T) {
 }
 
 func TestPerformanceHistoryInvalidBankID(t *testing.T) {
+	// Create test dependencies
+	deps := CreateTestDependencies("bank")
+	defer CleanupTestDependencies(deps)
+	
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux)
+	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
@@ -270,8 +279,12 @@ func TestPerformanceHistoryInvalidBankID(t *testing.T) {
 }
 
 func TestPerformanceHistoryOtherPlayersBank(t *testing.T) {
+	// Create test dependencies
+	deps := CreateTestDependencies("bank")
+	defer CleanupTestDependencies(deps)
+	
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux)
+	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
@@ -396,8 +409,12 @@ func TestPerformanceHistoryOtherPlayersBank(t *testing.T) {
 }
 
 func TestPerformanceHistoryDataPersistence(t *testing.T) {
+	// Create test dependencies
+	deps := CreateTestDependencies("bank")
+	defer CleanupTestDependencies(deps)
+	
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux)
+	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 

@@ -1,16 +1,27 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
 
-	"ponziworld/backend/db"
+	"ponziworld/backend/config"
 	"ponziworld/backend/services"
 )
 
+// PlayerHandler handles player-related requests
+type PlayerHandler struct {
+	deps *config.HandlerDependencies
+}
+
+// NewBankHandler creates a new BankHandler
+func NewPlayerHandler(deps *config.HandlerDependencies) *PlayerHandler {
+	return &PlayerHandler{deps: deps}
+}
+
 // CreateNewPlayerHandler handles POST /api/newPlayer
-func CreateNewPlayerHandler(w http.ResponseWriter, r *http.Request) {
+func (h *PlayerHandler) CreateNewPlayer(w http.ResponseWriter, r *http.Request) {
     if r.Method != http.MethodPost {		
 		w.Header().Set("Allow", http.MethodPost)
         http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -40,12 +51,9 @@ func CreateNewPlayerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client, ctx, cancel := db.ConnectDB()
-	defer cancel()
-	defer client.Disconnect(ctx)
-
-	// Create service manager
-	serviceManager := services.NewServiceManager(client.Database("ponziworld"))
+	// Use the injected service manager and create a new context for this request
+	ctx := context.Background() // Create a fresh context for this request
+	serviceManager := h.deps.ServiceManager
 
 	// Create new player with bank and initial assets
 	err := serviceManager.Player.CreateNewPlayer(ctx, req.Username, req.Password, req.BankName)
@@ -64,7 +72,7 @@ func CreateNewPlayerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetPlayerHandler handles GET /api/player - returns current player info
-func GetPlayerHandler(w http.ResponseWriter, r *http.Request) {
+func (h *PlayerHandler) GetPlayer(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -81,11 +89,10 @@ func GetPlayerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client, ctx, cancel := db.ConnectDB()
-	defer cancel()
-	defer client.Disconnect(ctx)
+	// Use the injected service manager and create a new context for this request
+	ctx := context.Background() // Create a fresh context for this request
+	serviceManager := h.deps.ServiceManager
 
-	serviceManager := services.NewServiceManager(client.Database("ponziworld"))
 	player, err := serviceManager.Auth.GetPlayerByUsername(ctx, username)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

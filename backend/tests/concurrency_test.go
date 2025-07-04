@@ -10,18 +10,16 @@ import (
 	"testing"
 	"time"
 
-	"ponziworld/backend/db"
 	"ponziworld/backend/routes"
 )
 
 func TestConcurrentUserCreation(t *testing.T) {
-	// Ensure database indexes are created before running tests
-	if err := db.EnsureAllIndexes(); err != nil {
-		t.Fatalf("Failed to ensure database indexes: %v", err)
-	}
-	
+	// Create test dependencies
+	deps := CreateTestDependencies("bank")
+	defer CleanupTestDependencies(deps)
+		
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux)
+	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
