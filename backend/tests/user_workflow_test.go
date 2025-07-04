@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"ponziworld/backend/db"
 	"ponziworld/backend/models"
 	"ponziworld/backend/routes"
 )
@@ -18,6 +19,11 @@ func TestFullUserWorkflow(t *testing.T) {
 	// Create test dependencies
 	deps := CreateTestDependencies("bank")
 	defer CleanupTestDependencies(deps)
+	
+	// Ensure database indexes are created before running tests
+	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
+		t.Fatalf("Failed to ensure database indexes: %v", err)
+	}
 	
 	// Setup test server
 	mux := http.NewServeMux()
@@ -145,10 +151,5 @@ func TestFullUserWorkflow(t *testing.T) {
 				t.Errorf("Expected asset amount %d, got %d", defaultCapital, bankResponse.Assets[0].Amount)
 			}
 		}
-	})
-
-	// Cleanup: Remove test player, bank, and assets from database
-	t.Cleanup(func() {
-		CleanupTestData(testUsername, testBankName)
 	})
 }

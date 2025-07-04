@@ -5,10 +5,11 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"testing"
+
 	"ponziworld/backend/db"
 	"ponziworld/backend/routes"
 	"ponziworld/backend/services"
-	"testing"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -17,6 +18,11 @@ func TestNextDayEndpoint(t *testing.T) {
 	// Create test dependencies
 	deps := CreateTestDependencies("bank")
 	defer CleanupTestDependencies(deps)
+	
+	// Ensure database indexes are created before running tests
+	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
+		t.Fatalf("Failed to ensure database indexes: %v", err)
+	}
 	
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux, deps)
@@ -35,7 +41,6 @@ func TestNextDayEndpoint(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create admin user: %v", err)
 	}
-	defer CleanupTestData("testadmin", "TestAdminBank")
 
 	t.Run("should create initial day 0 and increment to day 1", func(t *testing.T) {
 		req, err := http.NewRequest("POST", server.URL+"/api/nextDay", nil)
@@ -103,7 +108,6 @@ func TestNextDayEndpoint(t *testing.T) {
 		if err != nil {
 			t.Fatal("Failed to create regular user:", err)
 		}
-		defer CleanupTestData("regularuser", "RegularBank")
 
 		req, err := http.NewRequest("POST", server.URL+"/api/nextDay", nil)
 		if err != nil {
@@ -128,6 +132,11 @@ func TestCurrentDayEndpoint(t *testing.T) {
 	deps := CreateTestDependencies("bank")
 	defer CleanupTestDependencies(deps)	
 
+	// Ensure database indexes are created before running tests
+	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
+		t.Fatalf("Failed to ensure database indexes: %v", err)
+	}
+	
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
@@ -177,7 +186,7 @@ func TestCurrentDayEndpoint(t *testing.T) {
 			t.Fatal(err)
 		}
 		// Advance to day 5
-		for i := 0; i < 4; i++ {
+		for range 4 {
 			_, err = serviceManager.Game.NextDay(ctx)
 			if err != nil {
 				t.Fatal(err)

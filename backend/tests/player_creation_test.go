@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"ponziworld/backend/db"
 	"ponziworld/backend/routes"
 )
 
@@ -16,9 +17,11 @@ func TestPlayerCreation(t *testing.T) {
 	// Create test dependencies
 	deps := CreateTestDependencies("bank")
 	defer CleanupTestDependencies(deps)
-		
-	// Reset game state to ensure consistent test environment
-	ResetGameState()
+	
+	// Ensure database indexes are created before running tests
+	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
+		t.Fatalf("Failed to ensure database indexes: %v", err)
+	}
 	
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux, deps)
@@ -45,11 +48,6 @@ func TestPlayerCreation(t *testing.T) {
 		if resp.StatusCode != http.StatusCreated {
 			t.Errorf("Expected status 201, got %d", resp.StatusCode)
 		}
-	})
-
-	// Cleanup
-	t.Cleanup(func() {
-		CleanupTestData(testUsername, "Test Bank Creation")
 	})
 
 	t.Run("Duplicate username", func(t *testing.T) {

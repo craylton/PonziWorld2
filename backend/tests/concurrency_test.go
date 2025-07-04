@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"ponziworld/backend/db"
 	"ponziworld/backend/routes"
 )
 
@@ -18,6 +19,11 @@ func TestConcurrentUserCreation(t *testing.T) {
 	deps := CreateTestDependencies("bank")
 	defer CleanupTestDependencies(deps)
 		
+	// Ensure database indexes are created before running tests
+	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
+		t.Fatalf("Failed to ensure database indexes: %v", err)
+	}
+	
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
@@ -72,7 +78,6 @@ func TestConcurrentUserCreation(t *testing.T) {
 			bankName := fmt.Sprintf("Bank %d", i)
 			playersAndBanks[username] = bankName
 		}
-		CleanupMultipleTestData(playersAndBanks)
 	})
 
 	t.Run("Duplicate username creation race condition", func(t *testing.T) {
@@ -125,8 +130,5 @@ func TestConcurrentUserCreation(t *testing.T) {
 		if errorCount != numAttempts-1 {
 			t.Errorf("Expected %d duplicate username errors, got %d", numAttempts-1, errorCount)
 		}
-
-		// Cleanup
-		CleanupTestData(duplicateUsername, "Race Test Bank")
 	})
 }

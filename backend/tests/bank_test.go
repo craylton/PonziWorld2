@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"ponziworld/backend/db"
 	"ponziworld/backend/models"
 	"ponziworld/backend/routes"
 )
@@ -17,6 +18,11 @@ func TestBankEndpoint(t *testing.T) {
 	// Create test dependencies
 	deps := CreateTestDependencies("bank")
 	defer CleanupTestDependencies(deps)
+	
+	// Ensure database indexes are created before running tests
+	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
+		t.Fatalf("Failed to ensure database indexes: %v", err)
+	}
 	
 	// Create test server with dependencies
 	mux := http.NewServeMux()

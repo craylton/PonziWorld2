@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"ponziworld/backend/auth"
+	"ponziworld/backend/db"
 	"ponziworld/backend/middleware"
 	"ponziworld/backend/routes"
 )
@@ -131,6 +132,11 @@ func TestLoginEndpoint(t *testing.T) {
 	deps := CreateTestDependencies("bank")
 	defer CleanupTestDependencies(deps)
 	
+	// Ensure database indexes are created before running tests
+	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
+		t.Fatalf("Failed to ensure database indexes: %v", err)
+	}
+	
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux,deps)
 	server := httptest.NewServer(mux)
@@ -144,11 +150,6 @@ func TestLoginEndpoint(t *testing.T) {
 	}
 	jsonData, _ := json.Marshal(createUserData)
 	http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
-
-	// Cleanup after all tests
-	t.Cleanup(func() {
-		CleanupTestData(createUserData["username"], createUserData["bankName"])
-	})
 
 	t.Run("Valid login", func(t *testing.T) {
 		loginData := map[string]string{
