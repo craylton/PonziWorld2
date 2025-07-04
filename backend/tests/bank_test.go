@@ -14,8 +14,13 @@ import (
 )
 
 func TestBankEndpoint(t *testing.T) {
+	// Create test dependencies
+	deps := CreateTestDependencies("bank")
+	defer CleanupTestDependencies(deps)
+	
+	// Create test server with dependencies
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux)
+	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
@@ -107,10 +112,5 @@ func TestBankEndpoint(t *testing.T) {
 		if asset.Amount != 1000 {
 			t.Errorf("Expected asset amount 1000, got %d", asset.Amount)
 		}
-	})
-
-	// Cleanup only test data
-	t.Cleanup(func() {
-		CleanupTestData(testUsername, testBankName)
 	})
 }
