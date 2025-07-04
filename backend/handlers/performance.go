@@ -1,17 +1,28 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
-	"ponziworld/backend/db"
+	"ponziworld/backend/config"
 	"ponziworld/backend/services"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// PerformanceHistoryHandler handles performance history-related requests
+type PerformanceHistoryHandler struct {
+	deps *config.HandlerDependencies
+}
+
+// NewPerformanceHistoryHandler creates a new PerformanceHistoryHandler
+func NewPerformanceHistoryHandler(deps *config.HandlerDependencies) *PerformanceHistoryHandler {
+	return &PerformanceHistoryHandler{deps: deps}
+}
+
 // GetPerformanceHistoryHandler handles GET /api/performanceHistory/ownbank/{bankId}
-func GetPerformanceHistoryHandler(w http.ResponseWriter, r *http.Request) {
+func (h *PerformanceHistoryHandler) GetPerformanceHistory(w http.ResponseWriter, r *http.Request) {
     if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
         http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -42,12 +53,9 @@ func GetPerformanceHistoryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client, ctx, cancel := db.ConnectDB()
-	defer cancel()
-	defer client.Disconnect(ctx)
-
-	// Create service manager
-	serviceManager := services.NewServiceManager(client.Database("ponziworld"))
+	// Use the injected service manager and create a new context for this request
+	ctx := context.Background() // Create a fresh context for this request
+	serviceManager := h.deps.ServiceManager
 
 	// Get performance history
 	response, err := serviceManager.Performance.GetPerformanceHistory(ctx, username, bankId)

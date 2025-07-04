@@ -13,6 +13,7 @@ func RegisterRoutes(mux *http.ServeMux, deps *config.HandlerDependencies) {
 	gameHandler := handlers.NewGameHandler(deps)
 	playerHandler := handlers.NewPlayerHandler(deps)
 	loginHandler := handlers.NewLoginHandler(deps)
+	performanceHistoryHandler := handlers.NewPerformanceHistoryHandler(deps)
 	
 	// Register routes
 	mux.HandleFunc("/api/newPlayer", playerHandler.CreateNewPlayer)
@@ -23,6 +24,6 @@ func RegisterRoutes(mux *http.ServeMux, deps *config.HandlerDependencies) {
 	mux.HandleFunc("/api/nextDay", middleware.AdminJwtMiddleware(gameHandler.AdvanceToNextDay))
 	mux.HandleFunc(
 		"/api/performanceHistory/ownbank/{bankId}",
-		middleware.JwtMiddleware(handlers.GetPerformanceHistoryHandler), // TODO: Convert this handler
+		middleware.JwtMiddleware(performanceHistoryHandler.GetPerformanceHistory),
 	)
 }
