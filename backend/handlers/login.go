@@ -1,16 +1,27 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
 	"ponziworld/backend/auth"
-	"ponziworld/backend/db"
+	"ponziworld/backend/config"
 	"ponziworld/backend/services"
 )
 
+// LoginHandler handles login-related requests
+type LoginHandler struct {
+	deps *config.HandlerDependencies
+}
+
+// NewLoginHandler creates a new LoginHandler
+func NewLoginHandler(deps *config.HandlerDependencies) *LoginHandler {
+	return &LoginHandler{deps: deps}
+}
+
 // LoginHandler handles POST /api/login
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
+func (h *LoginHandler) LogIn(w http.ResponseWriter, r *http.Request) {
     if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
         http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -34,12 +45,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client, ctx, cancel := db.ConnectDB()
-	defer cancel()
-	defer client.Disconnect(ctx)
-
-	// Create service manager
-	serviceManager := services.NewServiceManager(client.Database("ponziworld"))
+	// Use the injected service manager and create a new context for this request
+	ctx := context.Background() // Create a fresh context for this request
+	serviceManager := h.deps.ServiceManager
 
 	// Attempt login
 	_, err := serviceManager.Auth.Login(ctx, req.Username, req.Password)
