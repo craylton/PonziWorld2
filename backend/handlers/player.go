@@ -16,10 +16,10 @@ type PlayerHandler struct {
 }
 
 // NewBankHandler creates a new BankHandler
-func NewPlayerHandler(deps *config.Container) *PlayerHandler {
+func NewPlayerHandler(container *config.Container) *PlayerHandler {
 	return &PlayerHandler{
-		authService:   deps.ServiceContainer.Auth,
-		playerService: deps.ServiceContainer.Player,
+		authService:   container.ServiceContainer.Auth,
+		playerService: container.ServiceContainer.Player,
 	}
 }
 

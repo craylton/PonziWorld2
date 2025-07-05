@@ -15,9 +15,9 @@ type historicalPerformanceRepository struct {
 }
 
 // NewHistoricalPerformanceRepository creates a new historical performance repository
-func NewHistoricalPerformanceRepository(db *mongo.Database) HistoricalPerformanceRepository {
+func NewHistoricalPerformanceRepository(database *mongo.Database) HistoricalPerformanceRepository {
 	return &historicalPerformanceRepository{
-		collection: db.Collection("historicalPerformance"),
+		collection: database.Collection("historicalPerformance"),
 	}
 }
 

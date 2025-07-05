@@ -14,14 +14,14 @@ import (
 
 func TestPlayerCreation(t *testing.T) {
 	// Create test dependencies
-	deps, err := CreateTestDependencies("player")
+	container, err := CreateTestDependencies("player")
 	if err != nil {
 		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
-	defer CleanupTestDependencies(deps)
+	defer CleanupTestDependencies(container)
 
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux, deps)
+	routes.RegisterRoutes(mux, container)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 

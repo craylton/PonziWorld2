@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"ponziworld/backend/config"
-	"ponziworld/backend/db"
+	"ponziworld/backend/database"
 )
 
 // CreateTestDependencies creates handler dependencies for testing
@@ -16,7 +16,7 @@ func CreateTestDependencies(testName string) (*config.Container, error) {
 	testDatabaseName := fmt.Sprintf("ponziworld_test_%s_%d", testName, timestamp)
 
 	// Connect to database
-	client, err := db.ConnectDB()
+	client, err := database.InitializeDatabaseConnection()
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to MongoDB: %w", err)
 	}
@@ -25,7 +25,7 @@ func CreateTestDependencies(testName string) (*config.Container, error) {
 	container := config.NewContainer(client, testDatabaseName)
 	
 	// Ensure database indexes are created before running tests
-	if err := db.EnsureAllIndexes(container.DatabaseConfig); err != nil {
+	if err := database.EnsureAllIndexes(container.DatabaseConfig); err != nil {
 		return nil, fmt.Errorf("failed to ensure database indexes: %w", err)
 	}
 
@@ -33,12 +33,12 @@ func CreateTestDependencies(testName string) (*config.Container, error) {
 }
 
 // CleanupTestDependencies properly closes test dependencies and cleans up test database
-func CleanupTestDependencies(deps *config.Container) {
-	if deps != nil {
+func CleanupTestDependencies(container *config.Container) {
+	if container != nil {
 		// Drop the test database with a fresh context
 		ctx := context.Background()
-		deps.DatabaseConfig.GetDatabase().Drop(ctx)
+		container.DatabaseConfig.GetDatabase().Drop(ctx)
 		// Close the connection
-		deps.Close()
+		container.Close()
 	}
 }

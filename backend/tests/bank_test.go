@@ -15,15 +15,15 @@ import (
 
 func TestBankEndpoint(t *testing.T) {
 	// Create test dependencies
-	deps, err := CreateTestDependencies("bank")
+	container, err := CreateTestDependencies("bank")
 	if err != nil {
 		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
-	defer CleanupTestDependencies(deps)
+	defer CleanupTestDependencies(container)
 
 	// Create test server with dependencies
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux, deps)
+	routes.RegisterRoutes(mux, container)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 

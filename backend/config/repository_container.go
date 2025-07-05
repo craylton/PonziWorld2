@@ -14,12 +14,12 @@ type RepositoryContainer struct {
 	Game                  repositories.GameRepository
 }
 
-func NewRepositoryContainer(db *mongo.Database) *RepositoryContainer {
-	playerRepo := repositories.NewPlayerRepository(db)
-	bankRepo := repositories.NewBankRepository(db)
-	assetRepo := repositories.NewAssetRepository(db)
-	historyRepo := repositories.NewHistoricalPerformanceRepository(db)
-	gameRepo := repositories.NewGameRepository(db)
+func NewRepositoryContainer(database *mongo.Database) *RepositoryContainer {
+	playerRepo := repositories.NewPlayerRepository(database)
+	bankRepo := repositories.NewBankRepository(database)
+	assetRepo := repositories.NewAssetRepository(database)
+	historyRepo := repositories.NewHistoricalPerformanceRepository(database)
+	gameRepo := repositories.NewGameRepository(database)
 
 	return &RepositoryContainer{
 		Bank:                  bankRepo,

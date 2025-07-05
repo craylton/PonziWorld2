@@ -14,9 +14,9 @@ type gameRepository struct {
 	collection *mongo.Collection
 }
 
-func NewGameRepository(db *mongo.Database) GameRepository {
+func NewGameRepository(database *mongo.Database) GameRepository {
 	return &gameRepository{
-		collection: db.Collection("game"),
+		collection: database.Collection("game"),
 	}
 }
 

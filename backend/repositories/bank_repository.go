@@ -14,9 +14,9 @@ type bankRepository struct {
 }
 
 // NewBankRepository creates a new bank repository
-func NewBankRepository(db *mongo.Database) BankRepository {
+func NewBankRepository(database *mongo.Database) BankRepository {
 	return &bankRepository{
-		collection: db.Collection("banks"),
+		collection: database.Collection("banks"),
 	}
 }
 

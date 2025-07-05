@@ -14,21 +14,21 @@ import (
 
 func TestNextDayEndpoint(t *testing.T) {
 	// Create test dependencies
-	deps, err := CreateTestDependencies("game")
+	container, err := CreateTestDependencies("game")
 	if err != nil {
 		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
-	defer CleanupTestDependencies(deps)
+	defer CleanupTestDependencies(container)
 
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux, deps)
+	routes.RegisterRoutes(mux, container)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
 	// Create admin user for testing with unique username
 	timestamp := time.Now().Unix()
 	adminUsername := fmt.Sprintf("testadmin_%d", timestamp)
-	adminToken, err := CreateAdminUserForTest(deps, adminUsername, "password123", "TestAdminBank")
+	adminToken, err := CreateAdminUserForTest(container, adminUsername, "password123", "TestAdminBank")
 	if err != nil {
 		t.Fatalf("Failed to create admin user: %v", err)
 	}
@@ -97,7 +97,7 @@ func TestNextDayEndpoint(t *testing.T) {
 		// Create a regular (non-admin) user with unique username
 		timestamp := time.Now().Unix()
 		regularUsername := fmt.Sprintf("regularuser_%d", timestamp)
-		regularToken, err := CreateRegularUserForTest(deps, regularUsername, "password123", "RegularBank")
+		regularToken, err := CreateRegularUserForTest(container, regularUsername, "password123", "RegularBank")
 		if err != nil {
 			t.Fatal("Failed to create regular user:", err)
 		}
@@ -122,14 +122,14 @@ func TestNextDayEndpoint(t *testing.T) {
 
 func TestCurrentDayEndpoint(t *testing.T) {
 	// Create test dependencies
-	deps, err := CreateTestDependencies("game")
+	container, err := CreateTestDependencies("game")
 	if err != nil {
 		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
-	defer CleanupTestDependencies(deps)
+	defer CleanupTestDependencies(container)
 
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux, deps)
+	routes.RegisterRoutes(mux, container)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
@@ -166,13 +166,13 @@ func TestCurrentDayEndpoint(t *testing.T) {
 		// Create admin user for testing with unique username
 		timestamp := time.Now().Unix()
 		adminUsername := fmt.Sprintf("testadmin2_%d", timestamp)
-		adminToken, err := CreateAdminUserForTest(deps, adminUsername, "password123", "TestAdminBank2")
+		adminToken, err := CreateAdminUserForTest(container, adminUsername, "password123", "TestAdminBank2")
 		if err != nil {
 			t.Fatalf("Failed to create admin user: %v", err)
 		}
 
 		// Create a game state with day 5 by calling nextDay API endpoint
-		for i := 0; i < 5; i++ {
+		for i := range 5 {
 			req, err := http.NewRequest("POST", server.URL+"/api/nextDay", nil)
 			if err != nil {
 				t.Fatal(err)

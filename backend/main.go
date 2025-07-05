@@ -7,14 +7,14 @@ import (
 	"os"
 
 	"ponziworld/backend/config"
-	"ponziworld/backend/db"
+	"ponziworld/backend/database"
 	"ponziworld/backend/middleware"
 	"ponziworld/backend/routes"
 )
 
 func main() {
 	// Initialize database connection
-	client, err := db.ConnectDB()
+	client, err := database.InitializeDatabaseConnection()
 	if err != nil {
 		log.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
@@ -23,17 +23,17 @@ func main() {
 	databaseName := "ponziworld"
 
 	// Create handler dependencies
-	deps := config.NewContainer(client, databaseName)
-	defer deps.Close() // Ensure proper cleanup on exit
+	container := config.NewContainer(client, databaseName)
+	defer container.Close() // Ensure proper cleanup on exit
 
 	// Ensure database indexes using the existing connection
-	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
+	if err := database.EnsureAllIndexes(container.DatabaseConfig); err != nil {
 		log.Fatalf("Failed to ensure database indexes: %v", err)
 	}
 
 	// Set up routes with dependencies
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux, deps)
+	routes.RegisterRoutes(mux, container)
 
 	port := os.Getenv("PORT")
 	if port == "" {

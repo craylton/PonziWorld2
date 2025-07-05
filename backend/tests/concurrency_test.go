@@ -15,14 +15,14 @@ import (
 
 func TestConcurrentUserCreation(t *testing.T) {
 	// Create test dependencies
-	deps, err := CreateTestDependencies("concurrency")
+	container, err := CreateTestDependencies("concurrency")
 	if err != nil {
 		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
-	defer CleanupTestDependencies(deps)
+	defer CleanupTestDependencies(container)
 
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux, deps)
+	routes.RegisterRoutes(mux, container)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
@@ -70,7 +70,7 @@ func TestConcurrentUserCreation(t *testing.T) {
 
 		// Cleanup
 		playersAndBanks := make(map[string]string)
-		for i := 0; i < numPlayers; i++ {
+		for i := range numPlayers {
 			username := fmt.Sprintf("concurrent_%d_%d", timestamp, i)
 			bankName := fmt.Sprintf("Bank %d", i)
 			playersAndBanks[username] = bankName
@@ -85,7 +85,7 @@ func TestConcurrentUserCreation(t *testing.T) {
 		duplicateUsername := fmt.Sprintf("racetest_%d", timestamp)
 
 		// Try to create the same username multiple times simultaneously
-		for i := 0; i < numAttempts; i++ {
+		for range numAttempts {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()

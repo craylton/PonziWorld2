@@ -1,4 +1,4 @@
-package db
+package database
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-func ConnectDB() (*mongo.Client, error) {
+func InitializeDatabaseConnection() (*mongo.Client, error) {
 	uri := os.Getenv("MONGODB_URI")
 	if uri == "" {
 		uri = "mongodb://localhost:27017"

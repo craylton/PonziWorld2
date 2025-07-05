@@ -7,13 +7,13 @@ import (
 	"ponziworld/backend/middleware"
 )
 
-func RegisterRoutes(mux *http.ServeMux, deps *config.Container) {
+func RegisterRoutes(mux *http.ServeMux, container *config.Container) {
 	// Initialize handlers with dependencies
-	bankHandler := handlers.NewBankHandler(deps)
-	gameHandler := handlers.NewGameHandler(deps)
-	playerHandler := handlers.NewPlayerHandler(deps)
-	loginHandler := handlers.NewLoginHandler(deps)
-	performanceHistoryHandler := handlers.NewPerformanceHistoryHandler(deps)
+	bankHandler := handlers.NewBankHandler(container)
+	gameHandler := handlers.NewGameHandler(container)
+	playerHandler := handlers.NewPlayerHandler(container)
+	loginHandler := handlers.NewLoginHandler(container)
+	performanceHistoryHandler := handlers.NewPerformanceHistoryHandler(container)
 
 	// Register routes
 	mux.HandleFunc("/api/newPlayer", playerHandler.CreateNewPlayer)
@@ -23,7 +23,7 @@ func RegisterRoutes(mux *http.ServeMux, deps *config.Container) {
 	mux.HandleFunc("/api/player", middleware.JwtMiddleware(playerHandler.GetPlayer))
 	mux.HandleFunc(
 		"/api/nextDay",
-		middleware.AdminJwtMiddleware(gameHandler.AdvanceToNextDay, deps.ServiceContainer.Auth),
+		middleware.AdminJwtMiddleware(gameHandler.AdvanceToNextDay, container.ServiceContainer.Auth),
 	)
 	mux.HandleFunc(
 		"/api/performanceHistory/ownbank/{bankId}",

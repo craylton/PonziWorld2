@@ -16,9 +16,9 @@ type PerformanceHistoryHandler struct {
 }
 
 // NewPerformanceHistoryHandler creates a new PerformanceHistoryHandler
-func NewPerformanceHistoryHandler(deps *config.Container) *PerformanceHistoryHandler {
+func NewPerformanceHistoryHandler(container *config.Container) *PerformanceHistoryHandler {
 	return &PerformanceHistoryHandler{
-		performanceHistoryService: deps.ServiceContainer.Performance,
+		performanceHistoryService: container.ServiceContainer.Performance,
 	}
 }
 

@@ -14,9 +14,9 @@ type assetRepository struct {
 }
 
 // NewAssetRepository creates a new asset repository
-func NewAssetRepository(db *mongo.Database) AssetRepository {
+func NewAssetRepository(database *mongo.Database) AssetRepository {
 	return &assetRepository{
-		collection: db.Collection("assets"),
+		collection: database.Collection("assets"),
 	}
 }
 

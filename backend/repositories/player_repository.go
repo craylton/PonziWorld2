@@ -14,9 +14,9 @@ type playerRepository struct {
 }
 
 // NewPlayerRepository creates a new player repository
-func NewPlayerRepository(db *mongo.Database) PlayerRepository {
+func NewPlayerRepository(database *mongo.Database) PlayerRepository {
 	return &playerRepository{
-		collection: db.Collection("players"),
+		collection: database.Collection("players"),
 	}
 }
 

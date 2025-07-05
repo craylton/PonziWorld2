@@ -14,9 +14,9 @@ type GameHandler struct {
 }
 
 // NewBankHandler creates a new BankHandler
-func NewGameHandler(deps *config.Container) *GameHandler {
+func NewGameHandler(container *config.Container) *GameHandler {
 	return &GameHandler{
-		gameService: deps.ServiceContainer.Game,
+		gameService: container.ServiceContainer.Game,
 	}
 }
 
