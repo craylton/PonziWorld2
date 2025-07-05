@@ -13,11 +13,11 @@ import (
 
 // PerformanceHistoryHandler handles performance history-related requests
 type PerformanceHistoryHandler struct {
-	deps *config.HandlerDependencies
+	deps *config.Container
 }
 
 // NewPerformanceHistoryHandler creates a new PerformanceHistoryHandler
-func NewPerformanceHistoryHandler(deps *config.HandlerDependencies) *PerformanceHistoryHandler {
+func NewPerformanceHistoryHandler(deps *config.Container) *PerformanceHistoryHandler {
 	return &PerformanceHistoryHandler{deps: deps}
 }
 

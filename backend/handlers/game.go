@@ -6,16 +6,21 @@ import (
 	"net/http"
 
 	"ponziworld/backend/config"
+	"ponziworld/backend/services"
 )
 
 // BankHandler handles bank-related requests
 type GameHandler struct {
-	deps *config.HandlerDependencies
+	dbConfig    *config.DatabaseConfig
+	gameService *services.GameService
 }
 
 // NewBankHandler creates a new BankHandler
-func NewGameHandler(deps *config.HandlerDependencies) *GameHandler {
-	return &GameHandler{deps: deps}
+func NewGameHandler(deps *config.Container) *GameHandler {
+	return &GameHandler{
+		dbConfig:    deps.DatabaseConfig,
+		gameService: deps.ServiceManager.Game,
+	}
 }
 
 func (h *GameHandler) GetCurrentDay(w http.ResponseWriter, r *http.Request) {
@@ -28,9 +33,8 @@ func (h *GameHandler) GetCurrentDay(w http.ResponseWriter, r *http.Request) {
 
 	// Use the injected service manager and create a new context for this request
 	ctx := context.Background() // Create a fresh context for this request
-	serviceManager := h.deps.ServiceManager
 
-	currentDay, err := serviceManager.Game.GetCurrentDay(ctx)
+	currentDay, err := h.gameService.GetCurrentDay(ctx)
 	if err != nil {
 		http.Error(w, "Failed to get current day", http.StatusInternalServerError)
 		return
@@ -50,9 +54,8 @@ func (h *GameHandler) AdvanceToNextDay(w http.ResponseWriter, r *http.Request) {
 
 	// Use the injected service manager and create a new context for this request
 	ctx := context.Background() // Create a fresh context for this request
-	serviceManager := h.deps.ServiceManager
 
-	newDay, err := serviceManager.Game.NextDay(ctx)
+	newDay, err := h.gameService.NextDay(ctx)
 	if err != nil {
 		http.Error(w, "Failed to increment day", http.StatusInternalServerError)
 		return

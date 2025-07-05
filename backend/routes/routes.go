@@ -7,7 +7,7 @@ import (
 	"ponziworld/backend/middleware"
 )
 
-func RegisterRoutes(mux *http.ServeMux, deps *config.HandlerDependencies) {
+func RegisterRoutes(mux *http.ServeMux, deps *config.Container) {
 	// Initialize handlers with dependencies
 	bankHandler := handlers.NewBankHandler(deps)
 	gameHandler := handlers.NewGameHandler(deps)

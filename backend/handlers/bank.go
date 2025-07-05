@@ -12,21 +12,25 @@ import (
 
 // BankHandler handles bank-related requests
 type BankHandler struct {
-	deps *config.HandlerDependencies
+	dbConfig    *config.DatabaseConfig
+	bankService *services.BankService
 }
 
 // NewBankHandler creates a new BankHandler
-func NewBankHandler(deps *config.HandlerDependencies) *BankHandler {
-	return &BankHandler{deps: deps}
+func NewBankHandler(deps *config.Container) *BankHandler {
+	return &BankHandler{
+		//dbConfig:    deps.DatabaseConfig,
+		bankService: deps.ServiceManager.Bank,
+	}
 }
 
 // GetBank handles GET /api/bank
 func (h *BankHandler) GetBank(w http.ResponseWriter, r *http.Request) {
-    if r.Method != http.MethodGet {
+	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
-        http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-        return
-    }
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -40,10 +44,9 @@ func (h *BankHandler) GetBank(w http.ResponseWriter, r *http.Request) {
 
 	// Use the injected service manager and create a new context for this request
 	ctx := context.Background() // Create a fresh context for this request
-	serviceManager := h.deps.ServiceManager
 
 	// Get bank by username
-	bankResponse, err := serviceManager.Bank.GetBankByUsername(ctx, username)
+	bankResponse, err := h.bankService.GetBankByUsername(ctx, username)
 	if err != nil {
 		log.Printf("Error getting bank for username %s: %v", username, err)
 		if err == services.ErrPlayerNotFound {

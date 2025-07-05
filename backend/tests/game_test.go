@@ -10,31 +10,22 @@ import (
 	"ponziworld/backend/db"
 	"ponziworld/backend/routes"
 	"ponziworld/backend/services"
-
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 func TestNextDayEndpoint(t *testing.T) {
 	// Create test dependencies
 	deps := CreateTestDependencies("bank")
 	defer CleanupTestDependencies(deps)
-	
+
 	// Ensure database indexes are created before running tests
 	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
 		t.Fatalf("Failed to ensure database indexes: %v", err)
 	}
-	
+
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
 	defer server.Close()
-
-	// Clean up game collection before test
-	client, ctx, cancel := db.ConnectDB()
-	defer cancel()
-	defer client.Disconnect(ctx)
-	db := client.Database("ponziworld")
-	db.Collection("game").DeleteMany(ctx, bson.M{})
 
 	// Create admin user for testing
 	adminToken, err := CreateAdminUserForTest("testadmin", "password123", "TestAdminBank")
@@ -130,24 +121,17 @@ func TestNextDayEndpoint(t *testing.T) {
 func TestCurrentDayEndpoint(t *testing.T) {
 	// Create test dependencies
 	deps := CreateTestDependencies("bank")
-	defer CleanupTestDependencies(deps)	
+	defer CleanupTestDependencies(deps)
 
 	// Ensure database indexes are created before running tests
 	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
 		t.Fatalf("Failed to ensure database indexes: %v", err)
 	}
-	
+
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
 	defer server.Close()
-
-	// Clean up game collection before test
-	client, ctx, cancel := db.ConnectDB()
-	defer cancel()
-	defer client.Disconnect(ctx)
-	db := client.Database("ponziworld")
-	db.Collection("game").DeleteMany(ctx, bson.M{})
 
 	t.Run("should return day 0 when no game state exists", func(t *testing.T) {
 		req, err := http.NewRequest("GET", server.URL+"/api/currentDay", nil)

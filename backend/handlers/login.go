@@ -12,11 +12,11 @@ import (
 
 // LoginHandler handles login-related requests
 type LoginHandler struct {
-	deps *config.HandlerDependencies
+	deps *config.Container
 }
 
 // NewLoginHandler creates a new LoginHandler
-func NewLoginHandler(deps *config.HandlerDependencies) *LoginHandler {
+func NewLoginHandler(deps *config.Container) *LoginHandler {
 	return &LoginHandler{deps: deps}
 }
 

@@ -10,7 +10,7 @@ import (
 )
 
 // CreateTestDependencies creates handler dependencies for testing
-func CreateTestDependencies(testName string) *config.HandlerDependencies {
+func CreateTestDependencies(testName string) *config.Container {
 	// Create a unique test database name
 	timestamp := time.Now().Unix()
 	testDatabaseName := fmt.Sprintf("ponziworld_test_%s_%d", testName, timestamp)
@@ -23,7 +23,7 @@ func CreateTestDependencies(testName string) *config.HandlerDependencies {
 }
 
 // CleanupTestDependencies properly closes test dependencies and cleans up test database
-func CleanupTestDependencies(deps *config.HandlerDependencies) {
+func CleanupTestDependencies(deps *config.Container) {
 	if deps != nil {
 		// Drop the test database with a fresh context
 		ctx := context.Background()

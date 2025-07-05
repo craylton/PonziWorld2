@@ -12,11 +12,11 @@ import (
 
 // PlayerHandler handles player-related requests
 type PlayerHandler struct {
-	deps *config.HandlerDependencies
+	deps *config.Container
 }
 
 // NewBankHandler creates a new BankHandler
-func NewPlayerHandler(deps *config.HandlerDependencies) *PlayerHandler {
+func NewPlayerHandler(deps *config.Container) *PlayerHandler {
 	return &PlayerHandler{deps: deps}
 }
 
