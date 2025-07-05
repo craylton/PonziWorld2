@@ -28,6 +28,15 @@ type AssetRepository interface {
 	CalculateActualCapital(ctx context.Context, bankID primitive.ObjectID) (int64, error)
 }
 
+// AssetTypeRepository defines the interface for asset type database operations
+type AssetTypeRepository interface {
+	Create(ctx context.Context, assetType *models.AssetType) error
+	FindAll(ctx context.Context) ([]models.AssetType, error)
+	FindByName(ctx context.Context, name string) (*models.AssetType, error)
+	FindByID(ctx context.Context, id primitive.ObjectID) (*models.AssetType, error)
+	UpsertByName(ctx context.Context, assetType *models.AssetType) error
+}
+
 // HistoricalPerformanceRepository defines the interface for historical performance database operations
 type HistoricalPerformanceRepository interface {
 	Create(ctx context.Context, performance *models.HistoricalPerformance) error

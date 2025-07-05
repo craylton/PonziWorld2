@@ -1,4 +1,5 @@
 export interface Asset {
     amount: number;
-    assetType: string; // Using string for asset type (Cash, Stocks, Bonds, Crypto, etc.)
+    assetTypeId: string; // Using string ID reference to AssetType
+    assetType: string; // Asset type name for convenience
 }

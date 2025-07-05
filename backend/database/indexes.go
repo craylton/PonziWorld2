@@ -23,6 +23,10 @@ func EnsureAllIndexes(dbConfig *config.DatabaseConfig) error {
 		return err
 	}
 
+	if err := EnsureAssetTypeIndexes(dbConfig); err != nil {
+		return err
+	}
+
 	if err := EnsurePerformanceHistoryIndexes(dbConfig); err != nil {
 		return err
 	}
@@ -72,6 +76,13 @@ func EnsureAssetIndexes(dbConfig *config.DatabaseConfig) error {
 	return ensureIndex(dbConfig, "assets", "assets_bankId_idx", mongo.IndexModel{
 		Keys:    bson.D{{Key: "bankId", Value: 1}},
 		Options: options.Index().SetName("assets_bankId_idx"),
+	})
+}
+
+func EnsureAssetTypeIndexes(dbConfig *config.DatabaseConfig) error {
+	return ensureIndex(dbConfig, "assetTypes", "assetTypes_name_idx", mongo.IndexModel{
+		Keys:    bson.D{{Key: "name", Value: 1}},
+		Options: options.Index().SetUnique(true).SetName("assetTypes_name_idx"),
 	})
 }
 

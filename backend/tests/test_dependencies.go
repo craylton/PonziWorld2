@@ -29,6 +29,14 @@ func CreateTestDependencies(testName string) (*config.Container, error) {
 		return nil, fmt.Errorf("failed to ensure database indexes: %w", err)
 	}
 
+	// Initialize asset types for testing
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	
+	if err := container.ServiceContainer.AssetType.EnsureAssetTypesExist(ctx); err != nil {
+		return nil, fmt.Errorf("failed to initialize asset types: %w", err)
+	}
+
 	return container, nil
 }
 

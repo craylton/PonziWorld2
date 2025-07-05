@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"ponziworld/backend/config"
 	"ponziworld/backend/database"
@@ -29,6 +31,14 @@ func main() {
 	// Ensure database indexes using the existing connection
 	if err := database.EnsureAllIndexes(container.DatabaseConfig); err != nil {
 		log.Fatalf("Failed to ensure database indexes: %v", err)
+	}
+
+	// Initialize asset types on startup
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	
+	if err := container.ServiceContainer.AssetType.EnsureAssetTypesExist(ctx); err != nil {
+		log.Fatalf("Failed to initialize asset types: %v", err)
 	}
 
 	// Set up routes with dependencies
