@@ -9,13 +9,12 @@ import (
 	"ponziworld/backend/auth"
 	"ponziworld/backend/config"
 	"ponziworld/backend/models"
-	"ponziworld/backend/services"
 )
 
 // CreateAdminUserForTest creates an admin user for testing purposes
-func CreateAdminUserForTest(databaseConfig *config.DatabaseConfig, username, password, bankName string) (string, error) {
+func CreateAdminUserForTest(container *config.Container, username, password, bankName string) (string, error) {
 	ctx := context.Background()
-	database := databaseConfig.Client.Database(databaseConfig.DatabaseName)
+	database := container.DatabaseConfig.Client.Database(container.DatabaseConfig.DatabaseName)
 	
 	// Create admin player manually (bypass the normal service to set IsAdmin = true)
 	playersCollection := database.Collection("players")
@@ -40,8 +39,7 @@ func CreateAdminUserForTest(databaseConfig *config.DatabaseConfig, username, pas
 	}
 	
 	// Create bank for the admin user
-	serviceManager := services.NewServiceManager(database)
-	_, err = serviceManager.Bank.CreateBank(ctx, playerID, bankName, 1000)
+	_, err = container.ServiceContainer.Bank.CreateBank(ctx, playerID, bankName, 1000)
 	if err != nil {
 		return "", err
 	}
@@ -56,9 +54,9 @@ func CreateAdminUserForTest(databaseConfig *config.DatabaseConfig, username, pas
 }
 
 // CreateRegularUserForTest creates a regular (non-admin) user for testing purposes
-func CreateRegularUserForTest(databaseConfig *config.DatabaseConfig, username, password, bankName string) (string, error) {
+func CreateRegularUserForTest(container *config.Container, username, password, bankName string) (string, error) {
 	ctx := context.Background()
-	database := databaseConfig.Client.Database(databaseConfig.DatabaseName)
+	database := container.DatabaseConfig.Client.Database(container.DatabaseConfig.DatabaseName)
 	
 	// Create regular player manually (bypass the normal service to set IsAdmin = false)
 	playersCollection := database.Collection("players")
@@ -83,8 +81,7 @@ func CreateRegularUserForTest(databaseConfig *config.DatabaseConfig, username, p
 	}
 	
 	// Create bank for the user
-	serviceManager := services.NewServiceManager(database)
-	_, err = serviceManager.Bank.CreateBank(ctx, playerID, bankName, 1000)
+	_, err = container.ServiceContainer.Bank.CreateBank(ctx, playerID, bankName, 1000)
 	if err != nil {
 		return "", err
 	}

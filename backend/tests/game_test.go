@@ -31,7 +31,7 @@ func TestNextDayEndpoint(t *testing.T) {
 	// Create admin user for testing with unique username
 	timestamp := time.Now().Unix()
 	adminUsername := fmt.Sprintf("testadmin_%d", timestamp)
-	adminToken, err := CreateAdminUserForTest(deps.DatabaseConfig, adminUsername, "password123", "TestAdminBank")
+	adminToken, err := CreateAdminUserForTest(deps, adminUsername, "password123", "TestAdminBank")
 	if err != nil {
 		t.Fatalf("Failed to create admin user: %v", err)
 	}
@@ -100,7 +100,7 @@ func TestNextDayEndpoint(t *testing.T) {
 		// Create a regular (non-admin) user with unique username
 		timestamp := time.Now().Unix()
 		regularUsername := fmt.Sprintf("regularuser_%d", timestamp)
-		regularToken, err := CreateRegularUserForTest(deps.DatabaseConfig, regularUsername, "password123", "RegularBank")
+		regularToken, err := CreateRegularUserForTest(deps, regularUsername, "password123", "RegularBank")
 		if err != nil {
 			t.Fatal("Failed to create regular user:", err)
 		}
@@ -171,7 +171,7 @@ func TestCurrentDayEndpoint(t *testing.T) {
 		// Create admin user for testing with unique username
 		timestamp := time.Now().Unix()
 		adminUsername := fmt.Sprintf("testadmin2_%d", timestamp)
-		adminToken, err := CreateAdminUserForTest(deps.DatabaseConfig, adminUsername, "password123", "TestAdminBank2")
+		adminToken, err := CreateAdminUserForTest(deps, adminUsername, "password123", "TestAdminBank2")
 		if err != nil {
 			t.Fatalf("Failed to create admin user: %v", err)
 		}
