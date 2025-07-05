@@ -15,7 +15,7 @@ import (
 
 func TestPerformanceHistoryEndpoint(t *testing.T) {
 	// Create test dependencies
-	deps, err := CreateTestDependencies("bank")
+	deps, err := CreateTestDependencies("histPerf")
 	if err != nil {
 		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
@@ -182,7 +182,7 @@ func TestPerformanceHistoryEndpoint(t *testing.T) {
 
 func TestPerformanceHistoryUnauthorized(t *testing.T) {
 	// Create test dependencies
-	deps, err := CreateTestDependencies("bank")
+	deps, err := CreateTestDependencies("histPerf")
 	if err != nil {
 		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
@@ -213,7 +213,7 @@ func TestPerformanceHistoryUnauthorized(t *testing.T) {
 
 func TestPerformanceHistoryInvalidBankID(t *testing.T) {
 	// Create test dependencies
-	deps, err := CreateTestDependencies("bank")
+	deps, err := CreateTestDependencies("histPerf")
 	if err != nil {
 		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
@@ -279,7 +279,7 @@ func TestPerformanceHistoryInvalidBankID(t *testing.T) {
 
 func TestPerformanceHistoryOtherPlayersBank(t *testing.T) {
 	// Create test dependencies
-	deps, err := CreateTestDependencies("bank")
+	deps, err := CreateTestDependencies("histPerf")
 	if err != nil {
 		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
@@ -404,7 +404,7 @@ func TestPerformanceHistoryOtherPlayersBank(t *testing.T) {
 
 func TestPerformanceHistoryDataPersistence(t *testing.T) {
 	// Create test dependencies
-	deps, err := CreateTestDependencies("bank")
+	deps, err := CreateTestDependencies("histPerf")
 	if err != nil {
 		t.Fatalf("Failed to create test dependencies: %v", err)
 	}

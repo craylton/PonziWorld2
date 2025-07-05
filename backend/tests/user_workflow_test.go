@@ -16,7 +16,7 @@ import (
 // TestFullUserWorkflow tests the complete end-to-end player workflow
 func TestFullUserWorkflow(t *testing.T) {
 	// Create test dependencies
-	deps, err := CreateTestDependencies("bank")
+	deps, err := CreateTestDependencies("workflow")
 	if err != nil {
 		t.Fatalf("Failed to create test dependencies: %v", err)
 	}

@@ -14,7 +14,7 @@ import (
 
 func TestNextDayEndpoint(t *testing.T) {
 	// Create test dependencies
-	deps, err := CreateTestDependencies("bank")
+	deps, err := CreateTestDependencies("game")
 	if err != nil {
 		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
@@ -122,7 +122,7 @@ func TestNextDayEndpoint(t *testing.T) {
 
 func TestCurrentDayEndpoint(t *testing.T) {
 	// Create test dependencies
-	deps, err := CreateTestDependencies("bank")
+	deps, err := CreateTestDependencies("game")
 	if err != nil {
 		t.Fatalf("Failed to create test dependencies: %v", err)
 	}

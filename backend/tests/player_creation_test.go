@@ -14,7 +14,7 @@ import (
 
 func TestPlayerCreation(t *testing.T) {
 	// Create test dependencies
-	deps, err := CreateTestDependencies("bank")
+	deps, err := CreateTestDependencies("player")
 	if err != nil {
 		t.Fatalf("Failed to create test dependencies: %v", err)
 	}

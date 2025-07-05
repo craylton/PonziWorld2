@@ -15,7 +15,7 @@ import (
 
 func TestConcurrentUserCreation(t *testing.T) {
 	// Create test dependencies
-	deps, err := CreateTestDependencies("bank")
+	deps, err := CreateTestDependencies("concurrency")
 	if err != nil {
 		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
