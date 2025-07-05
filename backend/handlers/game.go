@@ -10,14 +10,12 @@ import (
 
 // BankHandler handles bank-related requests
 type GameHandler struct {
-	dbConfig    *config.DatabaseConfig
 	gameService *services.GameService
 }
 
 // NewBankHandler creates a new BankHandler
 func NewGameHandler(deps *config.Container) *GameHandler {
 	return &GameHandler{
-		dbConfig:    deps.DatabaseConfig,
 		gameService: deps.ServiceManager.Game,
 	}
 }

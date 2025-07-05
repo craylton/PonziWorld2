@@ -11,21 +11,25 @@ import (
 
 // PlayerHandler handles player-related requests
 type PlayerHandler struct {
-	deps *config.Container
+	authService   *services.AuthService
+	playerService *services.PlayerService
 }
 
 // NewBankHandler creates a new BankHandler
 func NewPlayerHandler(deps *config.Container) *PlayerHandler {
-	return &PlayerHandler{deps: deps}
+	return &PlayerHandler{
+		authService:   deps.ServiceManager.Auth,
+		playerService: deps.ServiceManager.Player,
+	}
 }
 
 // CreateNewPlayerHandler handles POST /api/newPlayer
 func (h *PlayerHandler) CreateNewPlayer(w http.ResponseWriter, r *http.Request) {
-    if r.Method != http.MethodPost {		
+	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
-        http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-        return
-    }
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -39,11 +43,11 @@ func (h *PlayerHandler) CreateNewPlayer(w http.ResponseWriter, r *http.Request) 
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
 		return
 	}
-	
+
 	// Trim whitespace and validate
 	req.Username = strings.TrimSpace(req.Username)
 	req.Password = strings.TrimSpace(req.Password)
-	req.BankName = strings.TrimSpace(req.BankName)	
+	req.BankName = strings.TrimSpace(req.BankName)
 	if req.Username == "" || req.Password == "" || req.BankName == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Username, password, and bank name required"})
@@ -52,10 +56,9 @@ func (h *PlayerHandler) CreateNewPlayer(w http.ResponseWriter, r *http.Request) 
 
 	// Use the request context for proper cancellation handling
 	ctx := r.Context()
-	serviceManager := h.deps.ServiceManager
 
 	// Create new player with bank and initial assets
-	err := serviceManager.Player.CreateNewPlayer(ctx, req.Username, req.Password, req.BankName)
+	err := h.playerService.CreateNewPlayer(ctx, req.Username, req.Password, req.BankName)
 	if err != nil {
 		if err == services.ErrUsernameExists {
 			w.WriteHeader(http.StatusBadRequest)
@@ -90,9 +93,8 @@ func (h *PlayerHandler) GetPlayer(w http.ResponseWriter, r *http.Request) {
 
 	// Use the request context for proper cancellation handling
 	ctx := r.Context()
-	serviceManager := h.deps.ServiceManager
 
-	player, err := serviceManager.Auth.GetPlayerByUsername(ctx, username)
+	player, err := h.authService.GetPlayerByUsername(ctx, username)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to fetch player data"})

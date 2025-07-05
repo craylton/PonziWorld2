@@ -12,21 +12,23 @@ import (
 
 // PerformanceHistoryHandler handles performance history-related requests
 type PerformanceHistoryHandler struct {
-	deps *config.Container
+	performanceHistoryService *services.PerformanceService
 }
 
 // NewPerformanceHistoryHandler creates a new PerformanceHistoryHandler
 func NewPerformanceHistoryHandler(deps *config.Container) *PerformanceHistoryHandler {
-	return &PerformanceHistoryHandler{deps: deps}
+	return &PerformanceHistoryHandler{
+		performanceHistoryService: deps.ServiceManager.Performance,
+	}
 }
 
 // GetPerformanceHistoryHandler handles GET /api/performanceHistory/ownbank/{bankId}
 func (h *PerformanceHistoryHandler) GetPerformanceHistory(w http.ResponseWriter, r *http.Request) {
-    if r.Method != http.MethodGet {
+	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
-        http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-        return
-    }
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 
 	// Get username from JWT
@@ -54,10 +56,9 @@ func (h *PerformanceHistoryHandler) GetPerformanceHistory(w http.ResponseWriter,
 
 	// Use the request context for proper cancellation handling
 	ctx := r.Context()
-	serviceManager := h.deps.ServiceManager
 
 	// Get performance history
-	response, err := serviceManager.Performance.GetPerformanceHistory(ctx, username, bankId)
+	response, err := h.performanceHistoryService.GetPerformanceHistory(ctx, username, bankId)
 	if err != nil {
 		if err == services.ErrPlayerNotFound {
 			w.WriteHeader(http.StatusNotFound)

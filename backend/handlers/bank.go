@@ -11,14 +11,12 @@ import (
 
 // BankHandler handles bank-related requests
 type BankHandler struct {
-	dbConfig    *config.DatabaseConfig
 	bankService *services.BankService
 }
 
 // NewBankHandler creates a new BankHandler
 func NewBankHandler(deps *config.Container) *BankHandler {
 	return &BankHandler{
-		//dbConfig:    deps.DatabaseConfig,
 		bankService: deps.ServiceManager.Bank,
 	}
 }

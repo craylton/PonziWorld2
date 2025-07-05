@@ -11,12 +11,14 @@ import (
 
 // LoginHandler handles login-related requests
 type LoginHandler struct {
-	deps *config.Container
+	authService *services.AuthService
 }
 
 // NewLoginHandler creates a new LoginHandler
 func NewLoginHandler(deps *config.Container) *LoginHandler {
-	return &LoginHandler{deps: deps}
+	return &LoginHandler{
+		authService: deps.ServiceManager.Auth,
+	}
 }
 
 // LoginHandler handles POST /api/login
@@ -46,10 +48,9 @@ func (h *LoginHandler) LogIn(w http.ResponseWriter, r *http.Request) {
 
 	// Use the request context for proper cancellation handling
 	ctx := r.Context()
-	serviceManager := h.deps.ServiceManager
 
 	// Attempt login
-	_, err := serviceManager.Auth.Login(ctx, req.Username, req.Password)
+	_, err := h.authService.Login(ctx, req.Username, req.Password)
 	if err != nil {
 		if err == services.ErrInvalidCredentials {
 			w.WriteHeader(http.StatusUnauthorized)
