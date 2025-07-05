@@ -19,17 +19,18 @@ func main() {
 	// Get database name from environment or use default
 	databaseName := "ponziworld"
 	
+	// Create handler dependencies
+	deps := config.NewHandlerDependencies(client, ctx, cancel, databaseName)
+	// Note: We don't defer deps.Close() here because it would close the connection
+	// during server startup. The connection will be closed when the server shuts down.
+	
 	// Ensure database indexes using the existing connection
-	if err := db.EnsureAllIndexes(); err != nil {
+	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
 		cancel()
 		client.Disconnect(ctx)
 		log.Fatalf("Failed to ensure database indexes: %v", err)
 	}
 	
-	// Create handler dependencies
-	deps := config.NewHandlerDependencies(client, ctx, cancel, databaseName)
-	// Note: We don't defer deps.Close() here because it would close the connection
-	// during server startup. The connection will be closed when the server shuts down.
 
 	// Set up routes with dependencies
 	mux := http.NewServeMux()
