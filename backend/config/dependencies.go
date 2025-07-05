@@ -25,7 +25,6 @@ type Container struct {
 // NewHandlerDependencies creates a new HandlerDependencies instance
 func NewHandlerDependencies(
 	client *mongo.Client,
-	ctx context.Context,
 	cancel context.CancelFunc,
 	databaseName string,
 ) *Container {

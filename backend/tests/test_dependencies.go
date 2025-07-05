@@ -16,10 +16,10 @@ func CreateTestDependencies(testName string) *config.Container {
 	testDatabaseName := fmt.Sprintf("ponziworld_test_%s_%d", testName, timestamp)
 	
 	// Connect to database
-	client, ctx, cancel := db.ConnectDB()
+	client, _, cancel := db.ConnectDB()
 	
 	// Create dependencies with test database
-	return config.NewHandlerDependencies(client, ctx, cancel, testDatabaseName)
+	return config.NewHandlerDependencies(client, cancel, testDatabaseName)
 }
 
 // CleanupTestDependencies properly closes test dependencies and cleans up test database

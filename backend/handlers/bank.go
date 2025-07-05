@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -42,8 +41,8 @@ func (h *BankHandler) GetBank(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Use the injected service manager and create a new context for this request
-	ctx := context.Background() // Create a fresh context for this request
+	// Use the request context for proper cancellation handling
+	ctx := r.Context()
 
 	// Get bank by username
 	bankResponse, err := h.bankService.GetBankByUsername(ctx, username)

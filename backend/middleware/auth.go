@@ -60,6 +60,7 @@ func AdminJwtMiddleware(next http.HandlerFunc, authService *services.AuthService
 			return
 		}
 
+		// Use the request context for proper cancellation handling
 		ctx := r.Context()
 		
 		player, err := authService.GetPlayerByUsername(ctx, username)

@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -51,8 +50,8 @@ func (h *PlayerHandler) CreateNewPlayer(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Use the injected service manager and create a new context for this request
-	ctx := context.Background() // Create a fresh context for this request
+	// Use the request context for proper cancellation handling
+	ctx := r.Context()
 	serviceManager := h.deps.ServiceManager
 
 	// Create new player with bank and initial assets
@@ -89,8 +88,8 @@ func (h *PlayerHandler) GetPlayer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Use the injected service manager and create a new context for this request
-	ctx := context.Background() // Create a fresh context for this request
+	// Use the request context for proper cancellation handling
+	ctx := r.Context()
 	serviceManager := h.deps.ServiceManager
 
 	player, err := serviceManager.Auth.GetPlayerByUsername(ctx, username)

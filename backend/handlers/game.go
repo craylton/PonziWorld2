@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 
@@ -31,8 +30,8 @@ func (h *GameHandler) GetCurrentDay(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	// Use the injected service manager and create a new context for this request
-	ctx := context.Background() // Create a fresh context for this request
+	// Use the request context for proper cancellation handling
+	ctx := r.Context()
 
 	currentDay, err := h.gameService.GetCurrentDay(ctx)
 	if err != nil {
@@ -52,8 +51,8 @@ func (h *GameHandler) AdvanceToNextDay(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	// Use the injected service manager and create a new context for this request
-	ctx := context.Background() // Create a fresh context for this request
+	// Use the request context for proper cancellation handling
+	ctx := r.Context()
 
 	newDay, err := h.gameService.NextDay(ctx)
 	if err != nil {
