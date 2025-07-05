@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"ponziworld/backend/auth"
-	"ponziworld/backend/db"
 	"ponziworld/backend/services"
 )
 
@@ -54,20 +53,16 @@ func JwtMiddleware(next http.HandlerFunc) http.HandlerFunc {
 }
 
 // AdminJwtMiddleware validates that the user is an admin
-func AdminJwtMiddleware(next http.HandlerFunc) http.HandlerFunc {
+func AdminJwtMiddleware(next http.HandlerFunc, authService *services.AuthService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		username, ok := validateJwt(w, r)
 		if !ok {
 			return
 		}
 
-		// Check if user is admin
-		client, ctx, cancel := db.ConnectDB()
-		defer cancel()
-		defer client.Disconnect(ctx)
-
-		serviceManager := services.NewServiceManager(client.Database("ponziworld"))
-		player, err := serviceManager.Auth.GetPlayerByUsername(ctx, username)
+		ctx := r.Context()
+		
+		player, err := authService.GetPlayerByUsername(ctx, username)
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusInternalServerError)

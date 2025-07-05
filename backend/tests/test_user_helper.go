@@ -1,22 +1,21 @@
 package tests
 
 import (
+	"context"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 
 	"ponziworld/backend/auth"
-	"ponziworld/backend/db"
+	"ponziworld/backend/config"
 	"ponziworld/backend/models"
 	"ponziworld/backend/services"
 )
 
 // CreateAdminUserForTest creates an admin user for testing purposes
-func CreateAdminUserForTest(username, password, bankName string) (string, error) {
-	client, ctx, cancel := db.ConnectDB()
-	defer cancel()
-	defer client.Disconnect(ctx)
-
-	database := client.Database("ponziworld")
+func CreateAdminUserForTest(databaseConfig *config.DatabaseConfig, username, password, bankName string) (string, error) {
+	ctx := context.Background()
+	database := databaseConfig.Client.Database(databaseConfig.DatabaseName)
 	
 	// Create admin player manually (bypass the normal service to set IsAdmin = true)
 	playersCollection := database.Collection("players")
@@ -57,12 +56,9 @@ func CreateAdminUserForTest(username, password, bankName string) (string, error)
 }
 
 // CreateRegularUserForTest creates a regular (non-admin) user for testing purposes
-func CreateRegularUserForTest(username, password, bankName string) (string, error) {
-	client, ctx, cancel := db.ConnectDB()
-	defer cancel()
-	defer client.Disconnect(ctx)
-
-	database := client.Database("ponziworld")
+func CreateRegularUserForTest(databaseConfig *config.DatabaseConfig, username, password, bankName string) (string, error) {
+	ctx := context.Background()
+	database := databaseConfig.Client.Database(databaseConfig.DatabaseName)
 	
 	// Create regular player manually (bypass the normal service to set IsAdmin = false)
 	playersCollection := database.Collection("players")

@@ -2,14 +2,15 @@ package tests
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"ponziworld/backend/db"
 	"ponziworld/backend/routes"
-	"ponziworld/backend/services"
 )
 
 func TestNextDayEndpoint(t *testing.T) {
@@ -27,8 +28,10 @@ func TestNextDayEndpoint(t *testing.T) {
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
-	// Create admin user for testing
-	adminToken, err := CreateAdminUserForTest("testadmin", "password123", "TestAdminBank")
+	// Create admin user for testing with unique username
+	timestamp := time.Now().Unix()
+	adminUsername := fmt.Sprintf("testadmin_%d", timestamp)
+	adminToken, err := CreateAdminUserForTest(deps.DatabaseConfig, adminUsername, "password123", "TestAdminBank")
 	if err != nil {
 		t.Fatalf("Failed to create admin user: %v", err)
 	}
@@ -94,8 +97,10 @@ func TestNextDayEndpoint(t *testing.T) {
 	})
 
 	t.Run("should reject non-admin users", func(t *testing.T) {
-		// Create a regular (non-admin) user
-		regularToken, err := CreateRegularUserForTest("regularuser", "password123", "RegularBank")
+		// Create a regular (non-admin) user with unique username
+		timestamp := time.Now().Unix()
+		regularUsername := fmt.Sprintf("regularuser_%d", timestamp)
+		regularToken, err := CreateRegularUserForTest(deps.DatabaseConfig, regularUsername, "password123", "RegularBank")
 		if err != nil {
 			t.Fatal("Failed to create regular user:", err)
 		}
@@ -163,17 +168,30 @@ func TestCurrentDayEndpoint(t *testing.T) {
 	})
 
 	t.Run("should return current day when game state exists", func(t *testing.T) {
-		// Create a game state with day 5
-		serviceManager := services.NewServiceManager(db)
-		_, err := serviceManager.Game.NextDay(ctx) // Creates day 1
+		// Create admin user for testing with unique username
+		timestamp := time.Now().Unix()
+		adminUsername := fmt.Sprintf("testadmin2_%d", timestamp)
+		adminToken, err := CreateAdminUserForTest(deps.DatabaseConfig, adminUsername, "password123", "TestAdminBank2")
 		if err != nil {
-			t.Fatal(err)
+			t.Fatalf("Failed to create admin user: %v", err)
 		}
-		// Advance to day 5
-		for range 4 {
-			_, err = serviceManager.Game.NextDay(ctx)
+
+		// Create a game state with day 5 by calling nextDay API endpoint
+		for i := 0; i < 5; i++ {
+			req, err := http.NewRequest("POST", server.URL+"/api/nextDay", nil)
 			if err != nil {
 				t.Fatal(err)
+			}
+			req.Header.Set("Authorization", "Bearer "+adminToken)
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				t.Fatalf("Failed to advance to day %d, status: %d", i+1, resp.StatusCode)
 			}
 		}
 
