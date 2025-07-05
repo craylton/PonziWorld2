@@ -9,21 +9,18 @@ import (
 	"testing"
 	"time"
 
-	"ponziworld/backend/db"
 	"ponziworld/backend/models"
 	"ponziworld/backend/routes"
 )
 
 func TestBankEndpoint(t *testing.T) {
 	// Create test dependencies
-	deps := CreateTestDependencies("bank")
-	defer CleanupTestDependencies(deps)
-	
-	// Ensure database indexes are created before running tests
-	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
-		t.Fatalf("Failed to ensure database indexes: %v", err)
+	deps, err := CreateTestDependencies("bank")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
-	
+	defer CleanupTestDependencies(deps)
+
 	// Create test server with dependencies
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux, deps)
@@ -97,7 +94,7 @@ func TestBankEndpoint(t *testing.T) {
 		if err := json.NewDecoder(resp.Body).Decode(&bankResponse); err != nil {
 			t.Fatalf("Failed to decode bank response: %v", err)
 		}
-		
+
 		// Verify bank data
 		if bankResponse.BankName != testBankName {
 			t.Errorf("Expected bank name %q, got %q", testBankName, bankResponse.BankName)

@@ -63,9 +63,3 @@ func (h *BankHandler) GetBank(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(bankResponse)
 }
-
-// GetBankHandler is a wrapper function for backward compatibility
-func GetBankHandler(w http.ResponseWriter, r *http.Request) {
-	// This is a temporary function that will be removed once we update the routes
-	panic("GetBankHandler should not be called directly - use dependency injection")
-}

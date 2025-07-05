@@ -10,20 +10,17 @@ import (
 	"testing"
 	"time"
 
-	"ponziworld/backend/db"
 	"ponziworld/backend/routes"
 )
 
 func TestConcurrentUserCreation(t *testing.T) {
 	// Create test dependencies
-	deps := CreateTestDependencies("bank")
-	defer CleanupTestDependencies(deps)
-		
-	// Ensure database indexes are created before running tests
-	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
-		t.Fatalf("Failed to ensure database indexes: %v", err)
+	deps, err := CreateTestDependencies("bank")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
-	
+	defer CleanupTestDependencies(deps)
+
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
@@ -39,7 +36,7 @@ func TestConcurrentUserCreation(t *testing.T) {
 			wg.Add(1)
 			go func(userNum int) {
 				defer wg.Done()
-				
+
 				createUserData := map[string]string{
 					"username": fmt.Sprintf("concurrent_%d_%d", timestamp, userNum),
 					"password": "testpassword123",
@@ -92,7 +89,7 @@ func TestConcurrentUserCreation(t *testing.T) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				
+
 				createUserData := map[string]string{
 					"username": duplicateUsername,
 					"password": "testpassword123",

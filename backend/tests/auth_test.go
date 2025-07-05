@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"ponziworld/backend/auth"
-	"ponziworld/backend/db"
 	"ponziworld/backend/middleware"
 	"ponziworld/backend/routes"
 )
@@ -129,16 +128,14 @@ func TestJwtMiddleware(t *testing.T) {
 
 func TestLoginEndpoint(t *testing.T) {
 	// Create test dependencies
-	deps := CreateTestDependencies("bank")
-	defer CleanupTestDependencies(deps)
-	
-	// Ensure database indexes are created before running tests
-	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
-		t.Fatalf("Failed to ensure database indexes: %v", err)
+	deps, err := CreateTestDependencies("bank")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
-	
+	defer CleanupTestDependencies(deps)
+
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux,deps)
+	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 

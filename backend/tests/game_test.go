@@ -9,19 +9,16 @@ import (
 	"testing"
 	"time"
 
-	"ponziworld/backend/db"
 	"ponziworld/backend/routes"
 )
 
 func TestNextDayEndpoint(t *testing.T) {
 	// Create test dependencies
-	deps := CreateTestDependencies("bank")
-	defer CleanupTestDependencies(deps)
-
-	// Ensure database indexes are created before running tests
-	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
-		t.Fatalf("Failed to ensure database indexes: %v", err)
+	deps, err := CreateTestDependencies("bank")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
+	defer CleanupTestDependencies(deps)
 
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux, deps)
@@ -125,13 +122,11 @@ func TestNextDayEndpoint(t *testing.T) {
 
 func TestCurrentDayEndpoint(t *testing.T) {
 	// Create test dependencies
-	deps := CreateTestDependencies("bank")
-	defer CleanupTestDependencies(deps)
-
-	// Ensure database indexes are created before running tests
-	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
-		t.Fatalf("Failed to ensure database indexes: %v", err)
+	deps, err := CreateTestDependencies("bank")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
+	defer CleanupTestDependencies(deps)
 
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux, deps)

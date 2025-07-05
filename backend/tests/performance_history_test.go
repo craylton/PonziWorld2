@@ -9,21 +9,18 @@ import (
 	"testing"
 	"time"
 
-	"ponziworld/backend/db"
 	"ponziworld/backend/models"
 	"ponziworld/backend/routes"
 )
 
 func TestPerformanceHistoryEndpoint(t *testing.T) {
 	// Create test dependencies
-	deps := CreateTestDependencies("bank")
-	defer CleanupTestDependencies(deps)
-	
-	// Ensure database indexes are created before running tests
-	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
-		t.Fatalf("Failed to ensure database indexes: %v", err)
+	deps, err := CreateTestDependencies("bank")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
-	
+	defer CleanupTestDependencies(deps)
+
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
@@ -185,14 +182,12 @@ func TestPerformanceHistoryEndpoint(t *testing.T) {
 
 func TestPerformanceHistoryUnauthorized(t *testing.T) {
 	// Create test dependencies
-	deps := CreateTestDependencies("bank")
-	defer CleanupTestDependencies(deps)
-	
-	// Ensure database indexes are created before running tests
-	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
-		t.Fatalf("Failed to ensure database indexes: %v", err)
+	deps, err := CreateTestDependencies("bank")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
-	
+	defer CleanupTestDependencies(deps)
+
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
@@ -218,14 +213,12 @@ func TestPerformanceHistoryUnauthorized(t *testing.T) {
 
 func TestPerformanceHistoryInvalidBankID(t *testing.T) {
 	// Create test dependencies
-	deps := CreateTestDependencies("bank")
-	defer CleanupTestDependencies(deps)
-	
-	// Ensure database indexes are created before running tests
-	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
-		t.Fatalf("Failed to ensure database indexes: %v", err)
+	deps, err := CreateTestDependencies("bank")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
-	
+	defer CleanupTestDependencies(deps)
+
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
@@ -286,14 +279,12 @@ func TestPerformanceHistoryInvalidBankID(t *testing.T) {
 
 func TestPerformanceHistoryOtherPlayersBank(t *testing.T) {
 	// Create test dependencies
-	deps := CreateTestDependencies("bank")
-	defer CleanupTestDependencies(deps)
-	
-	// Ensure database indexes are created before running tests
-	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
-		t.Fatalf("Failed to ensure database indexes: %v", err)
+	deps, err := CreateTestDependencies("bank")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
-	
+	defer CleanupTestDependencies(deps)
+
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
@@ -413,14 +404,12 @@ func TestPerformanceHistoryOtherPlayersBank(t *testing.T) {
 
 func TestPerformanceHistoryDataPersistence(t *testing.T) {
 	// Create test dependencies
-	deps := CreateTestDependencies("bank")
-	defer CleanupTestDependencies(deps)
-	
-	// Ensure database indexes are created before running tests
-	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
-		t.Fatalf("Failed to ensure database indexes: %v", err)
+	deps, err := CreateTestDependencies("bank")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
-	
+	defer CleanupTestDependencies(deps)
+
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)

@@ -10,34 +10,34 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-func EnsureAllIndexes(dbConfig *config.DatabaseConfig) error {	
+func EnsureAllIndexes(dbConfig *config.DatabaseConfig) error {
 	if err := EnsurePlayerIndexes(dbConfig); err != nil {
 		return err
 	}
-	
+
 	if err := EnsureBankIndexes(dbConfig); err != nil {
 		return err
 	}
-	
+
 	if err := EnsureAssetIndexes(dbConfig); err != nil {
 		return err
 	}
-	
+
 	if err := EnsurePerformanceHistoryIndexes(dbConfig); err != nil {
 		return err
 	}
-	
+
 	if err := EnsureGameIndexes(dbConfig); err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
 func ensureIndex(dbConfig *config.DatabaseConfig, collectionName, indexName string, model mongo.IndexModel) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	coll := dbConfig.Client.Database(dbConfig.DatabaseName).Collection(collectionName)
+	coll := dbConfig.GetDatabase().Collection(collectionName)
 	view := coll.Indexes()
 	specs, err := view.ListSpecifications(ctx)
 	if err != nil {

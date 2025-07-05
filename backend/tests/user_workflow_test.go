@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"ponziworld/backend/db"
 	"ponziworld/backend/models"
 	"ponziworld/backend/routes"
 )
@@ -17,14 +16,12 @@ import (
 // TestFullUserWorkflow tests the complete end-to-end player workflow
 func TestFullUserWorkflow(t *testing.T) {
 	// Create test dependencies
-	deps := CreateTestDependencies("bank")
-	defer CleanupTestDependencies(deps)
-	
-	// Ensure database indexes are created before running tests
-	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
-		t.Fatalf("Failed to ensure database indexes: %v", err)
+	deps, err := CreateTestDependencies("bank")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
-	
+	defer CleanupTestDependencies(deps)
+
 	// Setup test server
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux, deps)
@@ -64,7 +61,7 @@ func TestFullUserWorkflow(t *testing.T) {
 			t.Errorf("Expected status 201, got %d", resp.StatusCode)
 		}
 	})
-	
+
 	t.Run("Login Player", func(t *testing.T) {
 		// Test player login
 		loginData := map[string]string{
@@ -95,24 +92,24 @@ func TestFullUserWorkflow(t *testing.T) {
 		}
 		authToken = token
 	})
-	
+
 	t.Run("Get Player Details", func(t *testing.T) {
-			// GET /api/newPlayer is removed; expect Method Not Allowed
-			req, err := http.NewRequest("GET", server.URL+"/api/newPlayer", nil)
-			if err != nil {
-				t.Fatalf("Failed to create request: %v", err)
-			}
-			req.Header.Set("Authorization", "Bearer "+authToken)
-			client := &http.Client{}
-			resp, err := client.Do(req)
-			if err != nil {
-				t.Fatalf("Failed to fetch player after login: %v", err)
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != http.StatusMethodNotAllowed {
-				t.Errorf("Expected status %d from /api/newPlayer, got %d", http.StatusMethodNotAllowed, resp.StatusCode)
-			}
-        	// Test /api/bank endpoint
+		// GET /api/newPlayer is removed; expect Method Not Allowed
+		req, err := http.NewRequest("GET", server.URL+"/api/newPlayer", nil)
+		if err != nil {
+			t.Fatalf("Failed to create request: %v", err)
+		}
+		req.Header.Set("Authorization", "Bearer "+authToken)
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatalf("Failed to fetch player after login: %v", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusMethodNotAllowed {
+			t.Errorf("Expected status %d from /api/newPlayer, got %d", http.StatusMethodNotAllowed, resp.StatusCode)
+		}
+		// Test /api/bank endpoint
 		req, _ = http.NewRequest("GET", server.URL+"/api/bank", nil)
 		req.Header.Set("Authorization", "Bearer "+authToken)
 

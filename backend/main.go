@@ -21,7 +21,7 @@ func main() {
 	databaseName := "ponziworld"
 	
 	// Create handler dependencies
-	deps := config.NewHandlerDependencies(client, cancel, databaseName)
+	deps := config.NewContainer(client, cancel, databaseName)
 	defer deps.Close() // Ensure proper cleanup on exit
 	
 	// Ensure database indexes using the existing connection

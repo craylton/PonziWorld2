@@ -62,7 +62,7 @@ func AdminJwtMiddleware(next http.HandlerFunc, authService *services.AuthService
 
 		// Use the request context for proper cancellation handling
 		ctx := r.Context()
-		
+
 		player, err := authService.GetPlayerByUsername(ctx, username)
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json")
