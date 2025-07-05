@@ -16,10 +16,13 @@ func CreateTestDependencies(testName string) (*config.Container, error) {
 	testDatabaseName := fmt.Sprintf("ponziworld_test_%s_%d", testName, timestamp)
 
 	// Connect to database
-	client, _, cancel := db.ConnectDB()
+	client, err := db.ConnectDB()
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to MongoDB: %w", err)
+	}
 
 	// Create dependencies with test database
-	container := config.NewContainer(client, cancel, testDatabaseName)
+	container := config.NewContainer(client, testDatabaseName)
 	
 	// Ensure database indexes are created before running tests
 	if err := db.EnsureAllIndexes(container.DatabaseConfig); err != nil {

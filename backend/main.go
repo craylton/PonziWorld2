@@ -14,21 +14,23 @@ import (
 
 func main() {
 	// Initialize database connection
-	client, _, cancel := db.ConnectDB()
-	defer cancel() // Ensure connection context is canceled on exit
-	
+	client, err := db.ConnectDB()
+	if err != nil {
+		log.Fatalf("Failed to connect to MongoDB: %v", err)
+	}
+
 	// Get database name from environment or use default
 	databaseName := "ponziworld"
-	
+
 	// Create handler dependencies
-	deps := config.NewContainer(client, cancel, databaseName)
+	deps := config.NewContainer(client, databaseName)
 	defer deps.Close() // Ensure proper cleanup on exit
-	
+
 	// Ensure database indexes using the existing connection
 	if err := db.EnsureAllIndexes(deps.DatabaseConfig); err != nil {
 		log.Fatalf("Failed to ensure database indexes: %v", err)
 	}
-	
+
 	// Set up routes with dependencies
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux, deps)
