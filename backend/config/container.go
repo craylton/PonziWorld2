@@ -2,7 +2,6 @@ package config
 
 import (
 	"context"
-	"ponziworld/backend/services"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -18,8 +17,9 @@ type DatabaseConfig struct {
 
 // Container holds all dependencies needed by handlers
 type Container struct {
-	ServiceManager *services.ServiceManager
-	DatabaseConfig *DatabaseConfig
+	DatabaseConfig      *DatabaseConfig
+	ServiceContainer    *ServiceContainer
+	RepositoryContainer *RepositoryContainer
 }
 
 // NewHandlerDependencies creates a new HandlerDependencies instance
@@ -34,11 +34,15 @@ func NewHandlerDependencies(
 		connectionCancel: cancel,
 	}
 
-	serviceManager := services.NewServiceManager(client.Database(databaseName))
+	db := dbConfig.Client.Database(dbConfig.DatabaseName)
 
+	repositoryContainer := NewRepositoryContainer(db)
+	serviceContainer := NewServiceContainer(repositoryContainer)
+	
 	return &Container{
-		ServiceManager: serviceManager,
 		DatabaseConfig: dbConfig,
+		ServiceContainer:    serviceContainer,
+		RepositoryContainer: repositoryContainer,
 	}
 }
 

@@ -18,8 +18,8 @@ type PlayerHandler struct {
 // NewBankHandler creates a new BankHandler
 func NewPlayerHandler(deps *config.Container) *PlayerHandler {
 	return &PlayerHandler{
-		authService:   deps.ServiceManager.Auth,
-		playerService: deps.ServiceManager.Player,
+		authService:   deps.ServiceContainer.Auth,
+		playerService: deps.ServiceContainer.Player,
 	}
 }
 

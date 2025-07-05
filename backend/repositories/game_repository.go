@@ -10,12 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-type GameRepository interface {
-	GetCurrentDay(ctx context.Context) (int, error)
-	IncrementDay(ctx context.Context) (int, error)
-	CreateInitialGame(ctx context.Context, initialDay int) error
-}
-
 type gameRepository struct {
 	collection *mongo.Collection
 }

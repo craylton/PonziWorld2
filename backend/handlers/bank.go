@@ -17,7 +17,7 @@ type BankHandler struct {
 // NewBankHandler creates a new BankHandler
 func NewBankHandler(deps *config.Container) *BankHandler {
 	return &BankHandler{
-		bankService: deps.ServiceManager.Bank,
+		bankService: deps.ServiceContainer.Bank,
 	}
 }
 

@@ -18,7 +18,7 @@ type PerformanceHistoryHandler struct {
 // NewPerformanceHistoryHandler creates a new PerformanceHistoryHandler
 func NewPerformanceHistoryHandler(deps *config.Container) *PerformanceHistoryHandler {
 	return &PerformanceHistoryHandler{
-		performanceHistoryService: deps.ServiceManager.Performance,
+		performanceHistoryService: deps.ServiceContainer.Performance,
 	}
 }
 

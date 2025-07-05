@@ -23,7 +23,7 @@ func RegisterRoutes(mux *http.ServeMux, deps *config.Container) {
 	mux.HandleFunc("/api/player", middleware.JwtMiddleware(playerHandler.GetPlayer))
 	mux.HandleFunc(
 		"/api/nextDay",
-		middleware.AdminJwtMiddleware(gameHandler.AdvanceToNextDay, deps.ServiceManager.Auth),
+		middleware.AdminJwtMiddleware(gameHandler.AdvanceToNextDay, deps.ServiceContainer.Auth),
 	)
 	mux.HandleFunc(
 		"/api/performanceHistory/ownbank/{bankId}",

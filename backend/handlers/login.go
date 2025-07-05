@@ -17,7 +17,7 @@ type LoginHandler struct {
 // NewLoginHandler creates a new LoginHandler
 func NewLoginHandler(deps *config.Container) *LoginHandler {
 	return &LoginHandler{
-		authService: deps.ServiceManager.Auth,
+		authService: deps.ServiceContainer.Auth,
 	}
 }
 
