@@ -127,8 +127,15 @@ func TestJwtMiddleware(t *testing.T) {
 }
 
 func TestLoginEndpoint(t *testing.T) {
+	// Create test dependencies
+	deps, err := CreateTestDependencies("auth")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(deps)
+
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux)
+	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
@@ -140,11 +147,6 @@ func TestLoginEndpoint(t *testing.T) {
 	}
 	jsonData, _ := json.Marshal(createUserData)
 	http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
-
-	// Cleanup after all tests
-	t.Cleanup(func() {
-		CleanupTestData(createUserData["username"], createUserData["bankName"])
-	})
 
 	t.Run("Valid login", func(t *testing.T) {
 		loginData := map[string]string{

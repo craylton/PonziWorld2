@@ -2,19 +2,32 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
-	"ponziworld/backend/db"
+	"ponziworld/backend/config"
 	"ponziworld/backend/services"
 )
 
-// GetBankHandler handles GET /api/bank
-func GetBankHandler(w http.ResponseWriter, r *http.Request) {
-    if r.Method != http.MethodGet {
+// BankHandler handles bank-related requests
+type BankHandler struct {
+	bankService *services.BankService
+}
+
+// NewBankHandler creates a new BankHandler
+func NewBankHandler(deps *config.Container) *BankHandler {
+	return &BankHandler{
+		bankService: deps.ServiceContainer.Bank,
+	}
+}
+
+// GetBank handles GET /api/bank
+func (h *BankHandler) GetBank(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
-        http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-        return
-    }
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -26,16 +39,13 @@ func GetBankHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client, ctx, cancel := db.ConnectDB()
-	defer cancel()
-	defer client.Disconnect(ctx)
-
-	// Create service manager
-	serviceManager := services.NewServiceManager(client.Database("ponziworld"))
+	// Use the request context for proper cancellation handling
+	ctx := r.Context()
 
 	// Get bank by username
-	bankResponse, err := serviceManager.Bank.GetBankByUsername(ctx, username)
+	bankResponse, err := h.bankService.GetBankByUsername(ctx, username)
 	if err != nil {
+		log.Printf("Error getting bank for username %s: %v", username, err)
 		if err == services.ErrPlayerNotFound {
 			w.WriteHeader(http.StatusNotFound)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Player not found"})

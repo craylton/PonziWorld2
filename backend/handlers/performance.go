@@ -4,19 +4,31 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"ponziworld/backend/db"
+	"ponziworld/backend/config"
 	"ponziworld/backend/services"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// PerformanceHistoryHandler handles performance history-related requests
+type PerformanceHistoryHandler struct {
+	performanceHistoryService *services.PerformanceService
+}
+
+// NewPerformanceHistoryHandler creates a new PerformanceHistoryHandler
+func NewPerformanceHistoryHandler(deps *config.Container) *PerformanceHistoryHandler {
+	return &PerformanceHistoryHandler{
+		performanceHistoryService: deps.ServiceContainer.Performance,
+	}
+}
+
 // GetPerformanceHistoryHandler handles GET /api/performanceHistory/ownbank/{bankId}
-func GetPerformanceHistoryHandler(w http.ResponseWriter, r *http.Request) {
-    if r.Method != http.MethodGet {
+func (h *PerformanceHistoryHandler) GetPerformanceHistory(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
-        http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-        return
-    }
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 
 	// Get username from JWT
@@ -42,15 +54,11 @@ func GetPerformanceHistoryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client, ctx, cancel := db.ConnectDB()
-	defer cancel()
-	defer client.Disconnect(ctx)
-
-	// Create service manager
-	serviceManager := services.NewServiceManager(client.Database("ponziworld"))
+	// Use the request context for proper cancellation handling
+	ctx := r.Context()
 
 	// Get performance history
-	response, err := serviceManager.Performance.GetPerformanceHistory(ctx, username, bankId)
+	response, err := h.performanceHistoryService.GetPerformanceHistory(ctx, username, bankId)
 	if err != nil {
 		if err == services.ErrPlayerNotFound {
 			w.WriteHeader(http.StatusNotFound)

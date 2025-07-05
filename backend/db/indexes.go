@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"ponziworld/backend/config"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -9,38 +10,34 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-func EnsureAllIndexes() error {
-	client, ctx, cancel := ConnectDB()
-	defer cancel()
-	defer client.Disconnect(ctx)
-	
-	if err := EnsurePlayerIndexes(client); err != nil {
+func EnsureAllIndexes(dbConfig *config.DatabaseConfig) error {
+	if err := EnsurePlayerIndexes(dbConfig); err != nil {
 		return err
 	}
-	
-	if err := EnsureBankIndexes(client); err != nil {
+
+	if err := EnsureBankIndexes(dbConfig); err != nil {
 		return err
 	}
-	
-	if err := EnsureAssetIndexes(client); err != nil {
+
+	if err := EnsureAssetIndexes(dbConfig); err != nil {
 		return err
 	}
-	
-	if err := EnsurePerformanceHistoryIndexes(client); err != nil {
+
+	if err := EnsurePerformanceHistoryIndexes(dbConfig); err != nil {
 		return err
 	}
-	
-	if err := EnsureGameIndexes(client); err != nil {
+
+	if err := EnsureGameIndexes(dbConfig); err != nil {
 		return err
 	}
-	
+
 	return nil
 }
 
-func ensureIndex(client *mongo.Client, collectionName, indexName string, model mongo.IndexModel) error {
+func ensureIndex(dbConfig *config.DatabaseConfig, collectionName, indexName string, model mongo.IndexModel) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	coll := client.Database("ponziworld").Collection(collectionName)
+	coll := dbConfig.GetDatabase().Collection(collectionName)
 	view := coll.Indexes()
 	specs, err := view.ListSpecifications(ctx)
 	if err != nil {
@@ -57,30 +54,30 @@ func ensureIndex(client *mongo.Client, collectionName, indexName string, model m
 	return err
 }
 
-func EnsurePlayerIndexes(client *mongo.Client) error {
-	return ensureIndex(client, "players", "username_idx", mongo.IndexModel{
+func EnsurePlayerIndexes(dbConfig *config.DatabaseConfig) error {
+	return ensureIndex(dbConfig, "players", "username_idx", mongo.IndexModel{
 		Keys:    bson.D{{Key: "username", Value: 1}},
 		Options: options.Index().SetUnique(true).SetName("username_idx"),
 	})
 }
 
-func EnsureBankIndexes(client *mongo.Client) error {
-	return ensureIndex(client, "banks", "banks_playerId_idx", mongo.IndexModel{
+func EnsureBankIndexes(dbConfig *config.DatabaseConfig) error {
+	return ensureIndex(dbConfig, "banks", "banks_playerId_idx", mongo.IndexModel{
 		Keys:    bson.D{{Key: "playerId", Value: 1}},
 		Options: options.Index().SetName("banks_playerId_idx"),
 	})
 }
 
-func EnsureAssetIndexes(client *mongo.Client) error {
-	return ensureIndex(client, "assets", "assets_bankId_idx", mongo.IndexModel{
+func EnsureAssetIndexes(dbConfig *config.DatabaseConfig) error {
+	return ensureIndex(dbConfig, "assets", "assets_bankId_idx", mongo.IndexModel{
 		Keys:    bson.D{{Key: "bankId", Value: 1}},
 		Options: options.Index().SetName("assets_bankId_idx"),
 	})
 }
 
-func EnsurePerformanceHistoryIndexes(client *mongo.Client) error {
+func EnsurePerformanceHistoryIndexes(dbConfig *config.DatabaseConfig) error {
 	// Index for efficient queries by bankId, isClaimed, and day
-	err := ensureIndex(client, "historicalPerformance", "performance_bankId_isClaimed_day_idx", mongo.IndexModel{
+	err := ensureIndex(dbConfig, "historicalPerformance", "performance_bankId_isClaimed_day_idx", mongo.IndexModel{
 		Keys:    bson.D{{Key: "bankId", Value: 1}, {Key: "isClaimed", Value: 1}, {Key: "day", Value: 1}},
 		Options: options.Index().SetName("performance_bankId_isClaimed_day_idx"),
 	})
@@ -89,16 +86,16 @@ func EnsurePerformanceHistoryIndexes(client *mongo.Client) error {
 	}
 
 	// Unique index to prevent duplicate entries for the same bank, day, and claimed status
-	return ensureIndex(client, "historicalPerformance", "performance_unique_idx", mongo.IndexModel{
+	return ensureIndex(dbConfig, "historicalPerformance", "performance_unique_idx", mongo.IndexModel{
 		Keys:    bson.D{{Key: "bankId", Value: 1}, {Key: "day", Value: 1}, {Key: "isClaimed", Value: 1}},
 		Options: options.Index().SetUnique(true).SetName("performance_unique_idx"),
 	})
 }
 
-func EnsureGameIndexes(client *mongo.Client) error {
+func EnsureGameIndexes(dbConfig *config.DatabaseConfig) error {
 	// For the game collection, we don't need specific indexes as there's only one document
 	// But we can ensure the collection exists by creating a basic index on _id
-	return ensureIndex(client, "game", "game_id_idx", mongo.IndexModel{
+	return ensureIndex(dbConfig, "game", "game_id_idx", mongo.IndexModel{
 		Keys:    bson.D{{Key: "_id", Value: 1}},
 		Options: options.Index().SetName("game_id_idx"),
 	})

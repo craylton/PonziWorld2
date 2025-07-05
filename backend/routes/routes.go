@@ -2,19 +2,31 @@ package routes
 
 import (
 	"net/http"
+	"ponziworld/backend/config"
 	"ponziworld/backend/handlers"
 	"ponziworld/backend/middleware"
 )
 
-func RegisterRoutes(mux *http.ServeMux) {	
-	mux.HandleFunc("/api/newPlayer", handlers.CreateNewPlayerHandler)
-	mux.HandleFunc("/api/bank", middleware.JwtMiddleware(handlers.GetBankHandler))
-	mux.HandleFunc("/api/login", handlers.LoginHandler)
-	mux.HandleFunc("/api/player", middleware.JwtMiddleware(handlers.GetPlayerHandler))
-	mux.HandleFunc("/api/currentDay", handlers.CurrentDayHandler)
-	mux.HandleFunc("/api/nextDay", middleware.AdminJwtMiddleware(handlers.NextDayHandler))
+func RegisterRoutes(mux *http.ServeMux, deps *config.Container) {
+	// Initialize handlers with dependencies
+	bankHandler := handlers.NewBankHandler(deps)
+	gameHandler := handlers.NewGameHandler(deps)
+	playerHandler := handlers.NewPlayerHandler(deps)
+	loginHandler := handlers.NewLoginHandler(deps)
+	performanceHistoryHandler := handlers.NewPerformanceHistoryHandler(deps)
+
+	// Register routes
+	mux.HandleFunc("/api/newPlayer", playerHandler.CreateNewPlayer)
+	mux.HandleFunc("/api/bank", middleware.JwtMiddleware(bankHandler.GetBank))
+	mux.HandleFunc("/api/login", loginHandler.LogIn)
+	mux.HandleFunc("/api/currentDay", gameHandler.GetCurrentDay)
+	mux.HandleFunc("/api/player", middleware.JwtMiddleware(playerHandler.GetPlayer))
+	mux.HandleFunc(
+		"/api/nextDay",
+		middleware.AdminJwtMiddleware(gameHandler.AdvanceToNextDay, deps.ServiceContainer.Auth),
+	)
 	mux.HandleFunc(
 		"/api/performanceHistory/ownbank/{bankId}",
-		middleware.JwtMiddleware(handlers.GetPerformanceHistoryHandler),
+		middleware.JwtMiddleware(performanceHistoryHandler.GetPerformanceHistory),
 	)
 }

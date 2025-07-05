@@ -3,11 +3,24 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"ponziworld/backend/db"
+
+	"ponziworld/backend/config"
 	"ponziworld/backend/services"
 )
 
-func CurrentDayHandler(w http.ResponseWriter, r *http.Request) {
+// BankHandler handles bank-related requests
+type GameHandler struct {
+	gameService *services.GameService
+}
+
+// NewBankHandler creates a new BankHandler
+func NewGameHandler(deps *config.Container) *GameHandler {
+	return &GameHandler{
+		gameService: deps.ServiceContainer.Game,
+	}
+}
+
+func (h *GameHandler) GetCurrentDay(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -15,13 +28,10 @@ func CurrentDayHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	client, ctx, cancel := db.ConnectDB()
-	defer cancel()
-	defer client.Disconnect(ctx)
+	// Use the request context for proper cancellation handling
+	ctx := r.Context()
 
-	serviceManager := services.NewServiceManager(client.Database("ponziworld"))
-
-	currentDay, err := serviceManager.Game.GetCurrentDay(ctx)
+	currentDay, err := h.gameService.GetCurrentDay(ctx)
 	if err != nil {
 		http.Error(w, "Failed to get current day", http.StatusInternalServerError)
 		return
@@ -31,7 +41,7 @@ func CurrentDayHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func NextDayHandler(w http.ResponseWriter, r *http.Request) {
+func (h *GameHandler) AdvanceToNextDay(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -39,13 +49,10 @@ func NextDayHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	client, ctx, cancel := db.ConnectDB()
-	defer cancel()
-	defer client.Disconnect(ctx)
+	// Use the request context for proper cancellation handling
+	ctx := r.Context()
 
-	serviceManager := services.NewServiceManager(client.Database("ponziworld"))
-
-	newDay, err := serviceManager.Game.NextDay(ctx)
+	newDay, err := h.gameService.NextDay(ctx)
 	if err != nil {
 		http.Error(w, "Failed to increment day", http.StatusInternalServerError)
 		return

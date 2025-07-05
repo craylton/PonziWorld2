@@ -20,6 +20,7 @@ Think about how the profits etc work
     does it work itself numerically
     do the percentages make sense
 
+
 FUTURE THINGS:
 
 Defensive programming when retrieving data from DB

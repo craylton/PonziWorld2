@@ -10,18 +10,19 @@ import (
 	"testing"
 	"time"
 
-	"ponziworld/backend/db"
 	"ponziworld/backend/routes"
 )
 
 func TestConcurrentUserCreation(t *testing.T) {
-	// Ensure database indexes are created before running tests
-	if err := db.EnsureAllIndexes(); err != nil {
-		t.Fatalf("Failed to ensure database indexes: %v", err)
+	// Create test dependencies
+	deps, err := CreateTestDependencies("concurrency")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
-	
+	defer CleanupTestDependencies(deps)
+
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux)
+	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
@@ -35,7 +36,7 @@ func TestConcurrentUserCreation(t *testing.T) {
 			wg.Add(1)
 			go func(userNum int) {
 				defer wg.Done()
-				
+
 				createUserData := map[string]string{
 					"username": fmt.Sprintf("concurrent_%d_%d", timestamp, userNum),
 					"password": "testpassword123",
@@ -74,7 +75,6 @@ func TestConcurrentUserCreation(t *testing.T) {
 			bankName := fmt.Sprintf("Bank %d", i)
 			playersAndBanks[username] = bankName
 		}
-		CleanupMultipleTestData(playersAndBanks)
 	})
 
 	t.Run("Duplicate username creation race condition", func(t *testing.T) {
@@ -89,7 +89,7 @@ func TestConcurrentUserCreation(t *testing.T) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				
+
 				createUserData := map[string]string{
 					"username": duplicateUsername,
 					"password": "testpassword123",
@@ -127,8 +127,5 @@ func TestConcurrentUserCreation(t *testing.T) {
 		if errorCount != numAttempts-1 {
 			t.Errorf("Expected %d duplicate username errors, got %d", numAttempts-1, errorCount)
 		}
-
-		// Cleanup
-		CleanupTestData(duplicateUsername, "Race Test Bank")
 	})
 }

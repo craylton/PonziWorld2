@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	ErrBankNotFound    = errors.New("bank not found")
-	ErrUnauthorized    = errors.New("unauthorized access")
+	ErrBankNotFound = errors.New("bank not found")
+	ErrUnauthorized = errors.New("unauthorized access")
 )
 
 type BankService struct {

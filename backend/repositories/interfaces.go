@@ -36,3 +36,10 @@ type HistoricalPerformanceRepository interface {
 	FindClaimedByBankIDAndDateRange(ctx context.Context, bankID primitive.ObjectID, startDay, endDay int) ([]models.HistoricalPerformance, error)
 	FindActualByBankIDAndDateRange(ctx context.Context, bankID primitive.ObjectID, startDay, endDay int) ([]models.HistoricalPerformance, error)
 }
+
+// GameRepository defines the interface for game database operations
+type GameRepository interface {
+	GetCurrentDay(ctx context.Context) (int, error)
+	IncrementDay(ctx context.Context) (int, error)
+	CreateInitialGame(ctx context.Context, initialDay int) error
+}

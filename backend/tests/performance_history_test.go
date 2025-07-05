@@ -14,22 +14,21 @@ import (
 )
 
 func TestPerformanceHistoryEndpoint(t *testing.T) {
-	// Reset game state to ensure consistent test environment
-	ResetGameState()
+	// Create test dependencies
+	deps, err := CreateTestDependencies("histPerf")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(deps)
 
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux)
+	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
 	timestamp := time.Now().Unix()
 	testUsername := fmt.Sprintf("perftest_%d", timestamp)
 	testBankName := "Test Bank Performance"
-
-	// Setup cleanup
-	t.Cleanup(func() {
-		CleanupTestData(testUsername, testBankName)
-	})
 
 	// Create player and bank
 	createUserData := map[string]string{
@@ -182,8 +181,15 @@ func TestPerformanceHistoryEndpoint(t *testing.T) {
 }
 
 func TestPerformanceHistoryUnauthorized(t *testing.T) {
+	// Create test dependencies
+	deps, err := CreateTestDependencies("histPerf")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(deps)
+
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux)
+	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
@@ -206,19 +212,21 @@ func TestPerformanceHistoryUnauthorized(t *testing.T) {
 }
 
 func TestPerformanceHistoryInvalidBankID(t *testing.T) {
+	// Create test dependencies
+	deps, err := CreateTestDependencies("histPerf")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(deps)
+
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux)
+	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
 	timestamp := time.Now().Unix()
 	testUsername := fmt.Sprintf("perfinvalidtest_%d", timestamp)
 	testBankName := "Test Bank Invalid"
-
-	// Setup cleanup
-	t.Cleanup(func() {
-		CleanupTestData(testUsername, testBankName)
-	})
 
 	// Create player and get token
 	createUserData := map[string]string{
@@ -270,8 +278,15 @@ func TestPerformanceHistoryInvalidBankID(t *testing.T) {
 }
 
 func TestPerformanceHistoryOtherPlayersBank(t *testing.T) {
+	// Create test dependencies
+	deps, err := CreateTestDependencies("histPerf")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(deps)
+
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux)
+	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
@@ -280,14 +295,6 @@ func TestPerformanceHistoryOtherPlayersBank(t *testing.T) {
 	player1BankName := "Player 1 Bank"
 	player2Username := fmt.Sprintf("perfplayer2_%d", timestamp)
 	player2BankName := "Player 2 Bank"
-
-	// Setup cleanup
-	t.Cleanup(func() {
-		CleanupMultipleTestData(map[string]string{
-			player1Username: player1BankName,
-			player2Username: player2BankName,
-		})
-	})
 
 	// Create first player and bank
 	createPlayer1Data := map[string]string{
@@ -396,19 +403,21 @@ func TestPerformanceHistoryOtherPlayersBank(t *testing.T) {
 }
 
 func TestPerformanceHistoryDataPersistence(t *testing.T) {
+	// Create test dependencies
+	deps, err := CreateTestDependencies("histPerf")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(deps)
+
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux)
+	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
 	timestamp := time.Now().Unix()
 	testUsername := fmt.Sprintf("perfpersist_%d", timestamp)
 	testBankName := "Test Bank Persistence"
-
-	// Setup cleanup
-	t.Cleanup(func() {
-		CleanupTestData(testUsername, testBankName)
-	})
 
 	// Create player and bank
 	createUserData := map[string]string{

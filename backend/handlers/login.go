@@ -5,17 +5,29 @@ import (
 	"net/http"
 
 	"ponziworld/backend/auth"
-	"ponziworld/backend/db"
+	"ponziworld/backend/config"
 	"ponziworld/backend/services"
 )
 
+// LoginHandler handles login-related requests
+type LoginHandler struct {
+	authService *services.AuthService
+}
+
+// NewLoginHandler creates a new LoginHandler
+func NewLoginHandler(deps *config.Container) *LoginHandler {
+	return &LoginHandler{
+		authService: deps.ServiceContainer.Auth,
+	}
+}
+
 // LoginHandler handles POST /api/login
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
-    if r.Method != http.MethodPost {
+func (h *LoginHandler) LogIn(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
-        http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-        return
-    }
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -34,15 +46,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client, ctx, cancel := db.ConnectDB()
-	defer cancel()
-	defer client.Disconnect(ctx)
-
-	// Create service manager
-	serviceManager := services.NewServiceManager(client.Database("ponziworld"))
+	// Use the request context for proper cancellation handling
+	ctx := r.Context()
 
 	// Attempt login
-	_, err := serviceManager.Auth.Login(ctx, req.Username, req.Password)
+	_, err := h.authService.Login(ctx, req.Username, req.Password)
 	if err != nil {
 		if err == services.ErrInvalidCredentials {
 			w.WriteHeader(http.StatusUnauthorized)

@@ -14,8 +14,16 @@ import (
 )
 
 func TestBankEndpoint(t *testing.T) {
+	// Create test dependencies
+	deps, err := CreateTestDependencies("bank")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(deps)
+
+	// Create test server with dependencies
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux)
+	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
@@ -86,7 +94,7 @@ func TestBankEndpoint(t *testing.T) {
 		if err := json.NewDecoder(resp.Body).Decode(&bankResponse); err != nil {
 			t.Fatalf("Failed to decode bank response: %v", err)
 		}
-		
+
 		// Verify bank data
 		if bankResponse.BankName != testBankName {
 			t.Errorf("Expected bank name %q, got %q", testBankName, bankResponse.BankName)
@@ -107,10 +115,5 @@ func TestBankEndpoint(t *testing.T) {
 		if asset.Amount != 1000 {
 			t.Errorf("Expected asset amount 1000, got %d", asset.Amount)
 		}
-	})
-
-	// Cleanup only test data
-	t.Cleanup(func() {
-		CleanupTestData(testUsername, testBankName)
 	})
 }

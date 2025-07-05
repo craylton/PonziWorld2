@@ -15,12 +15,16 @@ import (
 
 // TestFullUserWorkflow tests the complete end-to-end player workflow
 func TestFullUserWorkflow(t *testing.T) {
-	// Reset game state to ensure consistent test environment
-	ResetGameState()
-	
+	// Create test dependencies
+	deps, err := CreateTestDependencies("workflow")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(deps)
+
 	// Setup test server
 	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux)
+	routes.RegisterRoutes(mux, deps)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 	var defaultCapital int64 = 1000
@@ -57,7 +61,7 @@ func TestFullUserWorkflow(t *testing.T) {
 			t.Errorf("Expected status 201, got %d", resp.StatusCode)
 		}
 	})
-	
+
 	t.Run("Login Player", func(t *testing.T) {
 		// Test player login
 		loginData := map[string]string{
@@ -88,24 +92,24 @@ func TestFullUserWorkflow(t *testing.T) {
 		}
 		authToken = token
 	})
-	
+
 	t.Run("Get Player Details", func(t *testing.T) {
-			// GET /api/newPlayer is removed; expect Method Not Allowed
-			req, err := http.NewRequest("GET", server.URL+"/api/newPlayer", nil)
-			if err != nil {
-				t.Fatalf("Failed to create request: %v", err)
-			}
-			req.Header.Set("Authorization", "Bearer "+authToken)
-			client := &http.Client{}
-			resp, err := client.Do(req)
-			if err != nil {
-				t.Fatalf("Failed to fetch player after login: %v", err)
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != http.StatusMethodNotAllowed {
-				t.Errorf("Expected status %d from /api/newPlayer, got %d", http.StatusMethodNotAllowed, resp.StatusCode)
-			}
-        	// Test /api/bank endpoint
+		// GET /api/newPlayer is removed; expect Method Not Allowed
+		req, err := http.NewRequest("GET", server.URL+"/api/newPlayer", nil)
+		if err != nil {
+			t.Fatalf("Failed to create request: %v", err)
+		}
+		req.Header.Set("Authorization", "Bearer "+authToken)
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatalf("Failed to fetch player after login: %v", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusMethodNotAllowed {
+			t.Errorf("Expected status %d from /api/newPlayer, got %d", http.StatusMethodNotAllowed, resp.StatusCode)
+		}
+		// Test /api/bank endpoint
 		req, _ = http.NewRequest("GET", server.URL+"/api/bank", nil)
 		req.Header.Set("Authorization", "Bearer "+authToken)
 
@@ -144,10 +148,5 @@ func TestFullUserWorkflow(t *testing.T) {
 				t.Errorf("Expected asset amount %d, got %d", defaultCapital, bankResponse.Assets[0].Amount)
 			}
 		}
-	})
-
-	// Cleanup: Remove test player, bank, and assets from database
-	t.Cleanup(func() {
-		CleanupTestData(testUsername, testBankName)
 	})
 }
