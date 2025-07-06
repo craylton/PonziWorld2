@@ -1,6 +1,6 @@
-import SidePanel from './SidePanel/SidePanel';
-import type { Player } from '../models/User';
-import { makeAuthenticatedRequest } from '../auth';
+import SidePanel from '../SidePanel';
+import type { Player } from '../../../models/User';
+import { makeAuthenticatedRequest } from '../../../auth';
 
 interface SettingsPanelProps {
   visible: boolean;

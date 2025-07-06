@@ -1,5 +1,5 @@
-import SidePanel from './SidePanel/SidePanel';
-import InvestorList from './SidePanel/InvestorList/InvestorList';
+import SidePanel from '../SidePanel';
+import InvestorList from './InvestorList';
 
 interface InvestorsPanelProps {
   visible: boolean;

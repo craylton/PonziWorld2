@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import './Dashboard.css';
 import DashboardHeader from './DashboardHeader';
-import InvestorsButton from './InvestorsButton';
-import SettingsButton from './SettingsButton';
-import InvestorsPanel from './InvestorsPanel';
-import SettingsPanel from './SettingsPanel';
-import AssetSection from './AssetSection';
+import InvestorsButton from './SidePanel/Investors/InvestorsButton';
+import SettingsButton from './SidePanel/Settings/SettingsButton';
+import InvestorsPanel from './SidePanel/Investors/InvestorsPanel';
+import SettingsPanel from './SidePanel/Settings/SettingsPanel';
+import AssetSection from './Assets/AssetSection';
 import { makeAuthenticatedRequest } from '../auth';
 import type { Bank } from '../models/Bank';
 import type { PerformanceHistory } from '../models/PerformanceHistory';

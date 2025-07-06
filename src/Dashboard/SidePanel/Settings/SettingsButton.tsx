@@ -1,4 +1,4 @@
-import SidePanelButton from './SidePanel/SidePanelButton';
+import SidePanelButton from '../SidePanelButton';
 
 interface SettingsButtonProps {
   isRightPanelOpen: boolean;

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import AssetList from './AssetList/AssetList';
-import type { AssetType } from '../models/AssetType';
-import type { Asset } from './AssetList/Asset';
+import AssetList from './AssetList';
+import type { AssetType } from '../../models/AssetType';
+import type { Asset } from './Asset';
 
 interface AssetSectionProps {
   bankAssets: Asset[];
