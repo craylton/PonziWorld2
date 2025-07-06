@@ -102,6 +102,44 @@
   background-color: #f058c8;
 }
 
+.dashboard-more-assets-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.dashboard-more-assets-button {
+  background-color: #ff6cdc;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  font-weight: 500;
+}
+
+.dashboard-more-assets-button:hover {
+  background-color: #e65ac8;
+  transform: translateY(-1px);
+}
+
+.dashboard-more-assets-button:active {
+  transform: translateY(0);
+}
+
+.dashboard-more-assets-button:disabled {
+  background-color: #999;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.dashboard-more-assets-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 108, 220, 0.4);
+}
+
 @media (max-width: 900px) {
   .dashboard-layout {
     flex-direction: column;

@@ -4,12 +4,14 @@ import './AssetList.css';
 
 interface AssetListProps {
     assets: Asset[];
+    showBorder?: boolean;
+    title?: string;
 }
 
-export default function AssetList({ assets }: AssetListProps) {
+export default function AssetList({ assets, showBorder = false, title = "Your Assets" }: AssetListProps) {
     if (assets.length === 0) {
         return (
-            <div className="asset-list asset-list--empty">
+            <div className={`asset-list asset-list--empty ${showBorder ? 'asset-list--bordered' : ''}`}>
                 <div className="asset-list__empty-message">
                     You have no assets
                 </div>
@@ -18,9 +20,9 @@ export default function AssetList({ assets }: AssetListProps) {
     }
 
     return (
-        <div className="asset-list">
+        <div className={`asset-list ${showBorder ? 'asset-list--bordered' : ''}`}>
             <div className="asset-list__header">
-                <h3 className="asset-list__title">Your Assets</h3>
+                <h3 className="asset-list__title">{title}</h3>
             </div>
             
             <div className="asset-list__items">
