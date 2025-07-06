@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import './Dashboard.css';
 import DashboardHeader from './DashboardHeader';
-import InvestorList from './SidePanel/InvestorList/InvestorList';
-import SidePanelButton from './SidePanel/SidePanelButton';
-import SidePanel from './SidePanel/SidePanel';
+import InvestorsButton from './InvestorsButton';
+import SettingsButton from './SettingsButton';
+import InvestorsPanel from './InvestorsPanel';
+import SettingsPanel from './SettingsPanel';
 import AssetSection from './AssetSection';
 import { makeAuthenticatedRequest } from '../auth';
 import type { Bank } from '../models/Bank';
@@ -72,24 +73,6 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     fetchData();
   }, [onLogout]);
 
-  const handleAdvanceDay = async () => {
-    try {
-      const response = await makeAuthenticatedRequest('/api/nextDay', {
-        method: 'POST',
-      });
-      
-      if (response.ok) {
-        // Optionally refresh the page or show a success message
-        window.location.reload();
-      } else {
-        const errorData = await response.json();
-        alert(`Failed to advance day: ${errorData.error || 'Unknown error'}`);
-      }
-    } catch {
-      alert('Failed to advance day: Network error');
-    }
-  };
-
   if (isInitialDataLoading || !bank || !player || currentDay === null) {
     return <div>Loading...</div>;
   }
@@ -105,47 +88,24 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         isHistoryLoading={isHistoryLoading}
       />
       <div className="dashboard-layout">
-        <SidePanel side="left" visible={isLeftPanelOpen}>
-          <InvestorList />
-        </SidePanel>
+        <InvestorsPanel visible={isLeftPanelOpen} />
         <main className="dashboard-main">
-          <SidePanelButton
-            iconType="hamburger"
-            shouldAllowClose={isLeftPanelOpen}
+          <InvestorsButton
+            isLeftPanelOpen={isLeftPanelOpen}
             onClick={() => setIsLeftPanelOpen(!isLeftPanelOpen)}
-            ariaLabel="Open left panel"
-            className={`dashboard-sidepanel-button--left`}
           />
           <AssetSection bankAssets={bank.assets} />
           
-          <SidePanelButton
-            iconType="cog"
-            shouldAllowClose={isRightPanelOpen}
+          <SettingsButton
+            isRightPanelOpen={isRightPanelOpen}
             onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}
-            ariaLabel="Open settings panel"
-            className={`dashboard-sidepanel-button--right`}
           />
         </main>
-        <SidePanel side="right" visible={isRightPanelOpen}>
-          <h3>Settings</h3>
-          <button
-            onClick={onLogout}
-            className='dashboard-settings-button'
-          >
-            Logout
-          </button>
-          {player.isAdmin && (
-            <div className="dashboard-admin-section">
-              <p>Admin only</p>
-              <button
-                onClick={handleAdvanceDay}
-                className="dashboard-settings-button"
-              >
-                Advance to next day
-              </button>
-            </div>
-          )}
-        </SidePanel>
+        <SettingsPanel
+          visible={isRightPanelOpen}
+          player={player}
+          onLogout={onLogout}
+        />
       </div>
     </div>
   );
