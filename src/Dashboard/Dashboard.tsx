@@ -4,13 +4,11 @@ import DashboardHeader from './DashboardHeader';
 import InvestorList from './SidePanel/InvestorList/InvestorList';
 import SidePanelButton from './SidePanel/SidePanelButton';
 import SidePanel from './SidePanel/SidePanel';
-import AssetList from './AssetList/AssetList';
+import AssetSection from './AssetSection';
 import { makeAuthenticatedRequest } from '../auth';
 import type { Bank } from '../models/Bank';
 import type { PerformanceHistory } from '../models/PerformanceHistory';
 import type { Player } from '../models/User';
-import type { AssetType } from '../models/AssetType';
-import type { Asset } from './AssetList/Asset';
 
 interface DashboardProps {
   onLogout: () => void;
@@ -25,9 +23,6 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
   const [isInitialDataLoading, setIsInitialDataLoading] = useState(true);
   const [isHistoryLoading, setIsHistoryLoading] = useState(true);
-  const [allAssetTypes, setAllAssetTypes] = useState<AssetType[]>([]);
-  const [showAllAssets, setShowAllAssets] = useState(false);
-  const [isLoadingAssetTypes, setIsLoadingAssetTypes] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -95,47 +90,6 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     }
   };
 
-  const handleLoadMoreAssets = async () => {
-    if (isLoadingAssetTypes) return;
-    
-    setIsLoadingAssetTypes(true);
-    try {
-      const response = await fetch('/api/assetTypes');
-      if (response.ok) {
-        const assetTypes: AssetType[] = await response.json();
-        setAllAssetTypes(assetTypes);
-        setShowAllAssets(true);
-      } else {
-        console.error('Failed to load asset types');
-      }
-    } catch (error) {
-      console.error('Error loading asset types:', error);
-    } finally {
-      setIsLoadingAssetTypes(false);
-    }
-  };
-
-  // Convert asset types to assets with 0 amount, filtering out existing ones
-  const getFilteredAssetTypes = (): Asset[] => {
-    if (!bank || !allAssetTypes.length) return [];
-    
-    const existingAssetTypes = new Set(bank.assets.map(asset => asset.assetType));
-    return allAssetTypes
-      .filter(assetType => !existingAssetTypes.has(assetType.name))
-      .map(assetType => ({
-        assetType: assetType.name,
-        amount: 0
-      }));
-  };
-
-  // Check if there are any assets available to show
-  const hasAvailableAssets = (): boolean => {
-    if (!bank) return false;
-    const existingAssetTypes = new Set(bank.assets.map(asset => asset.assetType));
-    // We know there are 5 total asset types from the backend
-    return existingAssetTypes.size < 5;
-  };
-
   if (isInitialDataLoading || !bank || !player || currentDay === null) {
     return <div>Loading...</div>;
   }
@@ -162,28 +116,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             ariaLabel="Open left panel"
             className={`dashboard-sidepanel-button--left`}
           />
-          <AssetList assets={bank.assets} />
-          
-          {/* More assets button and additional asset list */}
-          {!showAllAssets && hasAvailableAssets() && (
-            <div className="dashboard-more-assets-container">
-              <button
-                onClick={handleLoadMoreAssets}
-                disabled={isLoadingAssetTypes}
-                className="dashboard-more-assets-button"
-              >
-                {isLoadingAssetTypes ? 'Loading...' : 'More assets...'}
-              </button>
-            </div>
-          )}
-          
-          {showAllAssets && (
-            <AssetList 
-              assets={getFilteredAssetTypes()} 
-              showBorder={true}
-              title="Available Assets"
-            />
-          )}
+          <AssetSection bankAssets={bank.assets} />
           
           <SidePanelButton
             iconType="cog"
