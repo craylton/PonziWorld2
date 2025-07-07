@@ -8,6 +8,7 @@ type ServiceContainer struct {
 	Auth        *services.AuthService
 	Bank        *services.BankService
 	Asset       *services.AssetService
+	AssetType   *services.AssetTypeService
 	Performance *services.PerformanceService
 	Player      *services.PlayerService
 	Game        *services.GameService
@@ -19,8 +20,10 @@ func NewServiceContainer(repositoryContainer *RepositoryContainer) *ServiceConta
 		repositoryContainer.Player,
 		repositoryContainer.Bank,
 		repositoryContainer.Asset,
+		repositoryContainer.AssetType,
 	)
-	assetService := services.NewAssetService(repositoryContainer.Asset)
+	assetService := services.NewAssetService(repositoryContainer.Asset, repositoryContainer.AssetType)
+	assetTypeService := services.NewAssetTypeService(repositoryContainer.AssetType)
 	gameService := services.NewGameService(repositoryContainer.Game)
 	performanceService := services.NewPerformanceService(
 		bankService,
@@ -38,6 +41,7 @@ func NewServiceContainer(repositoryContainer *RepositoryContainer) *ServiceConta
 		Auth:        authService,
 		Bank:        bankService,
 		Asset:       assetService,
+		AssetType:   assetTypeService,
 		Performance: performanceService,
 		Player:      playerService,
 		Game:        gameService,

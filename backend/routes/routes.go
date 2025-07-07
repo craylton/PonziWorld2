@@ -14,6 +14,7 @@ func RegisterRoutes(mux *http.ServeMux, container *config.Container) {
 	playerHandler := handlers.NewPlayerHandler(container)
 	loginHandler := handlers.NewLoginHandler(container)
 	performanceHistoryHandler := handlers.NewPerformanceHistoryHandler(container)
+	assetTypeHandler := handlers.NewAssetTypeHandler(container)
 
 	// Register routes
 	mux.HandleFunc("/api/newPlayer", playerHandler.CreateNewPlayer)
@@ -21,6 +22,7 @@ func RegisterRoutes(mux *http.ServeMux, container *config.Container) {
 	mux.HandleFunc("/api/login", loginHandler.LogIn)
 	mux.HandleFunc("/api/currentDay", gameHandler.GetCurrentDay)
 	mux.HandleFunc("/api/player", middleware.JwtMiddleware(playerHandler.GetPlayer))
+	mux.HandleFunc("/api/assetTypes", middleware.JwtMiddleware(assetTypeHandler.GetAllAssetTypes))
 	mux.HandleFunc(
 		"/api/nextDay",
 		middleware.AdminJwtMiddleware(gameHandler.AdvanceToNextDay, container.ServiceContainer.Auth),

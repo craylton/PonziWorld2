@@ -115,5 +115,8 @@ func TestBankEndpoint(t *testing.T) {
 		if asset.Amount != 1000 {
 			t.Errorf("Expected asset amount 1000, got %d", asset.Amount)
 		}
+		if asset.AssetTypeId == "" {
+			t.Error("Expected asset type ID to be present")
+		}
 	})
 }

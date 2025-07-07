@@ -16,20 +16,23 @@ var (
 )
 
 type BankService struct {
-	playerRepo repositories.PlayerRepository
-	bankRepo   repositories.BankRepository
-	assetRepo  repositories.AssetRepository
+	playerRepo    repositories.PlayerRepository
+	bankRepo      repositories.BankRepository
+	assetRepo     repositories.AssetRepository
+	assetTypeRepo repositories.AssetTypeRepository
 }
 
 func NewBankService(
 	playerRepo repositories.PlayerRepository,
 	bankRepo repositories.BankRepository,
 	assetRepo repositories.AssetRepository,
+	assetTypeRepo repositories.AssetTypeRepository,
 ) *BankService {
 	return &BankService{
-		playerRepo: playerRepo,
-		bankRepo:   bankRepo,
-		assetRepo:  assetRepo,
+		playerRepo:    playerRepo,
+		bankRepo:      bankRepo,
+		assetRepo:     assetRepo,
+		assetTypeRepo: assetTypeRepo,
 	}
 }
 
@@ -64,13 +67,28 @@ func (s *BankService) GetBankByUsername(ctx context.Context, username string) (*
 		return nil, err
 	}
 
+	// Convert assets to AssetResponse with asset type information
+	assetResponses := make([]models.AssetResponse, len(assets))
+	for i, asset := range assets {
+		assetType, err := s.assetTypeRepo.FindByID(ctx, asset.AssetTypeId)
+		if err != nil {
+			return nil, err
+		}
+
+		assetResponses[i] = models.AssetResponse{
+			Amount:      asset.Amount,
+			AssetTypeId: asset.AssetTypeId.Hex(),
+			AssetType:   assetType.Name,
+		}
+	}
+
 	// Create response
 	response := &models.BankResponse{
 		Id:             bank.Id.Hex(),
 		BankName:       bank.BankName,
 		ClaimedCapital: bank.ClaimedCapital,
 		ActualCapital:  actualCapital,
-		Assets:         assets,
+		Assets:         assetResponses,
 	}
 
 	return response, nil
