@@ -8,22 +8,22 @@ interface SettingsPanelProps {
   onLogout: () => void;
 }
 
-  const handleAdvanceDay = async () => {
-    try {
-      const response = await makeAuthenticatedRequest('/api/nextDay', {
-        method: 'POST',
-      });
-      
-      if (response.ok) {
-        // Do nothing, maybe show a success message one day
-      } else {
-        const errorData = await response.json();
-        alert(`Failed to advance day: ${errorData.error || 'Unknown error'}`);
-      }
-    } catch {
-      alert('Failed to advance day: Network error');
+const handleAdvanceDay = async () => {
+  try {
+    const response = await makeAuthenticatedRequest('/api/nextDay', {
+      method: 'POST',
+    });
+
+    if (response.ok) {
+      // Do nothing, maybe show a success message one day
+    } else {
+      const errorData = await response.json();
+      alert(`Failed to advance day: ${errorData.error || 'Unknown error'}`);
     }
-  };
+  } catch {
+    alert('Failed to advance day: Network error');
+  }
+};
 
 export default function SettingsPanel({ visible, player, onLogout }: SettingsPanelProps) {
   return (

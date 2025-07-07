@@ -74,7 +74,7 @@ func (s *BankService) GetBankByUsername(ctx context.Context, username string) (*
 		if err != nil {
 			return nil, err
 		}
-		
+
 		assetResponses[i] = models.AssetResponse{
 			Amount:      asset.Amount,
 			AssetTypeId: asset.AssetTypeId.Hex(),

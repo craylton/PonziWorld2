@@ -68,11 +68,11 @@ func (r *assetTypeRepository) UpsertByName(ctx context.Context, assetType *model
 		_, err := r.collection.UpdateOne(ctx, filter, update)
 		return err
 	}
-	
+
 	// Create new if not found
 	if err == mongo.ErrNoDocuments {
 		return r.Create(ctx, assetType)
 	}
-	
+
 	return err
 }

@@ -46,7 +46,7 @@ export default function AssetList({ title, onLoad, isExpandedByDefault }: AssetL
     }, [isExpandedByDefault, hasLoadedAssetTypes, handleToggleAssets]);
 
     return (
-        <div className="asset-list asset-list--bordered">
+        <div className="asset-list">
             <div className="asset-list__header">
                 <button
                     onClick={handleToggleAssets}

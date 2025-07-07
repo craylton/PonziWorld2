@@ -28,7 +28,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch current day (non-authenticated)
+        // Fetch current day
         const currentDayResponse = await fetch('/api/currentDay');
         if (!currentDayResponse.ok) {
           onLogout();
@@ -95,7 +95,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             onClick={() => setIsLeftPanelOpen(!isLeftPanelOpen)}
           />
           <AssetSection bankAssets={bank.assets} />
-          
+
           <SettingsButton
             isRightPanelOpen={isRightPanelOpen}
             onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}

@@ -8,3 +8,9 @@ type Asset struct {
 	Amount      int64              `bson:"amount" json:"amount"`
 	AssetTypeId primitive.ObjectID `bson:"assetTypeId" json:"assetTypeId"`
 }
+
+type AssetResponse struct {
+	Amount      int64  `json:"amount"`
+	AssetTypeId string `json:"assetTypeId"`
+	AssetType   string `json:"assetType"`
+}

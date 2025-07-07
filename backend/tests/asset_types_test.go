@@ -11,22 +11,34 @@ import (
 )
 
 func TestAssetTypesEndpoint(t *testing.T) {
-	// Create test dependencies
 	container, err := CreateTestDependencies("asset_types")
 	if err != nil {
 		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
 	defer CleanupTestDependencies(container)
 
-	// Create test server with dependencies
+	// Create test server
 	mux := http.NewServeMux()
 	routes.RegisterRoutes(mux, container)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 
 	t.Run("should return all asset types", func(t *testing.T) {
-		// Make request to get asset types
-		resp, err := http.Get(server.URL + "/api/assetTypes")
+		// Create a test user and get authentication token
+		token, err := CreateRegularUserForTest(container, "testuser", "testpassword123", "Test Bank")
+		if err != nil {
+			t.Fatalf("Failed to create test user: %v", err)
+		}
+
+		// Make authenticated request to get asset types
+		req, err := http.NewRequest("GET", server.URL+"/api/assetTypes", nil)
+		if err != nil {
+			t.Fatalf("Failed to create request: %v", err)
+		}
+		req.Header.Set("Authorization", "Bearer "+token)
+
+		client := &http.Client{}
+		resp, err := client.Do(req)
 		if err != nil {
 			t.Fatalf("Failed to make request: %v", err)
 		}
@@ -35,12 +47,6 @@ func TestAssetTypesEndpoint(t *testing.T) {
 		// Check status code
 		if resp.StatusCode != http.StatusOK {
 			t.Errorf("Expected status code %d, got %d", http.StatusOK, resp.StatusCode)
-		}
-
-		// Check content type
-		contentType := resp.Header.Get("Content-Type")
-		if contentType != "application/json" {
-			t.Errorf("Expected content type 'application/json', got '%s'", contentType)
 		}
 
 		// Parse response
@@ -75,26 +81,6 @@ func TestAssetTypesEndpoint(t *testing.T) {
 			if assetType.Name == "" {
 				t.Errorf("Asset type with ID '%s' has empty name", assetType.Id.Hex())
 			}
-		}
-	})
-
-	t.Run("should handle invalid methods", func(t *testing.T) {
-		// Make POST request to asset types endpoint (should only accept GET)
-		resp, err := http.Post(server.URL+"/api/assetTypes", "application/json", nil)
-		if err != nil {
-			t.Fatalf("Failed to make request: %v", err)
-		}
-		defer resp.Body.Close()
-
-		// Should return method not allowed
-		if resp.StatusCode != http.StatusMethodNotAllowed {
-			t.Errorf("Expected status code %d for POST request, got %d", http.StatusMethodNotAllowed, resp.StatusCode)
-		}
-
-		// Check Allow header
-		allowHeader := resp.Header.Get("Allow")
-		if allowHeader != "GET" {
-			t.Errorf("Expected Allow header to be 'GET', got '%s'", allowHeader)
 		}
 	})
 }

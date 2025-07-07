@@ -13,14 +13,21 @@ type AssetService struct {
 	assetTypeRepo repositories.AssetTypeRepository
 }
 
-func NewAssetService(assetRepo repositories.AssetRepository, assetTypeRepo repositories.AssetTypeRepository) *AssetService {
+func NewAssetService(
+	assetRepo repositories.AssetRepository,
+	assetTypeRepo repositories.AssetTypeRepository,
+) *AssetService {
 	return &AssetService{
 		assetRepo:     assetRepo,
 		assetTypeRepo: assetTypeRepo,
 	}
 }
 
-func (s *AssetService) CreateInitialAsset(ctx context.Context, bankID primitive.ObjectID, amount int64) (*models.Asset, error) {
+func (s *AssetService) CreateInitialAsset(
+	ctx context.Context,
+	bankID primitive.ObjectID,
+	amount int64,
+) (*models.Asset, error) {
 	// Get the Cash asset type
 	cashAssetType, err := s.assetTypeRepo.FindByName(ctx, "Cash")
 	if err != nil {

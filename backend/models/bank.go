@@ -9,12 +9,6 @@ type Bank struct {
 	ClaimedCapital int64              `bson:"claimedCapital" json:"claimedCapital"`
 }
 
-type AssetResponse struct {
-	Amount      int64  `json:"amount"`
-	AssetTypeId string `json:"assetTypeId"`
-	AssetType   string `json:"assetType"` // Include the asset type name for convenience
-}
-
 type BankResponse struct {
 	Id             string          `json:"id"`
 	BankName       string          `json:"bankName"`

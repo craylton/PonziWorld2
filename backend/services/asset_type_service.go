@@ -18,14 +18,6 @@ func NewAssetTypeService(assetTypeRepo repositories.AssetTypeRepository) *AssetT
 	}
 }
 
-func (s *AssetTypeService) GetAssetTypeByName(ctx context.Context, name string) (*models.AssetType, error) {
-	return s.assetTypeRepo.FindByName(ctx, name)
-}
-
-func (s *AssetTypeService) GetAssetTypeByID(ctx context.Context, id primitive.ObjectID) (*models.AssetType, error) {
-	return s.assetTypeRepo.FindByID(ctx, id)
-}
-
 func (s *AssetTypeService) GetAllAssetTypes(ctx context.Context) ([]models.AssetType, error) {
 	return s.assetTypeRepo.FindAll(ctx)
 }

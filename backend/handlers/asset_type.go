@@ -31,10 +31,8 @@ func (h *AssetTypeHandler) GetAllAssetTypes(w http.ResponseWriter, r *http.Reque
 
 	w.Header().Set("Content-Type", "application/json")
 
-	// Use the request context for proper cancellation handling
 	ctx := r.Context()
 
-	// Get all asset types
 	assetTypes, err := h.assetTypeService.GetAllAssetTypes(ctx)
 	if err != nil {
 		log.Printf("Error getting asset types: %v", err)
@@ -43,7 +41,6 @@ func (h *AssetTypeHandler) GetAllAssetTypes(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Return the asset types
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(assetTypes)
 }
