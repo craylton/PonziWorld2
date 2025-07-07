@@ -110,8 +110,12 @@
   margin-top: 1rem;
 }
 
-.asset-list--bordered .asset-list__title {
-  color: rgba(255, 108, 220, 0.8);
+.asset-list--bordered .asset-list__header {
+  margin-bottom: 0;
+}
+
+.asset-list--bordered .asset-list__items {
+  padding-top: 1rem;
 }
 
 /* Mobile styles */

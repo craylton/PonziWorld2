@@ -140,6 +140,39 @@
   box-shadow: 0 0 0 2px rgba(255, 108, 220, 0.4);
 }
 
+.dashboard-assets-toggle-button {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  width: 100%;
+  font-weight: 600;
+}
+
+.dashboard-assets-toggle-button:disabled {
+  color: rgba(255, 255, 255, 0.5);
+  cursor: not-allowed;
+}
+
+.dashboard-assets-toggle-text {
+  flex-grow: 1;
+  text-align: left;
+}
+
+.dashboard-assets-toggle-icon {
+  transition: transform 0.2s ease;
+  transform: rotate(0deg);
+  flex-shrink: 0;
+}
+
+.dashboard-assets-toggle-icon.rotated {
+  transform: rotate(90deg);
+}
+
 @media (max-width: 900px) {
   .dashboard-layout {
     flex-direction: column;
