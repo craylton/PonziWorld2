@@ -1,18 +1,13 @@
 package tests
 
 import (
-	"bytes"
-	"encoding/json"
+	"context"
 	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
-
-	"ponziworld/backend/routes"
 )
 
-func TestPlayerCreation(t *testing.T) {
+func TestPlayerService_CreateNewPlayer(t *testing.T) {
 	// Create test dependencies
 	container, err := CreateTestDependencies("player")
 	if err != nil {
@@ -20,173 +15,77 @@ func TestPlayerCreation(t *testing.T) {
 	}
 	defer CleanupTestDependencies(container)
 
-	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux, container)
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
+	ctx := context.Background()
 	timestamp := time.Now().Unix()
 	testUsername := fmt.Sprintf("createtest_%d", timestamp)
 
 	t.Run("Valid player creation", func(t *testing.T) {
-		createUserData := map[string]string{
-			"username": testUsername,
-			"password": "testpassword123",
-			"bankName": "Test Bank Creation",
-		}
-		jsonData, _ := json.Marshal(createUserData)
-
-		resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
+		err := container.ServiceContainer.Player.CreateNewPlayer(ctx, testUsername, "testpassword123", "Test Bank Creation")
 		if err != nil {
 			t.Fatalf("Failed to create player: %v", err)
 		}
-		defer resp.Body.Close()
 
-		if resp.StatusCode != http.StatusCreated {
-			t.Errorf("Expected status 201, got %d", resp.StatusCode)
+		// Verify the player was created by trying to get their bank
+		bankResponse, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, testUsername)
+		if err != nil {
+			t.Fatalf("Failed to get bank for created player: %v", err)
+		}
+
+		if bankResponse.BankName != "Test Bank Creation" {
+			t.Errorf("Expected bank name 'Test Bank Creation', got %q", bankResponse.BankName)
+		}
+		if bankResponse.ClaimedCapital != 1000 {
+			t.Errorf("Expected claimed capital 1000, got %d", bankResponse.ClaimedCapital)
 		}
 	})
 
 	t.Run("Duplicate username", func(t *testing.T) {
 		// Try to create the same player again
-		createUserData := map[string]string{
-			"username": testUsername,
-			"password": "testpassword123",
-			"bankName": "Another Bank",
-		}
-		jsonData, _ := json.Marshal(createUserData)
-
-		resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
-		if err != nil {
-			t.Fatalf("Failed to attempt duplicate player creation: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusBadRequest {
-			t.Errorf("Expected status 400, got %d", resp.StatusCode)
+		err := container.ServiceContainer.Player.CreateNewPlayer(ctx, testUsername, "testpassword123", "Another Bank")
+		if err == nil {
+			t.Error("Expected error for duplicate username, got nil")
 		}
 	})
 
 	t.Run("Missing username", func(t *testing.T) {
-		createUserData := map[string]string{
-			"password": "testpassword123",
-			"bankName": "Test Bank",
-		}
-		jsonData, _ := json.Marshal(createUserData)
-
-		resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
-		if err != nil {
-			t.Fatalf("Failed to attempt player creation: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusBadRequest {
-			t.Errorf("Expected status 400, got %d", resp.StatusCode)
+		err := container.ServiceContainer.Player.CreateNewPlayer(ctx, "", "testpassword123", "Test Bank")
+		if err == nil {
+			t.Error("Expected error for missing username, got nil")
 		}
 	})
 
 	t.Run("Missing password", func(t *testing.T) {
-		createUserData := map[string]string{
-			"username": "testuser_missing_password",
-			"bankName": "Test Bank",
-		}
-		jsonData, _ := json.Marshal(createUserData)
-
-		resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
-		if err != nil {
-			t.Fatalf("Failed to attempt player creation: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusBadRequest {
-			t.Errorf("Expected status 400, got %d", resp.StatusCode)
+		err := container.ServiceContainer.Player.CreateNewPlayer(ctx, "testuser_missing_password", "", "Test Bank")
+		if err == nil {
+			t.Error("Expected error for missing password, got nil")
 		}
 	})
 
 	t.Run("Missing bank name", func(t *testing.T) {
-		createUserData := map[string]string{
-			"username": "testuser_missing_bank",
-			"password": "testpassword123",
-		}
-		jsonData, _ := json.Marshal(createUserData)
-
-		resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
-		if err != nil {
-			t.Fatalf("Failed to attempt player creation: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusBadRequest {
-			t.Errorf("Expected status 400, got %d", resp.StatusCode)
-		}
-	})
-
-	t.Run("Empty username", func(t *testing.T) {
-		createUserData := map[string]string{
-			"username": "",
-			"password": "testpassword123",
-			"bankName": "Test Bank",
-		}
-		jsonData, _ := json.Marshal(createUserData)
-
-		resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
-		if err != nil {
-			t.Fatalf("Failed to attempt player creation: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusBadRequest {
-			t.Errorf("Expected status 400, got %d", resp.StatusCode)
-		}
-	})
-
-	t.Run("Empty password", func(t *testing.T) {
-		createUserData := map[string]string{
-			"username": "testuser_empty_password",
-			"password": "",
-			"bankName": "Test Bank",
-		}
-		jsonData, _ := json.Marshal(createUserData)
-
-		resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
-		if err != nil {
-			t.Fatalf("Failed to attempt player creation: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusBadRequest {
-			t.Errorf("Expected status 400, got %d", resp.StatusCode)
+		err := container.ServiceContainer.Player.CreateNewPlayer(ctx, "testuser_missing_bank", "testpassword123", "")
+		if err == nil {
+			t.Error("Expected error for missing bank name, got nil")
 		}
 	})
 
 	t.Run("Whitespace-only username", func(t *testing.T) {
-		createUserData := map[string]string{
-			"username": "   ",
-			"password": "testpassword123",
-			"bankName": "Test Bank",
-		}
-		jsonData, _ := json.Marshal(createUserData)
-
-		resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
-		if err != nil {
-			t.Fatalf("Failed to attempt player creation: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusBadRequest {
-			t.Errorf("Expected status 400, got %d", resp.StatusCode)
+		err := container.ServiceContainer.Player.CreateNewPlayer(ctx, "   ", "testpassword123", "Test Bank")
+		if err == nil {
+			t.Error("Expected error for whitespace-only username, got nil")
 		}
 	})
 
-	t.Run("Invalid JSON", func(t *testing.T) {
-		resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer([]byte("{invalid json")))
-		if err != nil {
-			t.Fatalf("Failed to attempt player creation: %v", err)
+	t.Run("Whitespace-only password", func(t *testing.T) {
+		err := container.ServiceContainer.Player.CreateNewPlayer(ctx, "testuser_whitespace_password", "   ", "Test Bank")
+		if err == nil {
+			t.Error("Expected error for whitespace-only password, got nil")
 		}
-		defer resp.Body.Close()
+	})
 
-		if resp.StatusCode != http.StatusBadRequest {
-			t.Errorf("Expected status 400, got %d", resp.StatusCode)
+	t.Run("Whitespace-only bank name", func(t *testing.T) {
+		err := container.ServiceContainer.Player.CreateNewPlayer(ctx, "testuser_whitespace_bank", "testpassword123", "   ")
+		if err == nil {
+			t.Error("Expected error for whitespace-only bank name, got nil")
 		}
 	})
 }

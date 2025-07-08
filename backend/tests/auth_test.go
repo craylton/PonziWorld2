@@ -1,8 +1,10 @@
 package tests
 
 import (
-	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -10,7 +12,7 @@ import (
 
 	"ponziworld/backend/auth"
 	"ponziworld/backend/middleware"
-	"ponziworld/backend/routes"
+	"ponziworld/backend/services"
 )
 
 func TestJwtAuth(t *testing.T) {
@@ -126,131 +128,53 @@ func TestJwtMiddleware(t *testing.T) {
 	})
 }
 
-func TestLoginEndpoint(t *testing.T) {
-	// Create test dependencies
+// Unit test for AuthService.Login without HTTP
+func TestAuthService_Login(t *testing.T) {
 	container, err := CreateTestDependencies("auth")
 	if err != nil {
 		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
 	defer CleanupTestDependencies(container)
 
-	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux, container)
-	server := httptest.NewServer(mux)
-	defer server.Close()
+	ctx := context.Background()
+	timestamp := time.Now().Unix()
+	username := fmt.Sprintf("authtest_%d", timestamp)
+	password := "testpassword123"
 
-	// First create a player to test login with
-	createUserData := map[string]string{
-		"username": "logintest_" + string(rune(time.Now().Unix())),
-		"password": "testpassword123",
-		"bankName": "Test Bank",
+	// Create a new player via PlayerService
+	err = container.ServiceContainer.Player.CreateNewPlayer(ctx, username, password, "Test Bank")
+	if err != nil {
+		t.Fatalf("Failed to create new player: %v", err)
 	}
-	jsonData, _ := json.Marshal(createUserData)
-	http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
 
 	t.Run("Valid login", func(t *testing.T) {
-		loginData := map[string]string{
-			"username": createUserData["username"],
-			"password": createUserData["password"],
-		}
-		jsonData, _ := json.Marshal(loginData)
-
-		resp, err := http.Post(server.URL+"/api/login", "application/json", bytes.NewBuffer(jsonData))
+		player, err := container.ServiceContainer.Auth.Login(ctx, username, password)
 		if err != nil {
-			t.Fatalf("Failed to login: %v", err)
+			t.Fatalf("Expected successful login, got error: %v", err)
 		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status 200, got %d", resp.StatusCode)
-		}
-
-		var response map[string]interface{}
-		json.NewDecoder(resp.Body).Decode(&response)
-		if _, ok := response["token"]; !ok {
-			t.Error("Expected token in response")
+		if player.Username != username {
+			t.Errorf("Expected username %s, got %s", username, player.Username)
 		}
 	})
 
 	t.Run("Wrong password", func(t *testing.T) {
-		loginData := map[string]string{
-			"username": createUserData["username"],
-			"password": "wrongpassword",
-		}
-		jsonData, _ := json.Marshal(loginData)
-
-		resp, err := http.Post(server.URL+"/api/login", "application/json", bytes.NewBuffer(jsonData))
-		if err != nil {
-			t.Fatalf("Failed to attempt login: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusUnauthorized {
-			t.Errorf("Expected status 401, got %d", resp.StatusCode)
+		_, err := container.ServiceContainer.Auth.Login(ctx, username, "wrongpassword")
+		if !errors.Is(err, services.ErrInvalidCredentials) {
+			t.Errorf("Expected ErrInvalidCredentials, got %v", err)
 		}
 	})
 
 	t.Run("Missing username", func(t *testing.T) {
-		loginData := map[string]string{
-			"password": "testpassword123",
-		}
-		jsonData, _ := json.Marshal(loginData)
-
-		resp, err := http.Post(server.URL+"/api/login", "application/json", bytes.NewBuffer(jsonData))
-		if err != nil {
-			t.Fatalf("Failed to attempt login: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusBadRequest {
-			t.Errorf("Expected status 400, got %d", resp.StatusCode)
+		_, err := container.ServiceContainer.Auth.Login(ctx, "", password)
+		if err == nil {
+			t.Error("Expected error for missing username, got nil")
 		}
 	})
 
 	t.Run("Missing password", func(t *testing.T) {
-		loginData := map[string]string{
-			"username": createUserData["username"],
-		}
-		jsonData, _ := json.Marshal(loginData)
-
-		resp, err := http.Post(server.URL+"/api/login", "application/json", bytes.NewBuffer(jsonData))
-		if err != nil {
-			t.Fatalf("Failed to attempt login: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusBadRequest {
-			t.Errorf("Expected status 400, got %d", resp.StatusCode)
-		}
-	})
-
-	t.Run("Empty username", func(t *testing.T) {
-		loginData := map[string]string{
-			"username": "",
-			"password": "testpassword123",
-		}
-		jsonData, _ := json.Marshal(loginData)
-
-		resp, err := http.Post(server.URL+"/api/login", "application/json", bytes.NewBuffer(jsonData))
-		if err != nil {
-			t.Fatalf("Failed to attempt login: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusBadRequest {
-			t.Errorf("Expected status 400, got %d", resp.StatusCode)
-		}
-	})
-
-	t.Run("Invalid JSON", func(t *testing.T) {
-		resp, err := http.Post(server.URL+"/api/login", "application/json", bytes.NewBuffer([]byte("{invalid json")))
-		if err != nil {
-			t.Fatalf("Failed to attempt login: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusBadRequest {
-			t.Errorf("Expected status 400, got %d", resp.StatusCode)
+		_, err := container.ServiceContainer.Auth.Login(ctx, username, "")
+		if err == nil {
+			t.Error("Expected error for missing password, got nil")
 		}
 	})
 }

@@ -1,19 +1,13 @@
 package tests
 
 import (
-	"bytes"
-	"encoding/json"
+	"context"
 	"fmt"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 	"time"
-
-	"ponziworld/backend/models"
-	"ponziworld/backend/routes"
 )
 
-func TestBankEndpoint(t *testing.T) {
+func TestBankService_GetBankByUsername(t *testing.T) {
 	// Create test dependencies
 	container, err := CreateTestDependencies("bank")
 	if err != nil {
@@ -21,102 +15,45 @@ func TestBankEndpoint(t *testing.T) {
 	}
 	defer CleanupTestDependencies(container)
 
-	// Create test server with dependencies
-	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux, container)
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
+	ctx := context.Background()
 	timestamp := time.Now().Unix()
 	testUsername := fmt.Sprintf("banktest_%d", timestamp)
 	testBankName := "Test Bank API"
+	testPassword := "testpassword123"
 
-	// Create player
-	createPlayerData := map[string]string{
-		"username": testUsername,
-		"password": "testpassword123",
-		"bankName": testBankName,
-	}
-	jsonData, _ := json.Marshal(createPlayerData)
-
-	resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
+	// Create player directly via service
+	err = container.ServiceContainer.Player.CreateNewPlayer(ctx, testUsername, testPassword, testBankName)
 	if err != nil {
-		t.Fatalf("Failed to create player: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated {
-		t.Fatalf("Expected status 201 for player creation, got %d", resp.StatusCode)
+		t.Fatalf("Failed to create new player: %v", err)
 	}
 
-	// Login to get JWT
-	loginData := map[string]string{
-		"username": testUsername,
-		"password": "testpassword123",
-	}
-	jsonData, _ = json.Marshal(loginData)
-
-	resp, err = http.Post(server.URL+"/api/login", "application/json", bytes.NewBuffer(jsonData))
+	// Retrieve bank directly via service
+	bankResponse, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, testUsername)
 	if err != nil {
-		t.Fatalf("Failed to login player: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("Expected status 200 for login, got %d", resp.StatusCode)
-	}
-	var loginResponse map[string]any
-	if err := json.NewDecoder(resp.Body).Decode(&loginResponse); err != nil {
-		t.Fatalf("Failed to decode login response: %v", err)
+		t.Fatalf("Failed to get bank by username: %v", err)
 	}
 
-	token, ok := loginResponse["token"].(string)
-	if !ok {
-		t.Fatal("Login response did not contain token")
+	// Verify bank data
+	if bankResponse.BankName != testBankName {
+		t.Errorf("Expected bank name %q, got %q", testBankName, bankResponse.BankName)
 	}
-
-	t.Run("Valid bank request", func(t *testing.T) {
-		req, _ := http.NewRequest("GET", server.URL+"/api/bank", nil)
-		req.Header.Set("Authorization", "Bearer "+token)
-
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		if err != nil {
-			t.Fatalf("Failed to fetch bank: %v", err)
-		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			t.Errorf("Expected status 200, got %d", resp.StatusCode)
-		}
-
-		var bankResponse models.BankResponse
-		if err := json.NewDecoder(resp.Body).Decode(&bankResponse); err != nil {
-			t.Fatalf("Failed to decode bank response: %v", err)
-		}
-
-		// Verify bank data
-		if bankResponse.BankName != testBankName {
-			t.Errorf("Expected bank name %q, got %q", testBankName, bankResponse.BankName)
-		}
-		if bankResponse.ClaimedCapital != 1000 {
-			t.Errorf("Expected claimed capital 1000, got %d", bankResponse.ClaimedCapital)
-		}
-		if bankResponse.ActualCapital != 1000 {
-			t.Errorf("Expected actual capital 1000, got %d", bankResponse.ActualCapital)
-		}
-		if len(bankResponse.Assets) != 1 {
-			t.Errorf("Expected 1 asset, got %d", len(bankResponse.Assets))
-		}
-		asset := bankResponse.Assets[0]
-		if asset.AssetType != "Cash" {
-			t.Errorf("Expected asset type 'Cash', got %q", asset.AssetType)
-		}
-		if asset.Amount != 1000 {
-			t.Errorf("Expected asset amount 1000, got %d", asset.Amount)
-		}
-		if asset.AssetTypeId == "" {
-			t.Error("Expected asset type ID to be present")
-		}
-	})
+	if bankResponse.ClaimedCapital != 1000 {
+		t.Errorf("Expected claimed capital 1000, got %d", bankResponse.ClaimedCapital)
+	}
+	if bankResponse.ActualCapital != 1000 {
+		t.Errorf("Expected actual capital 1000, got %d", bankResponse.ActualCapital)
+	}
+	if len(bankResponse.Assets) != 1 {
+		t.Errorf("Expected 1 asset, got %d", len(bankResponse.Assets))
+	}
+	asset := bankResponse.Assets[0]
+	if asset.AssetType != "Cash" {
+		t.Errorf("Expected asset type 'Cash', got %q", asset.AssetType)
+	}
+	if asset.Amount != 1000 {
+		t.Errorf("Expected asset amount 1000, got %d", asset.Amount)
+	}
+	if asset.AssetTypeId == "" {
+		t.Error("Expected asset type ID to be present")
+	}
 }

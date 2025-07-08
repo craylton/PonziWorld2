@@ -2,18 +2,20 @@ package tests
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"ponziworld/backend/models"
+	"ponziworld/backend/routes"
 	"testing"
 	"time"
 
-	"ponziworld/backend/models"
-	"ponziworld/backend/routes"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func TestPerformanceHistoryEndpoint(t *testing.T) {
+func TestPerformanceService_GetPerformanceHistory(t *testing.T) {
 	// Create test dependencies
 	container, err := CreateTestDependencies("histPerf")
 	if err != nil {
@@ -21,108 +23,33 @@ func TestPerformanceHistoryEndpoint(t *testing.T) {
 	}
 	defer CleanupTestDependencies(container)
 
-	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux, container)
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
+	ctx := context.Background()
 	timestamp := time.Now().Unix()
 	testUsername := fmt.Sprintf("perftest_%d", timestamp)
 	testBankName := "Test Bank Performance"
+	testPassword := "testpassword123"
 
-	// Create player and bank
-	createUserData := map[string]string{
-		"username": testUsername,
-		"password": "testpassword123",
-		"bankName": testBankName,
-	}
-	jsonData, _ := json.Marshal(createUserData)
-
-	resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
+	// Create player and bank directly via service
+	err = container.ServiceContainer.Player.CreateNewPlayer(ctx, testUsername, testPassword, testBankName)
 	if err != nil {
-		t.Fatalf("Failed to create player: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated {
-		t.Fatalf("Expected status 201 for player creation, got %d", resp.StatusCode)
-	}
-
-	// Login to get JWT
-	loginData := map[string]string{
-		"username": testUsername,
-		"password": "testpassword123",
-	}
-	jsonData, _ = json.Marshal(loginData)
-
-	resp, err = http.Post(server.URL+"/api/login", "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		t.Fatalf("Failed to login: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("Expected status 200 for login, got %d", resp.StatusCode)
-	}
-
-	var loginResponse map[string]string
-	if err := json.NewDecoder(resp.Body).Decode(&loginResponse); err != nil {
-		t.Fatalf("Failed to decode login response: %v", err)
-	}
-
-	token := loginResponse["token"]
-	if token == "" {
-		t.Fatal("No token received from login")
+		t.Fatalf("Failed to create new player: %v", err)
 	}
 
 	// Get bank details to get bank ID
-	req, err := http.NewRequest("GET", server.URL+"/api/bank", nil)
-	if err != nil {
-		t.Fatalf("Failed to create bank request: %v", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+token)
-
-	client := &http.Client{}
-	resp, err = client.Do(req)
+	bankResponse, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, testUsername)
 	if err != nil {
 		t.Fatalf("Failed to get bank: %v", err)
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("Expected status 200 for bank retrieval, got %d", resp.StatusCode)
-	}
-
-	var bankResponse models.BankResponse
-	if err := json.NewDecoder(resp.Body).Decode(&bankResponse); err != nil {
-		t.Fatalf("Failed to decode bank response: %v", err)
-	}
-
-	bankId := bankResponse.Id
-	if bankId == "" {
-		t.Fatal("No bank ID received")
-	}
-
-	// Test performance history endpoint
-	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/"+bankId, nil)
+	bankID, err := primitive.ObjectIDFromHex(bankResponse.Id)
 	if err != nil {
-		t.Fatalf("Failed to create performance history request: %v", err)
+		t.Fatalf("Failed to convert bank ID to ObjectID: %v", err)
 	}
-	req.Header.Set("Authorization", "Bearer "+token)
 
-	resp, err = client.Do(req)
+	// Test performance history service directly
+	historyResponse, err := container.ServiceContainer.Performance.GetPerformanceHistory(ctx, testUsername, bankID)
 	if err != nil {
 		t.Fatalf("Failed to get performance history: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("Expected status 200 for performance history, got %d", resp.StatusCode)
-	}
-
-	var historyResponse models.PerformanceHistoryResponse
-	if err := json.NewDecoder(resp.Body).Decode(&historyResponse); err != nil {
-		t.Fatalf("Failed to decode performance history response: %v", err)
 	}
 
 	// Verify that we get 30 days of history
@@ -211,7 +138,7 @@ func TestPerformanceHistoryUnauthorized(t *testing.T) {
 	}
 }
 
-func TestPerformanceHistoryInvalidBankID(t *testing.T) {
+func TestPerformanceService_GetPerformanceHistoryInvalidBankID(t *testing.T) {
 	// Create test dependencies
 	container, err := CreateTestDependencies("histPerf")
 	if err != nil {
@@ -219,61 +146,25 @@ func TestPerformanceHistoryInvalidBankID(t *testing.T) {
 	}
 	defer CleanupTestDependencies(container)
 
-	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux, container)
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
+	ctx := context.Background()
 	timestamp := time.Now().Unix()
 	testUsername := fmt.Sprintf("perfinvalidtest_%d", timestamp)
 	testBankName := "Test Bank Invalid"
+	testPassword := "testpassword123"
 
-	// Create player and get token
-	createUserData := map[string]string{
-		"username": testUsername,
-		"password": "testpassword123",
-		"bankName": testBankName,
-	}
-	jsonData, _ := json.Marshal(createUserData)
-
-	resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
+	// Create player and bank
+	err = container.ServiceContainer.Player.CreateNewPlayer(ctx, testUsername, testPassword, testBankName)
 	if err != nil {
 		t.Fatalf("Failed to create player: %v", err)
 	}
-	defer resp.Body.Close()
 
-	loginData := map[string]string{
-		"username": testUsername,
-		"password": "testpassword123",
-	}
-	jsonData, _ = json.Marshal(loginData)
-
-	resp, err = http.Post(server.URL+"/api/login", "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		t.Fatalf("Failed to login: %v", err)
-	}
-	defer resp.Body.Close()
-
-	var loginResponse map[string]string
-	json.NewDecoder(resp.Body).Decode(&loginResponse)
-	token := loginResponse["token"]
-
-	// Test with invalid bank ID
-	req, err := http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/invalid", nil)
-	if err != nil {
-		t.Fatalf("Failed to create request: %v", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+token)
-
-	client := &http.Client{}
-	resp, err = client.Do(req)
-	if err != nil {
-		t.Fatalf("Failed to make request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusBadRequest {
-		t.Fatalf("Expected status 400 for invalid bank ID, got %d", resp.StatusCode)
+	// Test with invalid bank ID - this should return error for bank not found
+	invalidBankID := primitive.NewObjectID()
+	_, err = container.ServiceContainer.Performance.GetPerformanceHistory(ctx, testUsername, invalidBankID)
+	
+	// Should return error since the bank doesn't exist
+	if err == nil {
+		t.Fatal("Expected error for invalid bank ID, got nil")
 	}
 }
 
@@ -402,7 +293,7 @@ func TestPerformanceHistoryOtherPlayersBank(t *testing.T) {
 	}
 }
 
-func TestPerformanceHistoryDataPersistence(t *testing.T) {
+func TestPerformanceService_GetPerformanceHistoryDataPersistence(t *testing.T) {
 	// Create test dependencies
 	container, err := CreateTestDependencies("histPerf")
 	if err != nil {
@@ -410,94 +301,40 @@ func TestPerformanceHistoryDataPersistence(t *testing.T) {
 	}
 	defer CleanupTestDependencies(container)
 
-	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux, container)
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
+	ctx := context.Background()
 	timestamp := time.Now().Unix()
 	testUsername := fmt.Sprintf("perfpersist_%d", timestamp)
 	testBankName := "Test Bank Persistence"
+	testPassword := "testpassword123"
 
 	// Create player and bank
-	createUserData := map[string]string{
-		"username": testUsername,
-		"password": "testpassword123",
-		"bankName": testBankName,
-	}
-	jsonData, _ := json.Marshal(createUserData)
-
-	resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
+	err = container.ServiceContainer.Player.CreateNewPlayer(ctx, testUsername, testPassword, testBankName)
 	if err != nil {
 		t.Fatalf("Failed to create player: %v", err)
 	}
-	defer resp.Body.Close()
 
-	// Login and get bank ID
-	loginData := map[string]string{
-		"username": testUsername,
-		"password": "testpassword123",
-	}
-	jsonData, _ = json.Marshal(loginData)
-
-	resp, err = http.Post(server.URL+"/api/login", "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		t.Fatalf("Failed to login: %v", err)
-	}
-	defer resp.Body.Close()
-
-	var loginResponse map[string]string
-	json.NewDecoder(resp.Body).Decode(&loginResponse)
-	token := loginResponse["token"]
-
-	req, err := http.NewRequest("GET", server.URL+"/api/bank", nil)
-	if err != nil {
-		t.Fatalf("Failed to create bank request: %v", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+token)
-
-	client := &http.Client{}
-	resp, err = client.Do(req)
+	// Get bank details to get bank ID
+	bankResponse, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, testUsername)
 	if err != nil {
 		t.Fatalf("Failed to get bank: %v", err)
 	}
-	defer resp.Body.Close()
 
-	var bankResponse models.BankResponse
-	json.NewDecoder(resp.Body).Decode(&bankResponse)
-	bankId := bankResponse.Id
-
-	// First call to performance history endpoint
-	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/"+bankId, nil)
+	bankID, err := primitive.ObjectIDFromHex(bankResponse.Id)
 	if err != nil {
-		t.Fatalf("Failed to create performance history request: %v", err)
+		t.Fatalf("Failed to convert bank ID to ObjectID: %v", err)
 	}
-	req.Header.Set("Authorization", "Bearer "+token)
 
-	resp, err = client.Do(req)
+	// First call to performance history service
+	firstResponse, err := container.ServiceContainer.Performance.GetPerformanceHistory(ctx, testUsername, bankID)
 	if err != nil {
-		t.Fatalf("Failed to get performance history: %v", err)
+		t.Fatalf("Failed to get performance history first time: %v", err)
 	}
-	defer resp.Body.Close()
 
-	var firstResponse models.PerformanceHistoryResponse
-	json.NewDecoder(resp.Body).Decode(&firstResponse)
-
-	// Second call to performance history endpoint (should return identical data)
-	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/"+bankId, nil)
-	if err != nil {
-		t.Fatalf("Failed to create second performance history request: %v", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+token)
-
-	resp, err = client.Do(req)
+	// Second call to performance history service (should return identical data)
+	secondResponse, err := container.ServiceContainer.Performance.GetPerformanceHistory(ctx, testUsername, bankID)
 	if err != nil {
 		t.Fatalf("Failed to get performance history second time: %v", err)
 	}
-	defer resp.Body.Close()
-
-	var secondResponse models.PerformanceHistoryResponse
-	json.NewDecoder(resp.Body).Decode(&secondResponse)
 
 	// Verify that both responses are identical (data persisted in database)
 	if len(firstResponse.ClaimedHistory) != len(secondResponse.ClaimedHistory) {
