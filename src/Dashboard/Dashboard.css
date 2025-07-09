@@ -50,7 +50,7 @@
 }
 
 .dashboard-sidepanel-button {
-  position: absolute;
+  position: fixed;
   top: 1.2rem;
   width: 40px;
   height: 40px;
@@ -69,10 +69,7 @@
 
 .dashboard-sidepanel-button--right {
   display: flex;
-  position: absolute;
   right: 1.2rem;
-  top: 1.2rem;
-  z-index: 1004;
 }
 
 .dashboard-sidepanel-button--left {

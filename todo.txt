@@ -13,7 +13,6 @@ Design the DB
 Ensure currencies are stored in correct format
     Need to be displayed to the user as ints
     Need to be stored as floating points
-Allow closing side panels with mobile swipes
 
 
 FUTURE THINGS:
