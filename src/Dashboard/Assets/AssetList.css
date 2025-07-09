@@ -151,6 +151,22 @@
   transform: rotate(90deg);
 }
 
+.asset-list__chart-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.asset-list__performance {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+  min-width: 3.5rem;
+}
+
 /* Mobile styles */
 @media (max-width: 900px) {
   .asset-list {

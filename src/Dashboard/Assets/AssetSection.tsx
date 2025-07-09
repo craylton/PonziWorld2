@@ -4,7 +4,7 @@ import { makeAuthenticatedRequest } from '../../auth';
 import AssetList from './AssetList';
 
 // Helper to generate random data points for visualization
-const generateRandomDataPoints = (length = 7): number[] =>
+const generateRandomDataPoints = (length = 8): number[] =>
   Array.from({ length }, () => Math.floor(Math.random() * 20) + 1);
 
 interface AssetSectionProps {
