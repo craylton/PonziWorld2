@@ -3,6 +3,10 @@ import type { Asset } from './Asset';
 import { makeAuthenticatedRequest } from '../../auth';
 import AssetList from './AssetList';
 
+// Helper to generate random data points for visualization
+const generateRandomDataPoints = (length = 7): number[] =>
+  Array.from({ length }, () => Math.floor(Math.random() * 20) + 1);
+
 interface AssetSectionProps {
   bankAssets: Asset[];
 }
@@ -26,7 +30,11 @@ export default function AssetSection({ bankAssets }: AssetSectionProps) {
       const response = await makeAuthenticatedRequest('/api/assetTypes');
       if (response.ok) {
         const assetTypes: AssetType[] = await response.json();
-        return getFilteredAssetTypes(assetTypes);
+        // create assets with random dataPoints
+        return getFilteredAssetTypes(assetTypes).map(asset => ({
+          ...asset,
+          dataPoints: generateRandomDataPoints()
+        }));
       } else {
         console.error('Failed to load asset types');
         return [];
@@ -41,7 +49,15 @@ export default function AssetSection({ bankAssets }: AssetSectionProps) {
     <>
       <AssetList
         title="Your Assets"
-        onLoad={() => Promise.resolve(bankAssets)}
+        onLoad={() =>
+          Promise.resolve(
+            bankAssets.map(asset => ({
+              assetType: asset.assetType,
+              amount: asset.amount,
+              dataPoints: generateRandomDataPoints()
+            }))
+          )
+        }
         isExpandedByDefault
       />
 

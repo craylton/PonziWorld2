@@ -4,16 +4,16 @@ import { formatCurrency } from '../../utils/currency';
 
 interface AssetSummaryProps {
     asset: Asset;
+    historicalValues: number[];
 }
 
-export default function AssetSummary({ asset }: AssetSummaryProps) {
-    const dataPoints = [5, 10, 5, 20, 8, 15, 10];
+export default function AssetSummary({ asset, historicalValues }: AssetSummaryProps) {
     const width = 32;
     const height = 20;
-    const min = Math.min(...dataPoints);
-    const max = Math.max(...dataPoints);
-    const points = dataPoints.map((v, i) => {
-        const x = dataPoints.length > 1 ? (i / (dataPoints.length - 1)) * width : 0;
+    const min = Math.min(...historicalValues);
+    const max = Math.max(...historicalValues);
+    const points = historicalValues.map((v, i) => {
+        const x = historicalValues.length > 1 ? (i / (historicalValues.length - 1)) * width : 0;
         const y = max === min ? height / 2 : height - ((v - min) / (max - min)) * height;
         return `${x},${y}`;
     }).join(' ');
@@ -27,7 +27,6 @@ export default function AssetSummary({ asset }: AssetSummaryProps) {
             </div>
             <button className="asset-list__button" aria-label="View asset details">
                 <svg
-                    className="asset-list__spark"
                     width={width}
                     height={height}
                     viewBox={`0 0 ${width} ${height}`}

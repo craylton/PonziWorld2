@@ -70,7 +70,11 @@ export default function AssetList({ title, onLoad, isExpandedByDefault }: AssetL
                         </div>
                     ) : (
                         allAssets.map((asset, index) => (
-                            <AssetSummary key={`${asset.assetType}-${index}`} asset={asset} />
+                            <AssetSummary
+                                key={`${asset.assetType}-${index}`}
+                                asset={asset}
+                                historicalValues={asset.dataPoints ?? []}
+                            />
                         ))
                     )}
                 </div>
