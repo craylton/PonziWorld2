@@ -88,7 +88,10 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         isHistoryLoading={isHistoryLoading}
       />
       <div className="dashboard-layout">
-        <InvestorsPanel visible={isLeftPanelOpen} />
+        <InvestorsPanel 
+          visible={isLeftPanelOpen} 
+          onClose={() => setIsLeftPanelOpen(false)}
+        />
         <main className="dashboard-main">
           <InvestorsButton
             isLeftPanelOpen={isLeftPanelOpen}
@@ -105,6 +108,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
           visible={isRightPanelOpen}
           player={player}
           onLogout={onLogout}
+          onClose={() => setIsRightPanelOpen(false)}
         />
       </div>
     </div>
