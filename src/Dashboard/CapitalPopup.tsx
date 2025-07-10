@@ -1,28 +1,8 @@
 import { useRef, useEffect } from 'react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
-import { Line } from 'react-chartjs-2';
 import './CapitalPopup.css';
 import { formatCurrency } from '../utils/currency';
 import type { PerformanceHistoryEntry } from '../models/PerformanceHistory';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
+import LineGraph from './Assets/LineGraph';
 
 interface CapitalPopupProps {
   isOpen: boolean;
@@ -54,63 +34,7 @@ export default function CapitalPopup({
     }));
   };
 
-  // Prepare chart data for Chart.js
   const chartData = getChartData();
-  const data = {
-    labels: chartData.map(d => `Day ${d.day}`),
-    datasets: [
-      {
-        label: title,
-        data: chartData.map(d => d.value),
-        borderColor: '#2563eb',
-        backgroundColor: 'rgba(37, 99, 235, 0.1)',
-        borderWidth: 2,
-        pointBackgroundColor: '#2563eb',
-        pointBorderColor: '#2563eb',
-        pointRadius: 3,
-        pointHoverRadius: 5,
-        tension: 0.1,
-      },
-    ],
-  };
-
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: false,
-      },
-      tooltip: {
-        callbacks: {
-          label: (context: { parsed: { y: number } }) => {
-            return formatCurrency(context.parsed.y);
-          },
-        },
-      },
-    },
-    scales: {
-      x: {
-        grid: {
-          color: 'rgba(0, 0, 0, 0.1)',
-        },
-        ticks: {
-          maxTicksLimit: 7,
-        },
-      },
-      y: {
-        grid: {
-          color: 'rgba(0, 0, 0, 0.1)',
-        },
-        ticks: {
-          callback: (value: number | string) => {
-            return formatCurrency(value as number);
-          },
-          maxTicksLimit: 6,
-        },
-      },
-    },
-  };
 
   // Close popup when clicking outside
   useEffect(() => {
@@ -163,9 +87,12 @@ export default function CapitalPopup({
             </div>
           ) : performanceHistory ? (
             <div className="capital-popup__chart">
-              <div style={{ height: '300px' }}>
-                <Line data={data} options={options} />
-              </div>
+              <LineGraph
+                data={chartData}
+                title={title}
+                formatTooltip={formatCurrency}
+                formatYAxisTick={formatCurrency}
+              />
             </div>
           ) : (
             <div className="capital-popup__no-data">

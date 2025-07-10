@@ -1,27 +1,6 @@
 import { useRef, useEffect } from 'react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
-import { Line } from 'react-chartjs-2';
 import '../CapitalPopup.css';
-import { formatCurrency } from '../../utils/currency';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
+import LineGraph from './LineGraph';
 
 interface AssetDetailPopupProps {
   isOpen: boolean;
@@ -38,7 +17,7 @@ export default function AssetDetailPopup({
   const overlayRef = useRef<HTMLDivElement>(null);
 
   // Generate dummy detailed chart data (30 days) using the same algorithm as AssetSection
-  const getDummyChartData = () => {
+  const getChartData = () => {
     const data = [];
     let currentValue = 100;
     
@@ -56,63 +35,7 @@ export default function AssetDetailPopup({
     return data;
   };
 
-  // Prepare chart data for Chart.js
-  const chartData = getDummyChartData();
-  const data = {
-    labels: chartData.map(d => `Day ${d.day}`),
-    datasets: [
-      {
-        label: assetType,
-        data: chartData.map(d => d.value),
-        borderColor: '#2563eb',
-        backgroundColor: 'rgba(37, 99, 235, 0.1)',
-        borderWidth: 2,
-        pointBackgroundColor: '#2563eb',
-        pointBorderColor: '#2563eb',
-        pointRadius: 3,
-        pointHoverRadius: 5,
-        tension: 0.1,
-      },
-    ],
-  };
-
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: false,
-      },
-      tooltip: {
-        callbacks: {
-          label: (context: { parsed: { y: number } }) => {
-            return formatCurrency(context.parsed.y);
-          },
-        },
-      },
-    },
-    scales: {
-      x: {
-        grid: {
-          color: 'rgba(0, 0, 0, 0.1)',
-        },
-        ticks: {
-          maxTicksLimit: 7,
-        },
-      },
-      y: {
-        grid: {
-          color: 'rgba(0, 0, 0, 0.1)',
-        },
-        ticks: {
-          callback: (value: number | string) => {
-            return `${value as number}%`;
-          },
-          maxTicksLimit: 6,
-        },
-      },
-    },
-  };
+  const chartData = getChartData();
 
   // Close popup when clicking outside
   useEffect(() => {
@@ -156,9 +79,12 @@ export default function AssetDetailPopup({
         </div>
         <div className="capital-popup__content">
           <div className="capital-popup__chart">
-            <div style={{ height: '300px' }}>
-              <Line data={data} options={options} />
-            </div>
+            <LineGraph
+              data={chartData}
+              title={assetType}
+              formatTooltip={(value) => `${value}%`}
+              formatYAxisTick={(value) => `${value}%`}
+            />
           </div>
         </div>
         <div className="capital-popup__footer">
