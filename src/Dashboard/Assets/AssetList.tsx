@@ -3,14 +3,17 @@ import AssetSummary from './AssetSummary';
 import './AssetList.css';
 import ChevronIcon from '../ChevronIcon';
 import { useState, useEffect, useCallback } from 'react';
+import type { ComponentType } from 'react';
 
 interface AssetListProps {
     title: string;
     onLoad: () => Promise<Asset[]>;
     isExpandedByDefault: boolean;
+    /** Custom component for rendering each asset summary */
+    SummaryComponent?: ComponentType<{ asset: Asset; historicalValues: number[] }>;
 }
 
-export default function AssetList({ title, onLoad, isExpandedByDefault }: AssetListProps) {
+export default function AssetList({ title, onLoad, isExpandedByDefault, SummaryComponent = AssetSummary }: AssetListProps) {
     const [allAssets, setAllAssets] = useState<Asset[]>([]);
     const [showAssets, setShowAssets] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -70,7 +73,7 @@ export default function AssetList({ title, onLoad, isExpandedByDefault }: AssetL
                         </div>
                     ) : (
                         allAssets.map((asset, index) => (
-                            <AssetSummary
+                            <SummaryComponent
                                 key={`${asset.assetType}-${index}`}
                                 asset={asset}
                                 historicalValues={asset.dataPoints ?? []}
