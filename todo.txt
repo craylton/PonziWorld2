@@ -1,4 +1,12 @@
 
+Right now:
+Add a Buy/Sell button to all assets
+    This may be on the asset summary, it may be on the chart popup
+    Uninvested assets should not have sell button
+Change the chart axis and values
+    Random numbers should start from 100, and should all be in %
+Put summary chart on the capital values
+
 Next up:
 Allow user to queue up orders
     as in, you can say you want to buy something, but it doesn't actually buy it until the following day

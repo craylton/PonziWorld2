@@ -7,7 +7,7 @@ import UninvestedAssetSummary from './UninvestedAssetSummary';
 
 const generateRandomDataPoints = (length = 8): number[] => {
   const dataPoints: number[] = [];
-  let currentValue = 1000;
+  let currentValue = 100;
   
   for (let i = 0; i < length; i++) {
     dataPoints.push(currentValue);

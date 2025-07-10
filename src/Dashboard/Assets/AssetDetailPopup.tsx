@@ -1,7 +1,27 @@
 import { useRef, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
 import '../CapitalPopup.css';
 import { formatCurrency } from '../../utils/currency';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 interface AssetDetailPopupProps {
   isOpen: boolean;
@@ -20,7 +40,7 @@ export default function AssetDetailPopup({
   // Generate dummy detailed chart data (30 days) using the same algorithm as AssetSection
   const getDummyChartData = () => {
     const data = [];
-    let currentValue = 1000; // Starting value
+    let currentValue = 100;
     
     for (let i = 0; i < 30; i++) {
       data.push({
@@ -36,43 +56,62 @@ export default function AssetDetailPopup({
     return data;
   };
 
-  // Calculate Y-axis domain with padding around the data range
-  const getYAxisDomain = () => {
-    const data = getDummyChartData();
-    if (data.length === 0) return ['auto', 'auto'];
-
-    const values = data.map(d => d.value);
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-
-    // If all values are the same, add some padding
-    if (min === max) {
-      const padding = Math.max(min * 0.1, 50); // 10% padding or minimum 50
-      return [min - padding, max + padding];
-    }
-
-    // Add 5% padding on each side of the range
-    const range = max - min;
-    const padding = range * 0.05;
-
-    return [min - padding, max + padding];
+  // Prepare chart data for Chart.js
+  const chartData = getDummyChartData();
+  const data = {
+    labels: chartData.map(d => `Day ${d.day}`),
+    datasets: [
+      {
+        label: assetType,
+        data: chartData.map(d => d.value),
+        borderColor: '#2563eb',
+        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+        borderWidth: 2,
+        pointBackgroundColor: '#2563eb',
+        pointBorderColor: '#2563eb',
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        tension: 0.1,
+      },
+    ],
   };
 
-  // Custom tooltip formatter for currency
-  const CustomTooltip = ({ active, payload, label }: {
-    active?: boolean;
-    payload?: Array<{ value: number }>;
-    label?: string | number
-  }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="capital-popup__chart-tooltip">
-          <p className="label">{`Day ${label}`}</p>
-          <p className="value">{formatCurrency(payload[0].value)}</p>
-        </div>
-      );
-    }
-    return null;
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        callbacks: {
+          label: (context: { parsed: { y: number } }) => {
+            return formatCurrency(context.parsed.y);
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        grid: {
+          color: 'rgba(0, 0, 0, 0.1)',
+        },
+        ticks: {
+          maxTicksLimit: 7,
+        },
+      },
+      y: {
+        grid: {
+          color: 'rgba(0, 0, 0, 0.1)',
+        },
+        ticks: {
+          callback: (value: number | string) => {
+            return `${value as number}%`;
+          },
+          maxTicksLimit: 6,
+        },
+      },
+    },
   };
 
   // Close popup when clicking outside
@@ -96,8 +135,6 @@ export default function AssetDetailPopup({
 
   if (!isOpen) return null;
 
-  const chartData = getDummyChartData();
-
   return (
     <div
       className="capital-popup-overlay"
@@ -118,43 +155,10 @@ export default function AssetDetailPopup({
           </button>
         </div>
         <div className="capital-popup__content">
-          <div className="capital-popup__value">
-            {formatCurrency(123)}
-          </div>
-
           <div className="capital-popup__chart">
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart
-                data={chartData}
-                margin={{
-                  top: 5,
-                  right: 30,
-                  left: 20,
-                  bottom: 5,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="day"
-                  type="number"
-                  domain={['dataMin', 'dataMax']}
-                  tickFormatter={(value) => value.toString()}
-                />
-                <YAxis
-                  domain={getYAxisDomain()}
-                  tickFormatter={(value) => formatCurrency(value)}
-                />
-                <Tooltip content={<CustomTooltip />} />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#2563eb"
-                  strokeWidth={2}
-                  dot={{ fill: '#2563eb', strokeWidth: 2, r: 3 }}
-                  activeDot={{ r: 5 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <div style={{ height: '300px' }}>
+              <Line data={data} options={options} />
+            </div>
           </div>
         </div>
         <div className="capital-popup__footer">
