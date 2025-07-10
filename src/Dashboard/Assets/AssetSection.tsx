@@ -3,9 +3,18 @@ import type { Asset } from './Asset';
 import { makeAuthenticatedRequest } from '../../auth';
 import AssetList from './AssetList';
 
-// Helper to generate random data points for visualization
-const generateRandomDataPoints = (length = 8): number[] =>
-  Array.from({ length }, () => Math.floor(Math.random() * 20) + 1);
+const generateRandomDataPoints = (length = 8): number[] => {
+  const dataPoints: number[] = [];
+  let currentValue = 1000;
+  
+  for (let i = 0; i < length; i++) {
+    dataPoints.push(currentValue);
+    const factor = 0.9 + Math.random() * 0.3; // 0.9 to 1.2
+    currentValue = Math.round(currentValue * factor);
+  }
+  
+  return dataPoints;
+};
 
 interface AssetSectionProps {
   bankAssets: Asset[];

@@ -167,6 +167,27 @@
   min-width: 3.5rem;
 }
 
+.asset-list__performance-item {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.asset-list__performance-percentage {
+  font-weight: 700;
+}
+
+.asset-list__performance-percentage--positive {
+  color: #22c55e;
+}
+
+.asset-list__performance-percentage--negative {
+  color: #ef4444;
+}
+
+.asset-list__performance-percentage--neutral {
+  color: rgba(255, 255, 255, 0.8);
+}
+
 /* Mobile styles */
 @media (max-width: 900px) {
   .asset-list {
