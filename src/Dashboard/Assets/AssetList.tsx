@@ -1,19 +1,17 @@
 import type { Asset } from './Asset';
-import AssetSummary from './AssetSummary';
+import ConditionalAssetSummary from './ConditionalAssetSummary';
 import './AssetList.css';
 import ChevronIcon from '../ChevronIcon';
 import { useState, useEffect, useCallback } from 'react';
-import type { ComponentType } from 'react';
 
 interface AssetListProps {
     title: string;
     onLoad: () => Promise<Asset[]>;
     isExpandedByDefault: boolean;
-    /** Custom component for rendering each asset summary */
-    SummaryComponent?: ComponentType<{ asset: Asset; historicalValues: number[] }>;
+    isInvested: boolean;
 }
 
-export default function AssetList({ title, onLoad, isExpandedByDefault, SummaryComponent = AssetSummary }: AssetListProps) {
+export default function AssetList({ title, onLoad, isExpandedByDefault, isInvested }: AssetListProps) {
     const [allAssets, setAllAssets] = useState<Asset[]>([]);
     const [showAssets, setShowAssets] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -73,10 +71,11 @@ export default function AssetList({ title, onLoad, isExpandedByDefault, SummaryC
                         </div>
                     ) : (
                         allAssets.map((asset, index) => (
-                            <SummaryComponent
+                            <ConditionalAssetSummary
                                 key={`${asset.assetType}-${index}`}
                                 asset={asset}
                                 historicalValues={asset.dataPoints ?? []}
+                                isInvested={isInvested}
                             />
                         ))
                     )}

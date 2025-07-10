@@ -2,8 +2,6 @@ import type { AssetType } from '../../models/AssetType';
 import type { Asset } from './Asset';
 import { makeAuthenticatedRequest } from '../../auth';
 import AssetList from './AssetList';
-import InvestedAssetSummary from './InvestedAssetSummary';
-import UninvestedAssetSummary from './UninvestedAssetSummary';
 
 const generateRandomDataPoints = (length = 8): number[] => {
   const dataPoints: number[] = [];
@@ -70,14 +68,14 @@ export default function AssetSection({ bankAssets }: AssetSectionProps) {
           )
         }
         isExpandedByDefault
-        SummaryComponent={InvestedAssetSummary}
+        isInvested={true}
       />
 
       <AssetList
         title="Available Assets"
         onLoad={fetchAvailableAssetTypes}
         isExpandedByDefault={false}
-        SummaryComponent={UninvestedAssetSummary}
+        isInvested={false}
       />
     </>
   );
