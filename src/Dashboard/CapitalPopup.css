@@ -237,7 +237,7 @@
 
 .capital-popup__chart-tooltip .value {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #9499f3;
 }
@@ -310,4 +310,118 @@
   .capital-popup__chart-tooltip .value {
     font-size: 0.9rem;
   }
+}
+
+/* Transaction Popup Styles */
+.transaction-popup__holdings {
+  margin-bottom: 1rem;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+  color: #e0e0e0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.transaction-popup__input-group {
+  margin-bottom: 1rem;
+}
+
+.transaction-popup__label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #e0e0e0;
+  font-weight: 600;
+}
+
+.transaction-popup__input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.transaction-popup__input:focus {
+  outline: none;
+  border-color: #9c4aa1;
+}
+
+.transaction-popup__input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.transaction-popup__error {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(255, 0, 0, 0.2);
+  border: 1px solid rgba(255, 0, 0, 0.4);
+  border-radius: 4px;
+  color: #ff6b6b;
+  font-size: 0.8rem;
+}
+
+.transaction-popup__checkbox-group {
+  margin-top: 1rem;
+}
+
+.transaction-popup__checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #e0e0e0;
+  user-select: none;
+}
+
+.transaction-popup__checkbox {
+  margin-right: 0.5rem;
+  width: 1rem;
+  height: 1rem;
+  accent-color: #9c4aa1;
+  cursor: pointer;
+}
+
+.capital-popup__cancel-button {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  margin-right: 1rem;
+}
+
+.capital-popup__cancel-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.capital-popup__confirm-button {
+  background: #9c4aa1;
+  color: white;
+  border: 2px solid #9c4aa1;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.capital-popup__confirm-button:hover:not(:disabled) {
+  background: #8a3f8f;
+  border-color: #8a3f8f;
+}
+
+.capital-popup__confirm-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

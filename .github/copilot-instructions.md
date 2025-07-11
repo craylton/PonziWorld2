@@ -18,6 +18,7 @@ This project is a monorepo with a Vite+React+TypeScript frontend and a Go backen
 8. Do not implement a proposed solution that you believe to be suboptimal or not in line with best practice.
   - Instead, make your suggestion and see what the team thinks.
   - This is to avoid introducing potential issues or technical debt.
+  - If unsure on certain details, ask for clarification or guidance.
 
 ## The Application Layout
 

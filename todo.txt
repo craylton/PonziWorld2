@@ -1,9 +1,12 @@
 
 Right now:
-Add a Buy/Sell button to all assets
-    This may be on the asset summary, it may be on the chart popup
-    Uninvested assets should not have sell button
+Allow user to buy/sell
+    When user presses buy, it should come up with yet another popup
+    This popup has an amount textbox and a Confirm Buy/Sell button
 Put summary chart on the capital values
+    Probably could do with a complete redesign really
+    Like both lines could go in the same plot
+    
 
 Next up:
 Allow user to queue up orders

@@ -1,7 +1,8 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import '../CapitalPopup.css';
 import LineGraph from './LineGraph';
 import { formatCurrency } from '../../utils/currency';
+import TransactionPopup from './TransactionPopup';
 
 interface AssetDetailPopupProps {
   isOpen: boolean;
@@ -20,6 +21,8 @@ export default function AssetDetailPopup({
 }: AssetDetailPopupProps) {
   const popupRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
+  const [transactionPopupOpen, setTransactionPopupOpen] = useState(false);
+  const [transactionType, setTransactionType] = useState<'buy' | 'sell'>('buy');
 
   // Generate dummy detailed chart data (30 days) using the same algorithm as AssetSection
   const getChartData = () => {
@@ -42,13 +45,24 @@ export default function AssetDetailPopup({
 
   const chartData = getChartData();
 
-  // Empty functions for Buy/Sell actions
+  // Functions for Buy/Sell actions
   const handleBuy = () => {
-    // TODO: Implement buy functionality
+    setTransactionType('buy');
+    setTransactionPopupOpen(true);
   };
 
   const handleSell = () => {
-    // TODO: Implement sell functionality
+    setTransactionType('sell');
+    setTransactionPopupOpen(true);
+  };
+
+  const handleTransactionConfirm = (amount: number) => {
+    // TODO: Implement actual buy/sell functionality
+    console.log(`${transactionType} ${amount} of ${assetType}`);
+  };
+
+  const handleTransactionClose = () => {
+    setTransactionPopupOpen(false);
   };
 
   // Close popup when clicking outside
@@ -132,6 +146,14 @@ export default function AssetDetailPopup({
           )}
         </div>
       </div>
+      <TransactionPopup
+        isOpen={transactionPopupOpen}
+        onClose={handleTransactionClose}
+        assetType={assetType}
+        transactionType={transactionType}
+        currentHoldings={investedAmount || 0}
+        onConfirm={handleTransactionConfirm}
+      />
     </div>
   );
 }
