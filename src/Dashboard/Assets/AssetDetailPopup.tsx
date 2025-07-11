@@ -1,17 +1,22 @@
 import { useRef, useEffect } from 'react';
 import '../CapitalPopup.css';
 import LineGraph from './LineGraph';
+import { formatCurrency } from '../../utils/currency';
 
 interface AssetDetailPopupProps {
   isOpen: boolean;
   onClose: () => void;
   assetType: string;
+  isInvested?: boolean;
+  investedAmount?: number;
 }
 
 export default function AssetDetailPopup({
   isOpen,
   onClose,
-  assetType
+  assetType,
+  isInvested = false,
+  investedAmount
 }: AssetDetailPopupProps) {
   const popupRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -36,6 +41,15 @@ export default function AssetDetailPopup({
   };
 
   const chartData = getChartData();
+
+  // Empty functions for Buy/Sell actions
+  const handleBuy = () => {
+    // TODO: Implement buy functionality
+  };
+
+  const handleSell = () => {
+    // TODO: Implement sell functionality
+  };
 
   // Close popup when clicking outside
   useEffect(() => {
@@ -78,6 +92,11 @@ export default function AssetDetailPopup({
           </button>
         </div>
         <div className="capital-popup__content">
+          {isInvested && investedAmount && (
+            <div className="capital-popup__value">
+              {formatCurrency(investedAmount)}
+            </div>
+          )}
           <div className="capital-popup__chart">
             <LineGraph
               data={chartData}
@@ -88,12 +107,29 @@ export default function AssetDetailPopup({
           </div>
         </div>
         <div className="capital-popup__footer">
-          <button
-            className="capital-popup__close-footer-button"
-            onClick={onClose}
-          >
-            Close
-          </button>
+          {isInvested ? (
+            <>
+              <button
+                className="capital-popup__buy-button"
+                onClick={handleBuy}
+              >
+                Buy
+              </button>
+              <button
+                className="capital-popup__sell-button"
+                onClick={handleSell}
+              >
+                Sell
+              </button>
+            </>
+          ) : (
+            <button
+              className="capital-popup__buy-button"
+              onClick={handleBuy}
+            >
+              Buy
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -7,9 +7,10 @@ import AssetDetailPopup from './AssetDetailPopup';
 interface AssetSummaryBaseProps {
   asset: Asset;
   historicalValues: number[];
+  isInvested?: boolean;
 }
 
-export default function AssetSummaryBase({ asset, historicalValues }: AssetSummaryBaseProps) {
+export default function AssetSummaryBase({ asset, historicalValues, isInvested = false }: AssetSummaryBaseProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   const oneDayChange = historicalValues.length >= 2
@@ -58,6 +59,8 @@ export default function AssetSummaryBase({ asset, historicalValues }: AssetSumma
         isOpen={isPopupOpen}
         onClose={handleClosePopup}
         assetType={asset.assetType}
+        isInvested={isInvested}
+        investedAmount={isInvested ? asset.amount : undefined}
       />
     </>
   );

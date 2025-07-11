@@ -117,10 +117,37 @@
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   justify-content: center;
+  gap: 1rem;
 }
 
 .capital-popup__close-footer-button {
   background-color: #ff6cdc;
+  border: none;
+  color: #fff;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.capital-popup__buy-button {
+  background-color: #4caf50;
+  border: none;
+  color: #fff;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.capital-popup__sell-button {
+  background-color: #f44336;
   border: none;
   color: #fff;
   padding: 0.75rem 2rem;
@@ -138,12 +165,28 @@
   box-shadow: 0 4px 12px rgba(255, 108, 220, 0.3);
 }
 
-.capital-popup__close-footer-button:active {
+.capital-popup__buy-button:hover {
+  background-color: #45a049;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.capital-popup__sell-button:hover {
+  background-color: #da190b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+}
+
+.capital-popup__close-footer-button:active,
+.capital-popup__buy-button:active,
+.capital-popup__sell-button:active {
   transform: translateY(0);
   box-shadow: 0 2px 6px rgba(255, 108, 220, 0.2);
 }
 
-.capital-popup__close-footer-button:focus {
+.capital-popup__close-footer-button:focus,
+.capital-popup__buy-button:focus,
+.capital-popup__sell-button:focus {
   outline: none;
   box-shadow: 0 0 0 2px rgba(255, 108, 220, 0.4);
 }
@@ -234,11 +277,15 @@
 
   .capital-popup__footer {
     padding: 0.75rem 1rem 1rem 1rem;
+    gap: 0.75rem;
   }
 
-  .capital-popup__close-footer-button {
+  .capital-popup__close-footer-button,
+  .capital-popup__buy-button,
+  .capital-popup__sell-button {
     padding: 0.75rem 1.5rem;
     font-size: 0.95rem;
+    min-width: 100px;
   }
 
   /* Mobile chart adjustments */
