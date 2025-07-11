@@ -18,6 +18,7 @@
   min-width: 350px;
   flex: 1 1 120px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+  touch-action: none;
   position: relative;
   transition: transform 0.3s cubic-bezier(.4, 0, .2, 1), right 0.3s cubic-bezier(.4, 0, .2, 1);
   flex: 0 0 300px;
@@ -50,7 +51,7 @@
 }
 
 .dashboard-sidepanel-button {
-  position: absolute;
+  position: fixed;
   top: 1.2rem;
   width: 40px;
   height: 40px;
@@ -69,10 +70,7 @@
 
 .dashboard-sidepanel-button--right {
   display: flex;
-  position: absolute;
   right: 1.2rem;
-  top: 1.2rem;
-  z-index: 1004;
 }
 
 .dashboard-sidepanel-button--left {

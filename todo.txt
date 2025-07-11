@@ -1,14 +1,16 @@
 
+
 Next up:
+Allow user to queue up orders
+    as in, you can say you want to buy something, but it doesn't actually buy it until the following day
+    this requires a 'pending orders' collection containing bank ID, asset ID, amount
+Put assets in the history collection
+    Also display that history when you click an asset
 Design the DB
     A player can log on at any time during the day and make changes to their investments
         Need some kind of holding area
     Every time you invest in an asset, you might also become an investor
         So need some kind of investor -> investee collection
-Make some unit tests
-    Previously this was impossible because of lack of services
-    Now I think I can go to services directly instead of needing routing etc
-    This should make tests much quicker
 Ensure currencies are stored in correct format
     Need to be displayed to the user as ints
     Need to be stored as floating points

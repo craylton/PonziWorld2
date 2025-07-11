@@ -6,6 +6,7 @@ interface SettingsPanelProps {
   visible: boolean;
   player: Player;
   onLogout: () => void;
+  onClose?: () => void;
 }
 
 const handleAdvanceDay = async () => {
@@ -25,9 +26,9 @@ const handleAdvanceDay = async () => {
   }
 };
 
-export default function SettingsPanel({ visible, player, onLogout }: SettingsPanelProps) {
+export default function SettingsPanel({ visible, player, onLogout, onClose }: SettingsPanelProps) {
   return (
-    <SidePanel side="right" visible={visible}>
+    <SidePanel side="right" visible={visible} onClose={onClose}>
       <h3>Settings</h3>
       <button
         onClick={onLogout}
