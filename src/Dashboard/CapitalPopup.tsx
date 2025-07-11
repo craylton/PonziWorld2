@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useEffect } from 'react';
 import './CapitalPopup.css';
 import { formatCurrency } from '../utils/currency';
 import type { PerformanceHistoryEntry } from '../models/PerformanceHistory';
@@ -21,9 +21,6 @@ export default function CapitalPopup({
   performanceHistory,
   isHistoryLoading
 }: CapitalPopupProps) {
-  const popupRef = useRef<HTMLDivElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
-
   // Format the chart data based on the performance history
   const getChartData = () => {
     if (!performanceHistory) return [];
@@ -36,36 +33,23 @@ export default function CapitalPopup({
 
   const chartData = getChartData();
 
-  // Close popup when clicking outside
+  // Prevent background scrolling when open
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (overlayRef.current && event.target === overlayRef.current) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.body.style.overflow = 'hidden'; // Prevent background scrolling
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen, onClose]);
+    if (isOpen) document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   return (
     <div
       className="capital-popup-overlay"
-      ref={overlayRef}
+      onClick={e => e.target === e.currentTarget && onClose()}
       role="dialog"
       aria-modal="true"
       aria-labelledby="popup-title"
     >
-      <div className="capital-popup" ref={popupRef}>
+      <div className="capital-popup">
         <div className="capital-popup__header">
           <h2 id="popup-title" className="capital-popup__title">{title}</h2>
           <button

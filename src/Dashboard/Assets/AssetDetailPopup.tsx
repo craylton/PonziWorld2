@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import '../CapitalPopup.css';
 import LineGraph from './LineGraph';
 import { formatCurrency } from '../../utils/currency';
@@ -8,19 +8,15 @@ interface AssetDetailPopupProps {
   isOpen: boolean;
   onClose: () => void;
   assetType: string;
-  isInvested?: boolean;
-  investedAmount?: number;
+  investedAmount: number;
 }
 
 export default function AssetDetailPopup({
   isOpen,
   onClose,
   assetType,
-  isInvested = false,
   investedAmount
 }: AssetDetailPopupProps) {
-  const popupRef = useRef<HTMLDivElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
   const [transactionPopupOpen, setTransactionPopupOpen] = useState(false);
   const [transactionType, setTransactionType] = useState<'buy' | 'sell'>('buy');
 
@@ -65,36 +61,23 @@ export default function AssetDetailPopup({
     setTransactionPopupOpen(false);
   };
 
-  // Close popup when clicking outside
+  // Prevent background scrolling when open
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (overlayRef.current && event.target === overlayRef.current) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.body.style.overflow = 'hidden'; // Prevent background scrolling
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen, onClose]);
+    if (isOpen) document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   return (
     <div
       className="capital-popup-overlay"
-      ref={overlayRef}
+      onClick={e => e.target === e.currentTarget && onClose()}
       role="dialog"
       aria-modal="true"
       aria-labelledby="popup-title"
     >
-      <div className="capital-popup" ref={popupRef}>
+      <div className="capital-popup">
         <div className="capital-popup__header">
           <h2 id="popup-title" className="capital-popup__title">{assetType} Details</h2>
           <button
@@ -106,7 +89,7 @@ export default function AssetDetailPopup({
           </button>
         </div>
         <div className="capital-popup__content">
-          {isInvested && investedAmount && (
+          {investedAmount > 0 && (
             <div className="capital-popup__value">
               {formatCurrency(investedAmount)}
             </div>
@@ -121,7 +104,7 @@ export default function AssetDetailPopup({
           </div>
         </div>
         <div className="capital-popup__footer">
-          {isInvested ? (
+          {investedAmount > 0 ? (
             <>
               <button
                 className="capital-popup__buy-button"

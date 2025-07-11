@@ -18,7 +18,7 @@ export default function InvestedAssetSummary({ asset, historicalValues }: AssetS
             formatCurrency(asset.amount)
           }</div>
         </div>
-        <AssetSummaryBase asset={asset} historicalValues={historicalValues} isInvested={true} />
+        <AssetSummaryBase asset={asset} historicalValues={historicalValues} />
       </div>
     </>
   );

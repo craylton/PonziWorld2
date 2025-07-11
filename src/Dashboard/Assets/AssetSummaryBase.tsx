@@ -7,20 +7,20 @@ import AssetDetailPopup from './AssetDetailPopup';
 interface AssetSummaryBaseProps {
   asset: Asset;
   historicalValues: number[];
-  isInvested?: boolean;
 }
 
-export default function AssetSummaryBase({ asset, historicalValues, isInvested = false }: AssetSummaryBaseProps) {
+export default function AssetSummaryBase({ asset, historicalValues }: AssetSummaryBaseProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  const oneDayChange = historicalValues.length >= 2
-    ? ((historicalValues[historicalValues.length - 1] - historicalValues[historicalValues.length - 2])
-      / historicalValues[historicalValues.length - 2]) * 100
+  const numValues = historicalValues.length;
+  const oneDayChange = numValues >= 2
+    ? ((historicalValues[numValues - 1] - historicalValues[numValues - 2])
+      / historicalValues[numValues - 2]) * 100
     : 0;
 
-  const sevenDayChange = historicalValues.length >= 8
-    ? ((historicalValues[historicalValues.length - 1] - historicalValues[historicalValues.length - 8])
-      / historicalValues[historicalValues.length - 8]) * 100
+  const sevenDayChange = numValues >= 8
+    ? ((historicalValues[numValues - 1] - historicalValues[numValues - 8])
+      / historicalValues[numValues - 8]) * 100
     : 0;
 
   const getPercentageClass = (change: number) => {
@@ -59,8 +59,7 @@ export default function AssetSummaryBase({ asset, historicalValues, isInvested =
         isOpen={isPopupOpen}
         onClose={handleClosePopup}
         assetType={asset.assetType}
-        isInvested={isInvested}
-        investedAmount={isInvested ? asset.amount : undefined}
+        investedAmount={asset.amount}
       />
     </>
   );
