@@ -18,9 +18,10 @@ const generateRandomDataPoints = (length = 8): number[] => {
 
 interface AssetSectionProps {
   bankAssets: Asset[];
+  bankId: string;
 }
 
-export default function AssetSection({ bankAssets }: AssetSectionProps) {
+export default function AssetSection({ bankAssets, bankId }: AssetSectionProps) {
   // Convert asset types to assets with 0 amount, filtering out ones we've already invested in
   const getFilteredAssetTypes = (allAssetTypes: AssetType[]): Asset[] => {
     if (!allAssetTypes.length) return [];
@@ -30,6 +31,7 @@ export default function AssetSection({ bankAssets }: AssetSectionProps) {
       .filter(assetType => !investedAssetTypes.has(assetType.name))
       .map(assetType => ({
         assetType: assetType.name,
+        assetTypeId: assetType.id,
         amount: 0
       }));
   };
@@ -57,6 +59,7 @@ export default function AssetSection({ bankAssets }: AssetSectionProps) {
   const getInvestedAssetTypes = async (): Promise<Asset[]> => {
     return bankAssets.map(asset => ({
       assetType: asset.assetType,
+      assetTypeId: asset.assetTypeId,
       amount: asset.amount,
       dataPoints: generateRandomDataPoints()
     }))
@@ -68,12 +71,14 @@ export default function AssetSection({ bankAssets }: AssetSectionProps) {
         title="Your Assets"
         onLoad={getInvestedAssetTypes}
         isExpandedByDefault
+        bankId={bankId}
       />
 
       <AssetList
         title="Available Assets"
         onLoad={fetchAvailableAssetTypes}
         isExpandedByDefault={false}
+        bankId={bankId}
       />
     </>
   );

@@ -97,7 +97,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             isLeftPanelOpen={isLeftPanelOpen}
             onClick={() => setIsLeftPanelOpen(!isLeftPanelOpen)}
           />
-          <AssetSection bankAssets={bank.assets} />
+          <AssetSection bankAssets={bank.assets} bankId={bank.id} />
 
           <SettingsButton
             isRightPanelOpen={isRightPanelOpen}

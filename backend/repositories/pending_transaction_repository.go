@@ -1,0 +1,82 @@
+package repositories
+
+import (
+	"context"
+	"errors"
+	"ponziworld/backend/models"
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+)
+
+type PendingTransactionRepositoryImpl struct {
+	collection *mongo.Collection
+}
+
+func NewPendingTransactionRepository(database *mongo.Database) *PendingTransactionRepositoryImpl {
+	return &PendingTransactionRepositoryImpl{
+		collection: database.Collection("pendingTransactions"),
+	}
+}
+
+func (r *PendingTransactionRepositoryImpl) Create(ctx context.Context, transaction *models.PendingTransaction) error {
+	if transaction.Id.IsZero() {
+		transaction.Id = primitive.NewObjectID()
+	}
+	transaction.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
+
+	_, err := r.collection.InsertOne(ctx, transaction)
+	if err != nil {
+		if mongo.IsDuplicateKeyError(err) {
+			return errors.New("pending transaction already exists")
+		}
+		return err
+	}
+	return nil
+}
+
+func (r *PendingTransactionRepositoryImpl) FindByBuyerBankID(ctx context.Context, buyerBankID primitive.ObjectID) ([]models.PendingTransaction, error) {
+	filter := bson.M{"buyerBankId": buyerBankID}
+	cursor, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var transactions []models.PendingTransaction
+	if err = cursor.All(ctx, &transactions); err != nil {
+		return nil, err
+	}
+
+	return transactions, nil
+}
+
+func (r *PendingTransactionRepositoryImpl) FindByAssetID(ctx context.Context, assetID primitive.ObjectID) ([]models.PendingTransaction, error) {
+	filter := bson.M{"assetId": assetID}
+	cursor, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var transactions []models.PendingTransaction
+	if err = cursor.All(ctx, &transactions); err != nil {
+		return nil, err
+	}
+
+	return transactions, nil
+}
+
+func (r *PendingTransactionRepositoryImpl) Delete(ctx context.Context, id primitive.ObjectID) error {
+	filter := bson.M{"_id": id}
+	result, err := r.collection.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+	if result.DeletedCount == 0 {
+		return errors.New("pending transaction not found")
+	}
+	return nil
+}

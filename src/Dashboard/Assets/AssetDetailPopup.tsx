@@ -2,20 +2,25 @@ import { useEffect, useState } from 'react';
 import '../CapitalPopup.css';
 import LineGraph from './LineGraph';
 import { formatCurrency } from '../../utils/currency';
+import { makeAuthenticatedRequest } from '../../auth';
 import TransactionPopup from './TransactionPopup';
 
 interface AssetDetailPopupProps {
   isOpen: boolean;
   onClose: () => void;
   assetType: string;
+  assetTypeId: string;
   investedAmount: number;
+  bankId: string;
 }
 
 export default function AssetDetailPopup({
   isOpen,
   onClose,
   assetType,
-  investedAmount
+  assetTypeId,
+  investedAmount,
+  bankId
 }: AssetDetailPopupProps) {
   const [transactionPopupOpen, setTransactionPopupOpen] = useState(false);
   const [transactionType, setTransactionType] = useState<'buy' | 'sell'>('buy');
@@ -52,9 +57,39 @@ export default function AssetDetailPopup({
     setTransactionPopupOpen(true);
   };
 
-  const handleTransactionConfirm = (amount: number) => {
-    // TODO: Implement actual buy/sell functionality
-    console.log(`${transactionType} ${amount} of ${assetType}`);
+  const handleTransactionConfirm = async (amount: number) => {
+    try {
+      // Determine the endpoint and amount based on transaction type
+      const endpoint = transactionType === 'buy' ? '/api/buy' : '/api/sell';
+      const finalAmount = transactionType === 'buy' ? amount : -amount; // Negative for sell
+
+      const response = await makeAuthenticatedRequest(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          buyerBankId: bankId,
+          assetId: assetTypeId,
+          amount: finalAmount,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log(`${transactionType} transaction successful:`, result);
+        // You could add a success notification here
+        // For now, just close the popup
+        setTransactionPopupOpen(false);
+      } else {
+        const error = await response.json();
+        console.error(`${transactionType} transaction failed:`, error);
+        // You could add an error notification here
+      }
+    } catch (error) {
+      console.error(`Error during ${transactionType} transaction:`, error);
+      // You could add an error notification here
+    }
   };
 
   const handleTransactionClose = () => {

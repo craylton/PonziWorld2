@@ -5,13 +5,14 @@ import (
 )
 
 type ServiceContainer struct {
-	Auth        *services.AuthService
-	Bank        *services.BankService
-	Asset       *services.AssetService
-	AssetType   *services.AssetTypeService
-	Performance *services.PerformanceService
-	Player      *services.PlayerService
-	Game        *services.GameService
+	Auth               *services.AuthService
+	Bank               *services.BankService
+	Asset              *services.AssetService
+	AssetType          *services.AssetTypeService
+	Performance        *services.PerformanceService
+	Player             *services.PlayerService
+	Game               *services.GameService
+	PendingTransaction *services.PendingTransactionService
 }
 
 func NewServiceContainer(repositoryContainer *RepositoryContainer) *ServiceContainer {
@@ -36,14 +37,20 @@ func NewServiceContainer(repositoryContainer *RepositoryContainer) *ServiceConta
 		assetService,
 		performanceService,
 	)
+	pendingTransactionService := services.NewPendingTransactionService(
+		repositoryContainer.PendingTransaction,
+		repositoryContainer.Bank,
+		repositoryContainer.AssetType,
+	)
 
 	return &ServiceContainer{
-		Auth:        authService,
-		Bank:        bankService,
-		Asset:       assetService,
-		AssetType:   assetTypeService,
-		Performance: performanceService,
-		Player:      playerService,
-		Game:        gameService,
+		Auth:               authService,
+		Bank:               bankService,
+		Asset:              assetService,
+		AssetType:          assetTypeService,
+		Performance:        performanceService,
+		Player:             playerService,
+		Game:               gameService,
+		PendingTransaction: pendingTransactionService,
 	}
 }
