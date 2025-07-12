@@ -31,6 +31,68 @@ func (h *PendingTransactionHandler) SellAsset(w http.ResponseWriter, r *http.Req
 	h.handleTransaction(w, r)
 }
 
+func (h *PendingTransactionHandler) GetPendingTransactions(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	// Get username from JWT (set by middleware) - used for authorization
+	username := r.Header.Get("X-Username")
+	if username == "" {
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Authentication required"})
+		return
+	}
+
+	// Extract bank ID from URL path parameter
+	bankIdStr := r.PathValue("bankId")
+	log.Printf("DEBUG: Extracted bankId from URL: '%s', Full URL: %s", bankIdStr, r.URL.Path)
+	if bankIdStr == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Bank ID required"})
+		return
+	}
+
+	bankId, err := primitive.ObjectIDFromHex(bankIdStr)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid bank ID format"})
+		return
+	}
+
+	ctx := r.Context()
+
+	// Get pending transactions for the bank
+	transactions, err := h.pendingTransactionService.GetTransactionsByBankID(ctx, bankId, username)
+	if err != nil {
+		log.Printf("Error fetching pending transactions: %v", err)
+		
+		switch err {
+		case services.ErrInvalidBankID:
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Bank not found"})
+		case services.ErrPlayerNotFound:
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Player not found"})
+		case services.ErrUnauthorizedBank:
+			w.WriteHeader(http.StatusForbidden)
+			json.NewEncoder(w).Encode(map[string]string{"error": "You do not own this bank"})
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Failed to fetch pending transactions"})
+		}
+		return
+	}
+
+	// Return the transactions
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(transactions)
+}
+
 func (h *PendingTransactionHandler) handleTransaction(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)

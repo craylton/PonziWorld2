@@ -1,11 +1,17 @@
 
+Right now:
+Show an error message in UI if buy/sell order failed
+Show pending buy orders in UI
+Show pending sell orders in UI
+The above 2 points require looking up pending orders in the dashboard
+If we have a pending buy order but don't yet own the asset, it should go in 'Your assets' list
+
 
 Next up:
-Allow user to queue up orders
-    as in, you can say you want to buy something, but it doesn't actually buy it until the following day
-    this requires a 'pending orders' collection containing bank ID, asset ID, amount
+Make all purchases come out of cash
 Put assets in the history collection
     Also display that history when you click an asset
+Apply pending transactions on new day
 Design the DB
     A player can log on at any time during the day and make changes to their investments
         Need some kind of holding area
@@ -14,6 +20,7 @@ Design the DB
 Ensure currencies are stored in correct format
     Need to be displayed to the user as ints
     Need to be stored as floating points
+Redesign header so that claimed and actual capitals are in same graph
 
 
 FUTURE THINGS:

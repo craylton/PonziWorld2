@@ -26,6 +26,7 @@ func RegisterRoutes(mux *http.ServeMux, container *config.Container) {
 	mux.HandleFunc("/api/assetTypes", middleware.JwtMiddleware(assetTypeHandler.GetAllAssetTypes))
 	mux.HandleFunc("/api/buy", middleware.JwtMiddleware(pendingTransactionHandler.BuyAsset))
 	mux.HandleFunc("/api/sell", middleware.JwtMiddleware(pendingTransactionHandler.SellAsset))
+	mux.HandleFunc("/api/pendingTransactions/{bankId}", middleware.JwtMiddleware(pendingTransactionHandler.GetPendingTransactions))
 	mux.HandleFunc(
 		"/api/nextDay",
 		middleware.AdminJwtMiddleware(gameHandler.AdvanceToNextDay, container.ServiceContainer.Auth),

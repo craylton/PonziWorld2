@@ -548,3 +548,142 @@ func TestPendingTransactionService_GetTransactions(t *testing.T) {
 		}
 	})
 }
+
+func TestPendingTransactionService_GetTransactionsByBankID(t *testing.T) {
+	container, err := CreateTestDependencies("pending_transaction_get_by_bank")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(container)
+
+	ctx := context.Background()
+	service := container.ServiceContainer.PendingTransaction
+	timestamp := time.Now().Unix()
+
+	// Create test user and bank
+	username := fmt.Sprintf("testuser_%d", timestamp)
+	password := "testpass"
+	bankName := "Test Bank"
+	
+	_, err = CreateRegularUserForTest(container, username, password, bankName)
+	if err != nil {
+		t.Fatalf("Failed to create test user: %v", err)
+	}
+
+	user, err := container.RepositoryContainer.Player.FindByUsername(ctx, username)
+	if err != nil {
+		t.Fatalf("Failed to find test user: %v", err)
+	}
+
+	bank, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user.Id)
+	if err != nil {
+		t.Fatalf("Failed to find test bank: %v", err)
+	}
+
+	// Create second test user and bank for unauthorized access test
+	username2 := fmt.Sprintf("testuser2_%d", timestamp)
+	password2 := "testpass2"
+	bankName2 := "Test Bank 2"
+	
+	_, err = CreateRegularUserForTest(container, username2, password2, bankName2)
+	if err != nil {
+		t.Fatalf("Failed to create second test user: %v", err)
+	}
+
+	user2, err := container.RepositoryContainer.Player.FindByUsername(ctx, username2)
+	if err != nil {
+		t.Fatalf("Failed to find second test user: %v", err)
+	}
+
+	bank2, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user2.Id)
+	if err != nil {
+		t.Fatalf("Failed to find second test bank: %v", err)
+	}
+
+	// Create test asset type
+	assetType := &models.AssetType{
+		Id:   primitive.NewObjectID(),
+		Name: "Test Asset",
+	}
+	err = container.RepositoryContainer.AssetType.Create(ctx, assetType)
+	if err != nil {
+		t.Fatalf("Failed to create test asset type: %v", err)
+	}
+
+	t.Run("Valid bank owner can access transactions", func(t *testing.T) {
+		// Create some pending transactions
+		err := service.CreateTransaction(ctx, bank.Id, assetType.Id, 1000, username)
+		if err != nil {
+			t.Fatalf("Failed to create first transaction: %v", err)
+		}
+
+		err = service.CreateTransaction(ctx, bank.Id, bank2.Id, 500, username)
+		if err != nil {
+			t.Fatalf("Failed to create second transaction: %v", err)
+		}
+
+		// Get transactions using the new method
+		transactions, err := service.GetTransactionsByBankID(ctx, bank.Id, username)
+		if err != nil {
+			t.Errorf("Expected no error for valid bank owner, got: %v", err)
+		}
+
+		if len(transactions) != 2 {
+			t.Errorf("Expected 2 transactions, got %d", len(transactions))
+		}
+
+		// Verify transaction details
+		found1000 := false
+		found500 := false
+		for _, tx := range transactions {
+			if tx.Amount == 1000 && tx.AssetId == assetType.Id {
+				found1000 = true
+			}
+			if tx.Amount == 500 && tx.AssetId == bank2.Id {
+				found500 = true
+			}
+		}
+
+		if !found1000 {
+			t.Error("Expected to find transaction with amount 1000")
+		}
+		if !found500 {
+			t.Error("Expected to find transaction with amount 500")
+		}
+	})
+
+	t.Run("Unauthorized user cannot access transactions", func(t *testing.T) {
+		// Try to access bank's transactions with different user
+		_, err := service.GetTransactionsByBankID(ctx, bank.Id, username2)
+		if err != services.ErrUnauthorizedBank {
+			t.Errorf("Expected ErrUnauthorizedBank for unauthorized user, got: %v", err)
+		}
+	})
+
+	t.Run("Non-existent bank", func(t *testing.T) {
+		nonExistentBankID := primitive.NewObjectID()
+		_, err := service.GetTransactionsByBankID(ctx, nonExistentBankID, username)
+		if err != services.ErrInvalidBankID {
+			t.Errorf("Expected ErrInvalidBankID for non-existent bank, got: %v", err)
+		}
+	})
+
+	t.Run("Non-existent user", func(t *testing.T) {
+		_, err := service.GetTransactionsByBankID(ctx, bank.Id, "nonexistentuser")
+		if err != services.ErrInvalidBankID {
+			t.Errorf("Expected ErrInvalidBankID for non-existent user, got: %v", err)
+		}
+	})
+
+	t.Run("Empty transactions list", func(t *testing.T) {
+		// bank2 should have no pending transactions as buyer
+		transactions, err := service.GetTransactionsByBankID(ctx, bank2.Id, username2)
+		if err != nil {
+			t.Errorf("Expected no error for valid bank owner with no transactions, got: %v", err)
+		}
+
+		if len(transactions) != 0 {
+			t.Errorf("Expected 0 transactions for bank2, got %d", len(transactions))
+		}
+	})
+}

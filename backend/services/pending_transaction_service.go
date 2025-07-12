@@ -14,7 +14,6 @@ var (
 	ErrInvalidAmount      = errors.New("amount must not be zero")
 	ErrAssetNotFound      = errors.New("asset not found")
 	ErrInvalidBankID      = errors.New("invalid bank ID")
-	ErrTransactionExists  = errors.New("pending transaction already exists")
 	ErrSelfInvestment     = errors.New("bank cannot invest in itself")
 	ErrUnauthorizedBank   = errors.New("bank is not owned by the current player")
 )
@@ -128,4 +127,24 @@ func (s *PendingTransactionService) GetTransactionsByBuyerBankID(ctx context.Con
 
 func (s *PendingTransactionService) GetTransactionsByAssetID(ctx context.Context, assetID primitive.ObjectID) ([]models.PendingTransaction, error) {
 	return s.pendingTransactionRepo.FindByAssetID(ctx, assetID)
+}
+
+func (s *PendingTransactionService) GetTransactionsByBankID(ctx context.Context, bankID primitive.ObjectID, username string) ([]models.PendingTransaction, error) {
+	// Validate bank exists and is owned by the current player
+	bank, err := s.bankRepo.FindByID(ctx, bankID)
+	if err != nil {
+		return nil, ErrInvalidBankID
+	}
+
+	// Validate bank ownership
+	player, err := s.playerRepo.FindByUsername(ctx, username)
+	if err != nil {
+		return nil, ErrPlayerNotFound
+	}
+
+	if bank.PlayerId != player.Id {
+		return nil, ErrUnauthorizedBank
+	}
+
+	return s.pendingTransactionRepo.FindByBuyerBankID(ctx, bankID)
 }
