@@ -35,6 +35,10 @@ func EnsureAllIndexes(dbConfig *config.DatabaseConfig) error {
 		return err
 	}
 
+	if err := EnsurePendingTransactionIndexes(dbConfig); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -109,5 +113,29 @@ func EnsureGameIndexes(dbConfig *config.DatabaseConfig) error {
 	return ensureIndex(dbConfig, "game", "game_id_idx", mongo.IndexModel{
 		Keys:    bson.D{{Key: "_id", Value: 1}},
 		Options: options.Index().SetName("game_id_idx"),
+	})
+}
+
+func EnsurePendingTransactionIndexes(dbConfig *config.DatabaseConfig) error {
+	// Index on buyerBankId for efficient lookups by buyer
+	if err := ensureIndex(dbConfig, "pendingTransactions", "pending_buyerBankId_idx", mongo.IndexModel{
+		Keys:    bson.D{{Key: "buyerBankId", Value: 1}},
+		Options: options.Index().SetName("pending_buyerBankId_idx"),
+	}); err != nil {
+		return err
+	}
+
+	// Index on assetId for efficient lookups by asset
+	if err := ensureIndex(dbConfig, "pendingTransactions", "pending_assetId_idx", mongo.IndexModel{
+		Keys:    bson.D{{Key: "assetId", Value: 1}},
+		Options: options.Index().SetName("pending_assetId_idx"),
+	}); err != nil {
+		return err
+	}
+
+	// Compound index on buyerBankId and assetId for efficient duplicate checking
+	return ensureIndex(dbConfig, "pendingTransactions", "pending_buyer_asset_idx", mongo.IndexModel{
+		Keys:    bson.D{{Key: "buyerBankId", Value: 1}, {Key: "assetId", Value: 1}},
+		Options: options.Index().SetName("pending_buyer_asset_idx"),
 	})
 }

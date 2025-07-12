@@ -59,6 +59,7 @@ export default function AssetSummaryBase({ asset, historicalValues }: AssetSumma
         isOpen={isPopupOpen}
         onClose={handleClosePopup}
         assetType={asset.assetType}
+        assetTypeId={asset.assetTypeId}
         investedAmount={asset.amount}
       />
     </>

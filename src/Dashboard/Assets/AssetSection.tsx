@@ -30,6 +30,7 @@ export default function AssetSection({ bankAssets }: AssetSectionProps) {
       .filter(assetType => !investedAssetTypes.has(assetType.name))
       .map(assetType => ({
         assetType: assetType.name,
+        assetTypeId: assetType.id,
         amount: 0
       }));
   };
@@ -57,6 +58,7 @@ export default function AssetSection({ bankAssets }: AssetSectionProps) {
   const getInvestedAssetTypes = async (): Promise<Asset[]> => {
     return bankAssets.map(asset => ({
       assetType: asset.assetType,
+      assetTypeId: asset.assetTypeId,
       amount: asset.amount,
       dataPoints: generateRandomDataPoints()
     }))
