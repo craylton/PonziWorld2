@@ -18,10 +18,9 @@ const generateRandomDataPoints = (length = 8): number[] => {
 
 interface AssetSectionProps {
   bankAssets: Asset[];
-  bankId: string;
 }
 
-export default function AssetSection({ bankAssets, bankId }: AssetSectionProps) {
+export default function AssetSection({ bankAssets }: AssetSectionProps) {
   // Convert asset types to assets with 0 amount, filtering out ones we've already invested in
   const getFilteredAssetTypes = (allAssetTypes: AssetType[]): Asset[] => {
     if (!allAssetTypes.length) return [];
@@ -71,14 +70,12 @@ export default function AssetSection({ bankAssets, bankId }: AssetSectionProps) 
         title="Your Assets"
         onLoad={getInvestedAssetTypes}
         isExpandedByDefault
-        bankId={bankId}
       />
 
       <AssetList
         title="Available Assets"
         onLoad={fetchAvailableAssetTypes}
         isExpandedByDefault={false}
-        bankId={bankId}
       />
     </>
   );

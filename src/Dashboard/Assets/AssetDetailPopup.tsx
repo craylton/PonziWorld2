@@ -3,6 +3,7 @@ import '../CapitalPopup.css';
 import LineGraph from './LineGraph';
 import { formatCurrency } from '../../utils/currency';
 import { makeAuthenticatedRequest } from '../../auth';
+import { useBankContext } from '../../contexts/useBankContext';
 import TransactionPopup from './TransactionPopup';
 
 interface AssetDetailPopupProps {
@@ -11,7 +12,6 @@ interface AssetDetailPopupProps {
   assetType: string;
   assetTypeId: string;
   investedAmount: number;
-  bankId: string;
 }
 
 export default function AssetDetailPopup({
@@ -19,9 +19,9 @@ export default function AssetDetailPopup({
   onClose,
   assetType,
   assetTypeId,
-  investedAmount,
-  bankId
+  investedAmount
 }: AssetDetailPopupProps) {
+  const { bankId } = useBankContext();
   const [transactionPopupOpen, setTransactionPopupOpen] = useState(false);
   const [transactionType, setTransactionType] = useState<'buy' | 'sell'>('buy');
 

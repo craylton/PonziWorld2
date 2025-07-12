@@ -9,10 +9,9 @@ interface AssetListProps {
     title: string;
     onLoad: () => Promise<Asset[]>;
     isExpandedByDefault: boolean;
-    bankId: string;
 }
 
-export default function AssetList({ title, onLoad, isExpandedByDefault, bankId }: AssetListProps) {
+export default function AssetList({ title, onLoad, isExpandedByDefault }: AssetListProps) {
     const [allAssets, setAllAssets] = useState<Asset[]>([]);
     const [isExpanded, setIsExpanded] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -77,14 +76,12 @@ export default function AssetList({ title, onLoad, isExpandedByDefault, bankId }
                                     key={`${asset.assetType}-${index}`}
                                     asset={asset}
                                     historicalValues={asset.dataPoints ?? []}
-                                    bankId={bankId}
                                 />
                             ) : (
                                 <UninvestedAssetSummary
                                     key={`${asset.assetType}-${index}`}
                                     asset={asset}
                                     historicalValues={asset.dataPoints ?? []}
-                                    bankId={bankId}
                                 />
                             )
                         )

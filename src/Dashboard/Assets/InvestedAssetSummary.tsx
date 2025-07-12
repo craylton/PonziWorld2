@@ -6,10 +6,9 @@ import { formatCurrency } from '../../utils/currency';
 interface AssetSummaryProps {
   asset: Asset;
   historicalValues: number[];
-  bankId: string;
 }
 
-export default function InvestedAssetSummary({ asset, historicalValues, bankId }: AssetSummaryProps) {
+export default function InvestedAssetSummary({ asset, historicalValues }: AssetSummaryProps) {
   return (
     <>
       <div className="asset-list__item">
@@ -19,7 +18,7 @@ export default function InvestedAssetSummary({ asset, historicalValues, bankId }
             formatCurrency(asset.amount)
           }</div>
         </div>
-        <AssetSummaryBase asset={asset} historicalValues={historicalValues} bankId={bankId} />
+        <AssetSummaryBase asset={asset} historicalValues={historicalValues} />
       </div>
     </>
   );
