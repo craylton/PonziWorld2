@@ -670,8 +670,8 @@ func TestPendingTransactionService_GetTransactionsByBankID(t *testing.T) {
 
 	t.Run("Non-existent user", func(t *testing.T) {
 		_, err := service.GetTransactionsByBankID(ctx, bank.Id, "nonexistentuser")
-		if err != services.ErrInvalidBankID {
-			t.Errorf("Expected ErrInvalidBankID for non-existent user, got: %v", err)
+		if err != services.ErrPlayerNotFound {
+			t.Errorf("Expected ErrPlayerNotFound for non-existent user, got: %v", err)
 		}
 	})
 

@@ -70,8 +70,9 @@ export default function AssetList({ title, onLoad, isExpandedByDefault }: AssetL
                             (Empty)
                         </div>
                     ) : (
-                        allAssets.map((asset, index) =>
-                            asset.amount > 0 ? (
+                        allAssets.map((asset, index) => {
+                            const hasInvestmentOrPending = asset.amount > 0 || (asset.pendingAmount !== undefined && asset.pendingAmount !== 0);
+                            return hasInvestmentOrPending ? (
                                 <InvestedAssetSummary
                                     key={`${asset.assetType}-${index}`}
                                     asset={asset}
@@ -83,8 +84,8 @@ export default function AssetList({ title, onLoad, isExpandedByDefault }: AssetL
                                     asset={asset}
                                     historicalValues={asset.dataPoints ?? []}
                                 />
-                            )
-                        )
+                            );
+                        })
                     )}
                 </div>
             )}
