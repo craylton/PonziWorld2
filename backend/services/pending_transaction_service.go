@@ -16,36 +16,50 @@ var (
 	ErrInvalidBankID      = errors.New("invalid bank ID")
 	ErrTransactionExists  = errors.New("pending transaction already exists")
 	ErrSelfInvestment     = errors.New("bank cannot invest in itself")
+	ErrUnauthorizedBank   = errors.New("bank is not owned by the current player")
 )
 
 type PendingTransactionService struct {
 	pendingTransactionRepo repositories.PendingTransactionRepository
 	bankRepo               repositories.BankRepository
 	assetTypeRepo          repositories.AssetTypeRepository
+	playerRepo             repositories.PlayerRepository
 }
 
 func NewPendingTransactionService(
 	pendingTransactionRepo repositories.PendingTransactionRepository,
 	bankRepo repositories.BankRepository,
 	assetTypeRepo repositories.AssetTypeRepository,
+	playerRepo repositories.PlayerRepository,
 ) *PendingTransactionService {
 	return &PendingTransactionService{
 		pendingTransactionRepo: pendingTransactionRepo,
 		bankRepo:               bankRepo,
 		assetTypeRepo:          assetTypeRepo,
+		playerRepo:             playerRepo,
 	}
 }
 
-func (s *PendingTransactionService) CreateTransaction(ctx context.Context, buyerBankId, assetId primitive.ObjectID, amount int64) error {
+func (s *PendingTransactionService) CreateTransaction(ctx context.Context, buyerBankId, assetId primitive.ObjectID, amount int64, username string) error {
 	// Validate amount is not zero
 	if amount == 0 {
 		return ErrInvalidAmount
 	}
 
-	// Validate buyer bank exists
-	_, err := s.bankRepo.FindByID(ctx, buyerBankId)
+	// Validate buyer bank exists and is owned by the current player
+	buyerBank, err := s.bankRepo.FindByID(ctx, buyerBankId)
 	if err != nil {
 		return ErrInvalidBankID
+	}
+
+	// Validate bank ownership
+	player, err := s.playerRepo.FindByUsername(ctx, username)
+	if err != nil {
+		return ErrInvalidBankID // Player not found
+	}
+
+	if buyerBank.PlayerId != player.Id {
+		return ErrUnauthorizedBank
 	}
 
 	// Validate asset exists (check both asset types and banks since banks are also assets)
@@ -62,7 +76,27 @@ func (s *PendingTransactionService) CreateTransaction(ctx context.Context, buyer
 		return ErrSelfInvestment
 	}
 
-	// Create the pending transaction
+	// Check if there's an existing pending transaction for this bank-asset combination
+	existingTransactions, err := s.pendingTransactionRepo.FindByBuyerBankIDAndAssetID(ctx, buyerBankId, assetId)
+	if err != nil {
+		return err
+	}
+
+	// If there's an existing transaction, combine them
+	if len(existingTransactions) > 0 {
+		existingTransaction := existingTransactions[0]
+		newAmount := existingTransaction.Amount + amount
+		
+		// If the new amount is zero, delete the transaction
+		if newAmount == 0 {
+			return s.pendingTransactionRepo.Delete(ctx, existingTransaction.Id)
+		}
+		
+		// Otherwise, update the existing transaction
+		return s.pendingTransactionRepo.UpdateAmount(ctx, existingTransaction.Id, newAmount)
+	}
+
+	// Create new pending transaction if none exists
 	transaction := &models.PendingTransaction{
 		BuyerBankId: buyerBankId,
 		AssetId:     assetId,

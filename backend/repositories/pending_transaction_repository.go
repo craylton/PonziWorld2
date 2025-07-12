@@ -69,6 +69,41 @@ func (r *PendingTransactionRepositoryImpl) FindByAssetID(ctx context.Context, as
 	return transactions, nil
 }
 
+func (r *PendingTransactionRepositoryImpl) FindByBuyerBankIDAndAssetID(ctx context.Context, buyerBankID, assetID primitive.ObjectID) ([]models.PendingTransaction, error) {
+	filter := bson.M{
+		"buyerBankId": buyerBankID,
+		"assetId":     assetID,
+	}
+	cursor, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var transactions []models.PendingTransaction
+	if err = cursor.All(ctx, &transactions); err != nil {
+		return nil, err
+	}
+
+	return transactions, nil
+}
+
+func (r *PendingTransactionRepositoryImpl) UpdateAmount(ctx context.Context, id primitive.ObjectID, newAmount int64) error {
+	filter := bson.M{"_id": id}
+	update := bson.M{"$set": bson.M{"amount": newAmount}}
+
+	result, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	if result.MatchedCount == 0 {
+		return errors.New("pending transaction not found")
+	}
+
+	return nil
+}
+
 func (r *PendingTransactionRepositoryImpl) Delete(ctx context.Context, id primitive.ObjectID) error {
 	filter := bson.M{"_id": id}
 	result, err := r.collection.DeleteOne(ctx, filter)

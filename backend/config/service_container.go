@@ -41,6 +41,7 @@ func NewServiceContainer(repositoryContainer *RepositoryContainer) *ServiceConta
 		repositoryContainer.PendingTransaction,
 		repositoryContainer.Bank,
 		repositoryContainer.AssetType,
+		repositoryContainer.Player,
 	)
 
 	return &ServiceContainer{

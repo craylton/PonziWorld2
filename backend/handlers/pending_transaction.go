@@ -74,11 +74,8 @@ func (h *PendingTransactionHandler) handleTransaction(w http.ResponseWriter, r *
 		return
 	}
 
-	// Verify that the buyer bank exists (basic validation)
-	// TODO: Add proper ownership validation when multiple banks per player is fully implemented
-
 	// Create the pending transaction
-	err = h.pendingTransactionService.CreateTransaction(ctx, buyerBankObjectID, assetObjectID, req.Amount)
+	err = h.pendingTransactionService.CreateTransaction(ctx, buyerBankObjectID, assetObjectID, req.Amount, username)
 	if err != nil {
 		log.Printf("Error creating transaction: %v", err)
 		
@@ -95,6 +92,9 @@ func (h *PendingTransactionHandler) handleTransaction(w http.ResponseWriter, r *
 		case services.ErrSelfInvestment:
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Bank cannot invest in itself"})
+		case services.ErrUnauthorizedBank:
+			w.WriteHeader(http.StatusForbidden)
+			json.NewEncoder(w).Encode(map[string]string{"error": "You do not own this bank"})
 		default:
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create transaction"})
