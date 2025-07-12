@@ -4,249 +4,698 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"ponziworld/backend/config"
 	"ponziworld/backend/handlers"
 	"ponziworld/backend/models"
+	"ponziworld/backend/services"
 	"testing"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type TestDependencies struct {
-	Container *config.Container
-}
-
-func (d *TestDependencies) Cleanup() {
-	CleanupTestDependencies(d.Container)
-}
-
-func setupTestDependencies(t *testing.T) *TestDependencies {
-	container, err := CreateTestDependencies("pending_transaction_test")
+func TestPendingTransactionService_CreateTransaction(t *testing.T) {
+	container, err := CreateTestDependencies("pending_transaction")
 	if err != nil {
 		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
-	return &TestDependencies{Container: container}
-}
+	defer CleanupTestDependencies(container)
 
-func createTestUser(t *testing.T, deps *TestDependencies) (*models.Player, string) {
-	username := "testuser"
+	ctx := context.Background()
+	service := container.ServiceContainer.PendingTransaction
+	timestamp := time.Now().Unix()
+
+	// Create test user and bank
+	username := fmt.Sprintf("testuser_%d", timestamp)
 	password := "testpass"
 	bankName := "Test Bank"
-
-	token, err := CreateRegularUserForTest(deps.Container, username, password, bankName)
+	
+	_, err = CreateRegularUserForTest(container, username, password, bankName)
 	if err != nil {
 		t.Fatalf("Failed to create test user: %v", err)
 	}
 
-	// Retrieve the user to get the ID
-	user, err := deps.Container.RepositoryContainer.Player.FindByUsername(context.Background(), username)
+	user, err := container.RepositoryContainer.Player.FindByUsername(ctx, username)
 	if err != nil {
 		t.Fatalf("Failed to find test user: %v", err)
 	}
 
-	return user, token
-}
-
-func createTestBank(t *testing.T, deps *TestDependencies, playerID primitive.ObjectID) *models.Bank {
-	bank, err := deps.Container.RepositoryContainer.Bank.FindByPlayerID(context.Background(), playerID)
+	bank, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user.Id)
 	if err != nil {
 		t.Fatalf("Failed to find test bank: %v", err)
 	}
-	return bank
-}
 
-func TestBuyAsset(t *testing.T) {
-	deps := setupTestDependencies(t)
-	defer deps.Cleanup()
-
-	// Create a test user and bank
-	user, _ := createTestUser(t, deps)
-	bank := createTestBank(t, deps, user.Id)
-
-	// Create a test asset type
+	// Create test asset type
 	assetType := &models.AssetType{
 		Id:   primitive.NewObjectID(),
 		Name: "Test Asset",
 	}
-	err := deps.Container.RepositoryContainer.AssetType.Create(context.Background(), assetType)
+	err = container.RepositoryContainer.AssetType.Create(ctx, assetType)
 	if err != nil {
 		t.Fatalf("Failed to create test asset type: %v", err)
 	}
 
-	// Create buy request
-	buyRequest := models.PendingTransactionRequest{
-		BuyerBankId: bank.Id.Hex(),
-		AssetId:     assetType.Id.Hex(),
-		Amount:      1000, // Positive amount = buy
-	}
+	t.Run("Valid transaction creation", func(t *testing.T) {
+		err := service.CreateTransaction(ctx, bank.Id, assetType.Id, 1000, username)
+		if err != nil {
+			t.Errorf("Expected no error for valid transaction, got: %v", err)
+		}
 
-	requestBody, _ := json.Marshal(buyRequest)
+		// Verify transaction was created
+		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id)
+		if err != nil {
+			t.Fatalf("Failed to get transactions: %v", err)
+		}
+		if len(transactions) != 1 {
+			t.Errorf("Expected 1 transaction, got %d", len(transactions))
+		}
+		if transactions[0].Amount != 1000 {
+			t.Errorf("Expected amount 1000, got %d", transactions[0].Amount)
+		}
+	})
 
-	// Create test request
-	req := httptest.NewRequest(http.MethodPost, "/api/buy", bytes.NewBuffer(requestBody))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Username", user.Username) // Simulate JWT middleware
+	t.Run("Zero amount", func(t *testing.T) {
+		err := service.CreateTransaction(ctx, bank.Id, assetType.Id, 0, username)
+		if err != services.ErrInvalidAmount {
+			t.Errorf("Expected ErrInvalidAmount for zero amount, got: %v", err)
+		}
+	})
 
-	// Create response recorder
-	rr := httptest.NewRecorder()
+	t.Run("Non-existent bank", func(t *testing.T) {
+		nonExistentBankID := primitive.NewObjectID()
+		err := service.CreateTransaction(ctx, nonExistentBankID, assetType.Id, 1000, username)
+		if err != services.ErrInvalidBankID {
+			t.Errorf("Expected ErrInvalidBankID for non-existent bank, got: %v", err)
+		}
+	})
 
-	// Create handler
-	handler := handlers.NewPendingTransactionHandler(deps.Container)
-	handler.BuyAsset(rr, req)
+	t.Run("Non-existent asset", func(t *testing.T) {
+		nonExistentAssetID := primitive.NewObjectID()
+		err := service.CreateTransaction(ctx, bank.Id, nonExistentAssetID, 1000, username)
+		if err != services.ErrAssetNotFound {
+			t.Errorf("Expected ErrAssetNotFound for non-existent asset, got: %v", err)
+		}
+	})
 
-	// Check response
-	if rr.Code != http.StatusCreated {
-		t.Errorf("Expected status code %d, got %d", http.StatusCreated, rr.Code)
-		t.Logf("Response body: %s", rr.Body.String())
-	}
+	t.Run("Self-investment", func(t *testing.T) {
+		err := service.CreateTransaction(ctx, bank.Id, bank.Id, 1000, username)
+		if err != services.ErrSelfInvestment {
+			t.Errorf("Expected ErrSelfInvestment for self-investment, got: %v", err)
+		}
+	})
 
-	var response map[string]string
-	err = json.Unmarshal(rr.Body.Bytes(), &response)
-	if err != nil {
-		t.Fatalf("Failed to unmarshal response: %v", err)
-	}
-
-	if response["message"] != "buy transaction created successfully" {
-		t.Errorf("Expected success message, got: %s", response["message"])
-	}
-
-	// Verify transaction was created in database
-	transactions, err := deps.Container.RepositoryContainer.PendingTransaction.FindByBuyerBankID(context.Background(), bank.Id)
-	if err != nil {
-		t.Fatalf("Failed to find pending transactions: %v", err)
-	}
-
-	if len(transactions) != 1 {
-		t.Errorf("Expected 1 pending transaction, got %d", len(transactions))
-	}
-
-	if transactions[0].Amount != 1000 {
-		t.Errorf("Expected amount 1000, got %d", transactions[0].Amount)
-	}
-
-	if transactions[0].Amount <= 0 {
-		t.Errorf("Expected positive amount for buy transaction, got %d", transactions[0].Amount)
-	}
+	t.Run("Non-existent user", func(t *testing.T) {
+		err := service.CreateTransaction(ctx, bank.Id, assetType.Id, 1000, "nonexistentuser")
+		if err != services.ErrInvalidBankID {
+			t.Errorf("Expected ErrInvalidBankID when user doesn't exist, got: %v", err)
+		}
+	})
 }
 
-func TestSelfInvestmentPrevention(t *testing.T) {
-	deps := setupTestDependencies(t)
-	defer deps.Cleanup()
-
-	// Create a test user and bank
-	user, _ := createTestUser(t, deps)
-	bank := createTestBank(t, deps, user.Id)
-
-	// Create request where bank tries to invest in itself
-	buyRequest := models.PendingTransactionRequest{
-		BuyerBankId: bank.Id.Hex(),
-		AssetId:     bank.Id.Hex(), // Same as buyer bank ID
-		Amount:      1000,
-	}
-
-	requestBody, _ := json.Marshal(buyRequest)
-
-	// Create test request
-	req := httptest.NewRequest(http.MethodPost, "/api/buy", bytes.NewBuffer(requestBody))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Username", user.Username) // Simulate JWT middleware
-
-	// Create response recorder
-	rr := httptest.NewRecorder()
-
-	// Create handler
-	handler := handlers.NewPendingTransactionHandler(deps.Container)
-	handler.BuyAsset(rr, req)
-
-	// Check response
-	if rr.Code != http.StatusBadRequest {
-		t.Errorf("Expected status code %d, got %d", http.StatusBadRequest, rr.Code)
-		t.Logf("Response body: %s", rr.Body.String())
-	}
-
-	var response map[string]string
-	err := json.Unmarshal(rr.Body.Bytes(), &response)
+func TestPendingTransactionService_BankOwnership(t *testing.T) {
+	container, err := CreateTestDependencies("pending_transaction_ownership")
 	if err != nil {
-		t.Fatalf("Failed to unmarshal response: %v", err)
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(container)
+
+	ctx := context.Background()
+	service := container.ServiceContainer.PendingTransaction
+	timestamp := time.Now().Unix()
+
+	// Create two users
+	user1Username := fmt.Sprintf("testuser1_%d", timestamp)
+	user1Password := "testpass1"
+	user1BankName := "Test Bank 1"
+	
+	_, err = CreateRegularUserForTest(container, user1Username, user1Password, user1BankName)
+	if err != nil {
+		t.Fatalf("Failed to create first test user: %v", err)
 	}
 
-	if response["error"] != "Bank cannot invest in itself" {
-		t.Errorf("Expected self-investment error, got: %s", response["error"])
+	user2Username := fmt.Sprintf("testuser2_%d", timestamp)
+	user2Password := "testpass2"
+	user2BankName := "Test Bank 2"
+	
+	_, err = CreateRegularUserForTest(container, user2Username, user2Password, user2BankName)
+	if err != nil {
+		t.Fatalf("Failed to create second test user: %v", err)
 	}
-}
 
-func TestSellAssetTransaction(t *testing.T) {
-	deps := setupTestDependencies(t)
-	defer deps.Cleanup()
+	user1, err := container.RepositoryContainer.Player.FindByUsername(ctx, user1Username)
+	if err != nil {
+		t.Fatalf("Failed to find first test user: %v", err)
+	}
 
-	// Create a test user and bank
-	user, _ := createTestUser(t, deps)
-	bank := createTestBank(t, deps, user.Id)
+	user2, err := container.RepositoryContainer.Player.FindByUsername(ctx, user2Username)
+	if err != nil {
+		t.Fatalf("Failed to find second test user: %v", err)
+	}
 
-	// Create a test asset type
+	bank1, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user1.Id)
+	if err != nil {
+		t.Fatalf("Failed to find first test bank: %v", err)
+	}
+
+	bank2, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user2.Id)
+	if err != nil {
+		t.Fatalf("Failed to find second test bank: %v", err)
+	}
+
+	// Create test asset type
 	assetType := &models.AssetType{
 		Id:   primitive.NewObjectID(),
 		Name: "Test Asset",
 	}
-	err := deps.Container.RepositoryContainer.AssetType.Create(context.Background(), assetType)
+	err = container.RepositoryContainer.AssetType.Create(ctx, assetType)
 	if err != nil {
 		t.Fatalf("Failed to create test asset type: %v", err)
 	}
 
-	// Create sell request (negative amount)
-	sellRequest := models.PendingTransactionRequest{
-		BuyerBankId: bank.Id.Hex(),
-		AssetId:     assetType.Id.Hex(),
-		Amount:      -500, // Negative amount = sell
-	}
+	t.Run("User owns bank", func(t *testing.T) {
+		err := service.CreateTransaction(ctx, bank1.Id, assetType.Id, 1000, user1Username)
+		if err != nil {
+			t.Errorf("Expected no error when user uses their own bank, got: %v", err)
+		}
+	})
 
-	requestBody, _ := json.Marshal(sellRequest)
+	t.Run("User does not own bank", func(t *testing.T) {
+		err := service.CreateTransaction(ctx, bank2.Id, assetType.Id, 1000, user1Username)
+		if err != services.ErrUnauthorizedBank {
+			t.Errorf("Expected ErrUnauthorizedBank when user tries to use another user's bank, got: %v", err)
+		}
+	})
+}
 
-	// Create test request
-	req := httptest.NewRequest(http.MethodPost, "/api/sell", bytes.NewBuffer(requestBody))
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-Username", user.Username) // Simulate JWT middleware
-
-	// Create response recorder
-	rr := httptest.NewRecorder()
-
-	// Create handler
-	handler := handlers.NewPendingTransactionHandler(deps.Container)
-	handler.SellAsset(rr, req)
-
-	// Check response
-	if rr.Code != http.StatusCreated {
-		t.Errorf("Expected status code %d, got %d", http.StatusCreated, rr.Code)
-		t.Logf("Response body: %s", rr.Body.String())
-	}
-
-	var response map[string]string
-	err = json.Unmarshal(rr.Body.Bytes(), &response)
+func TestPendingTransactionService_TransactionCombining(t *testing.T) {
+	container, err := CreateTestDependencies("pending_transaction_combining")
 	if err != nil {
-		t.Fatalf("Failed to unmarshal response: %v", err)
+		t.Fatalf("Failed to create test dependencies: %v", err)
 	}
+	defer CleanupTestDependencies(container)
 
-	if response["message"] != "sell transaction created successfully" {
-		t.Errorf("Expected success message, got: %s", response["message"])
-	}
+	ctx := context.Background()
+	service := container.ServiceContainer.PendingTransaction
+	timestamp := time.Now().Unix()
 
-	// Verify transaction was created in database
-	transactions, err := deps.Container.RepositoryContainer.PendingTransaction.FindByBuyerBankID(context.Background(), bank.Id)
+	// Create test user and bank
+	username := fmt.Sprintf("testuser_%d", timestamp)
+	password := "testpass"
+	bankName := "Test Bank"
+	
+	_, err = CreateRegularUserForTest(container, username, password, bankName)
 	if err != nil {
-		t.Fatalf("Failed to find pending transactions: %v", err)
+		t.Fatalf("Failed to create test user: %v", err)
 	}
 
-	if len(transactions) != 1 {
-		t.Errorf("Expected 1 pending transaction, got %d", len(transactions))
+	user, err := container.RepositoryContainer.Player.FindByUsername(ctx, username)
+	if err != nil {
+		t.Fatalf("Failed to find test user: %v", err)
 	}
 
-	if transactions[0].Amount != -500 {
-		t.Errorf("Expected amount -500, got %d", transactions[0].Amount)
+	bank, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user.Id)
+	if err != nil {
+		t.Fatalf("Failed to find test bank: %v", err)
 	}
 
-	if transactions[0].Amount >= 0 {
-		t.Errorf("Expected negative amount for sell transaction, got %d", transactions[0].Amount)
+	// Create test asset type
+	assetType := &models.AssetType{
+		Id:   primitive.NewObjectID(),
+		Name: "Test Asset",
 	}
+	err = container.RepositoryContainer.AssetType.Create(ctx, assetType)
+	if err != nil {
+		t.Fatalf("Failed to create test asset type: %v", err)
+	}
+
+	t.Run("Initial buy transaction", func(t *testing.T) {
+		err := service.CreateTransaction(ctx, bank.Id, assetType.Id, 1000, username)
+		if err != nil {
+			t.Fatalf("Failed to create initial transaction: %v", err)
+		}
+
+		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id)
+		if err != nil {
+			t.Fatalf("Failed to get transactions: %v", err)
+		}
+		if len(transactions) != 1 {
+			t.Fatalf("Expected 1 transaction, got %d", len(transactions))
+		}
+		if transactions[0].Amount != 1000 {
+			t.Errorf("Expected amount 1000, got %d", transactions[0].Amount)
+		}
+	})
+
+	t.Run("Additional buy transaction combines", func(t *testing.T) {
+		err := service.CreateTransaction(ctx, bank.Id, assetType.Id, 500, username)
+		if err != nil {
+			t.Fatalf("Failed to create second transaction: %v", err)
+		}
+
+		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id)
+		if err != nil {
+			t.Fatalf("Failed to get transactions: %v", err)
+		}
+		if len(transactions) != 1 {
+			t.Errorf("Expected 1 combined transaction, got %d", len(transactions))
+		}
+		if transactions[0].Amount != 1500 {
+			t.Errorf("Expected combined amount 1500, got %d", transactions[0].Amount)
+		}
+	})
+
+	t.Run("Sell transaction reduces amount", func(t *testing.T) {
+		err := service.CreateTransaction(ctx, bank.Id, assetType.Id, -800, username)
+		if err != nil {
+			t.Fatalf("Failed to create sell transaction: %v", err)
+		}
+
+		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id)
+		if err != nil {
+			t.Fatalf("Failed to get transactions: %v", err)
+		}
+		if len(transactions) != 1 {
+			t.Errorf("Expected 1 transaction after sell, got %d", len(transactions))
+		}
+		if transactions[0].Amount != 700 {
+			t.Errorf("Expected reduced amount 700, got %d", transactions[0].Amount)
+		}
+	})
+
+	t.Run("Sell all deletes transaction", func(t *testing.T) {
+		err := service.CreateTransaction(ctx, bank.Id, assetType.Id, -700, username)
+		if err != nil {
+			t.Fatalf("Failed to create final sell transaction: %v", err)
+		}
+
+		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id)
+		if err != nil {
+			t.Fatalf("Failed to get transactions: %v", err)
+		}
+		if len(transactions) != 0 {
+			t.Errorf("Expected 0 transactions after selling all, got %d", len(transactions))
+		}
+	})
+}
+
+func TestPendingTransactionService_BankAsAsset(t *testing.T) {
+	container, err := CreateTestDependencies("pending_transaction_bank_asset")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(container)
+
+	ctx := context.Background()
+	service := container.ServiceContainer.PendingTransaction
+	timestamp := time.Now().Unix()
+
+	// Create two users with banks
+	user1Username := fmt.Sprintf("testuser1_%d", timestamp)
+	user1Password := "testpass1"
+	user1BankName := "Test Bank 1"
+	
+	_, err = CreateRegularUserForTest(container, user1Username, user1Password, user1BankName)
+	if err != nil {
+		t.Fatalf("Failed to create first test user: %v", err)
+	}
+
+	user2Username := fmt.Sprintf("testuser2_%d", timestamp)
+	user2Password := "testpass2"
+	user2BankName := "Test Bank 2"
+	
+	_, err = CreateRegularUserForTest(container, user2Username, user2Password, user2BankName)
+	if err != nil {
+		t.Fatalf("Failed to create second test user: %v", err)
+	}
+
+	user1, err := container.RepositoryContainer.Player.FindByUsername(ctx, user1Username)
+	if err != nil {
+		t.Fatalf("Failed to find first test user: %v", err)
+	}
+
+	user2, err := container.RepositoryContainer.Player.FindByUsername(ctx, user2Username)
+	if err != nil {
+		t.Fatalf("Failed to find second test user: %v", err)
+	}
+
+	bank1, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user1.Id)
+	if err != nil {
+		t.Fatalf("Failed to find first test bank: %v", err)
+	}
+
+	bank2, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user2.Id)
+	if err != nil {
+		t.Fatalf("Failed to find second test bank: %v", err)
+	}
+
+	t.Run("Invest in another bank", func(t *testing.T) {
+		err := service.CreateTransaction(ctx, bank1.Id, bank2.Id, 1000, user1Username)
+		if err != nil {
+			t.Errorf("Expected no error when investing in another bank, got: %v", err)
+		}
+
+		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank1.Id)
+		if err != nil {
+			t.Fatalf("Failed to get transactions: %v", err)
+		}
+		if len(transactions) != 1 {
+			t.Errorf("Expected 1 transaction, got %d", len(transactions))
+		}
+		if transactions[0].AssetId != bank2.Id {
+			t.Errorf("Expected AssetId to be bank2 ID, got different ID")
+		}
+	})
+}
+
+func TestPendingTransactionService_MultipleAssets(t *testing.T) {
+	container, err := CreateTestDependencies("pending_transaction_multiple")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(container)
+
+	ctx := context.Background()
+	service := container.ServiceContainer.PendingTransaction
+	timestamp := time.Now().Unix()
+
+	// Create test user and bank
+	username := fmt.Sprintf("testuser_%d", timestamp)
+	password := "testpass"
+	bankName := "Test Bank"
+	
+	_, err = CreateRegularUserForTest(container, username, password, bankName)
+	if err != nil {
+		t.Fatalf("Failed to create test user: %v", err)
+	}
+
+	user, err := container.RepositoryContainer.Player.FindByUsername(ctx, username)
+	if err != nil {
+		t.Fatalf("Failed to find test user: %v", err)
+	}
+
+	bank, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user.Id)
+	if err != nil {
+		t.Fatalf("Failed to find test bank: %v", err)
+	}
+
+	// Create multiple asset types
+	assetType1 := &models.AssetType{
+		Id:   primitive.NewObjectID(),
+		Name: "Asset Type 1",
+	}
+	assetType2 := &models.AssetType{
+		Id:   primitive.NewObjectID(),
+		Name: "Asset Type 2",
+	}
+
+	err = container.RepositoryContainer.AssetType.Create(ctx, assetType1)
+	if err != nil {
+		t.Fatalf("Failed to create asset type 1: %v", err)
+	}
+	err = container.RepositoryContainer.AssetType.Create(ctx, assetType2)
+	if err != nil {
+		t.Fatalf("Failed to create asset type 2: %v", err)
+	}
+
+	t.Run("Create transactions for different assets", func(t *testing.T) {
+		err := service.CreateTransaction(ctx, bank.Id, assetType1.Id, 1000, username)
+		if err != nil {
+			t.Fatalf("Failed to create transaction for asset 1: %v", err)
+		}
+
+		err = service.CreateTransaction(ctx, bank.Id, assetType2.Id, 2000, username)
+		if err != nil {
+			t.Fatalf("Failed to create transaction for asset 2: %v", err)
+		}
+
+		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id)
+		if err != nil {
+			t.Fatalf("Failed to get transactions: %v", err)
+		}
+		if len(transactions) != 2 {
+			t.Errorf("Expected 2 transactions for different assets, got %d", len(transactions))
+		}
+
+		// Verify amounts are correct
+		for _, txn := range transactions {
+			if txn.AssetId == assetType1.Id && txn.Amount != 1000 {
+				t.Errorf("Expected amount 1000 for asset 1, got %d", txn.Amount)
+			}
+			if txn.AssetId == assetType2.Id && txn.Amount != 2000 {
+				t.Errorf("Expected amount 2000 for asset 2, got %d", txn.Amount)
+			}
+		}
+	})
+
+	t.Run("Add to existing asset combines", func(t *testing.T) {
+		err := service.CreateTransaction(ctx, bank.Id, assetType1.Id, 500, username)
+		if err != nil {
+			t.Fatalf("Failed to add to transaction for asset 1: %v", err)
+		}
+
+		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id)
+		if err != nil {
+			t.Fatalf("Failed to get transactions: %v", err)
+		}
+		if len(transactions) != 2 {
+			t.Errorf("Expected 2 transactions after combining, got %d", len(transactions))
+		}
+
+		for _, txn := range transactions {
+			if txn.AssetId == assetType1.Id && txn.Amount != 1500 {
+				t.Errorf("Expected combined amount 1500 for asset 1, got %d", txn.Amount)
+			}
+			if txn.AssetId == assetType2.Id && txn.Amount != 2000 {
+				t.Errorf("Expected unchanged amount 2000 for asset 2, got %d", txn.Amount)
+			}
+		}
+	})
+}
+
+func TestPendingTransactionService_GetTransactions(t *testing.T) {
+	container, err := CreateTestDependencies("pending_transaction_get")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(container)
+
+	ctx := context.Background()
+	service := container.ServiceContainer.PendingTransaction
+	timestamp := time.Now().Unix()
+
+	// Create test user and bank
+	username := fmt.Sprintf("testuser_%d", timestamp)
+	password := "testpass"
+	bankName := "Test Bank"
+	
+	_, err = CreateRegularUserForTest(container, username, password, bankName)
+	if err != nil {
+		t.Fatalf("Failed to create test user: %v", err)
+	}
+
+	user, err := container.RepositoryContainer.Player.FindByUsername(ctx, username)
+	if err != nil {
+		t.Fatalf("Failed to find test user: %v", err)
+	}
+
+	bank, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user.Id)
+	if err != nil {
+		t.Fatalf("Failed to find test bank: %v", err)
+	}
+
+	// Create test asset type
+	assetType := &models.AssetType{
+		Id:   primitive.NewObjectID(),
+		Name: "Test Asset",
+	}
+	err = container.RepositoryContainer.AssetType.Create(ctx, assetType)
+	if err != nil {
+		t.Fatalf("Failed to create test asset type: %v", err)
+	}
+
+	t.Run("No transactions initially", func(t *testing.T) {
+		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id)
+		if err != nil {
+			t.Fatalf("Failed to get transactions: %v", err)
+		}
+		if len(transactions) != 0 {
+			t.Errorf("Expected 0 transactions initially, got %d", len(transactions))
+		}
+
+		transactions, err = service.GetTransactionsByAssetID(ctx, assetType.Id)
+		if err != nil {
+			t.Fatalf("Failed to get transactions: %v", err)
+		}
+		if len(transactions) != 0 {
+			t.Errorf("Expected 0 transactions initially, got %d", len(transactions))
+		}
+	})
+
+	t.Run("Non-existent IDs return empty", func(t *testing.T) {
+		nonExistentBankID := primitive.NewObjectID()
+		transactions, err := service.GetTransactionsByBuyerBankID(ctx, nonExistentBankID)
+		if err != nil {
+			t.Fatalf("Failed to get transactions: %v", err)
+		}
+		if len(transactions) != 0 {
+			t.Errorf("Expected 0 transactions for non-existent bank, got %d", len(transactions))
+		}
+
+		nonExistentAssetID := primitive.NewObjectID()
+		transactions, err = service.GetTransactionsByAssetID(ctx, nonExistentAssetID)
+		if err != nil {
+			t.Fatalf("Failed to get transactions: %v", err)
+		}
+		if len(transactions) != 0 {
+			t.Errorf("Expected 0 transactions for non-existent asset, got %d", len(transactions))
+		}
+	})
+}
+
+// Endpoint tests for authentication/authorization
+func TestPendingTransactionHandler_Authentication(t *testing.T) {
+	container, err := CreateTestDependencies("pending_transaction_auth")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(container)
+
+	ctx := context.Background()
+	timestamp := time.Now().Unix()
+
+	// Create test user and bank
+	username := fmt.Sprintf("testuser_%d", timestamp)
+	password := "testpass"
+	bankName := "Test Bank"
+	
+	_, err = CreateRegularUserForTest(container, username, password, bankName)
+	if err != nil {
+		t.Fatalf("Failed to create test user: %v", err)
+	}
+
+	user, err := container.RepositoryContainer.Player.FindByUsername(ctx, username)
+	if err != nil {
+		t.Fatalf("Failed to find test user: %v", err)
+	}
+
+	bank, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user.Id)
+	if err != nil {
+		t.Fatalf("Failed to find test bank: %v", err)
+	}
+
+	// Create test asset type
+	assetType := &models.AssetType{
+		Id:   primitive.NewObjectID(),
+		Name: "Test Asset",
+	}
+	err = container.RepositoryContainer.AssetType.Create(ctx, assetType)
+	if err != nil {
+		t.Fatalf("Failed to create test asset type: %v", err)
+	}
+
+	handler := handlers.NewPendingTransactionHandler(container)
+
+	t.Run("Valid buy request", func(t *testing.T) {
+		buyRequest := models.PendingTransactionRequest{
+			BuyerBankId: bank.Id.Hex(),
+			AssetId:     assetType.Id.Hex(),
+			Amount:      1000,
+		}
+
+		requestBody, _ := json.Marshal(buyRequest)
+		req := httptest.NewRequest(http.MethodPost, "/api/buy", bytes.NewBuffer(requestBody))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("X-Username", username) // Simulate JWT middleware
+
+		rr := httptest.NewRecorder()
+		handler.BuyAsset(rr, req)
+
+		if rr.Code != http.StatusCreated {
+			t.Errorf("Expected status 201, got %d. Body: %s", rr.Code, rr.Body.String())
+		}
+	})
+
+	t.Run("Missing username header", func(t *testing.T) {
+		buyRequest := models.PendingTransactionRequest{
+			BuyerBankId: bank.Id.Hex(),
+			AssetId:     assetType.Id.Hex(),
+			Amount:      1000,
+		}
+
+		requestBody, _ := json.Marshal(buyRequest)
+		req := httptest.NewRequest(http.MethodPost, "/api/buy", bytes.NewBuffer(requestBody))
+		req.Header.Set("Content-Type", "application/json")
+		// Don't set X-Username header
+
+		rr := httptest.NewRecorder()
+		handler.BuyAsset(rr, req)
+
+		if rr.Code != http.StatusUnauthorized {
+			t.Errorf("Expected status 401, got %d", rr.Code)
+		}
+	})
+
+	t.Run("Unauthorized bank access", func(t *testing.T) {
+		// Create second user
+		user2Username := fmt.Sprintf("testuser2_%d", timestamp)
+		user2Password := "testpass2"
+		user2BankName := "Test Bank 2"
+		
+		_, err = CreateRegularUserForTest(container, user2Username, user2Password, user2BankName)
+		if err != nil {
+			t.Fatalf("Failed to create second test user: %v", err)
+		}
+
+		user2, err := container.RepositoryContainer.Player.FindByUsername(ctx, user2Username)
+		if err != nil {
+			t.Fatalf("Failed to find second test user: %v", err)
+		}
+
+		bank2, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user2.Id)
+		if err != nil {
+			t.Fatalf("Failed to find second test bank: %v", err)
+		}
+
+		// User1 tries to use User2's bank
+		buyRequest := models.PendingTransactionRequest{
+			BuyerBankId: bank2.Id.Hex(),
+			AssetId:     assetType.Id.Hex(),
+			Amount:      1000,
+		}
+
+		requestBody, _ := json.Marshal(buyRequest)
+		req := httptest.NewRequest(http.MethodPost, "/api/buy", bytes.NewBuffer(requestBody))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("X-Username", username) // User1's username
+
+		rr := httptest.NewRecorder()
+		handler.BuyAsset(rr, req)
+
+		if rr.Code != http.StatusForbidden {
+			t.Errorf("Expected status 403, got %d", rr.Code)
+		}
+	})
+
+	t.Run("Self-investment prevention", func(t *testing.T) {
+		// Try to invest bank in itself
+		buyRequest := models.PendingTransactionRequest{
+			BuyerBankId: bank.Id.Hex(),
+			AssetId:     bank.Id.Hex(), // Same as buyer bank
+			Amount:      1000,
+		}
+
+		requestBody, _ := json.Marshal(buyRequest)
+		req := httptest.NewRequest(http.MethodPost, "/api/buy", bytes.NewBuffer(requestBody))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("X-Username", username)
+
+		rr := httptest.NewRecorder()
+		handler.BuyAsset(rr, req)
+
+		if rr.Code != http.StatusBadRequest {
+			t.Errorf("Expected status 400 for self-investment, got %d. Body: %s", rr.Code, rr.Body.String())
+		}
+	})
 }
