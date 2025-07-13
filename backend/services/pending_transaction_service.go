@@ -58,15 +58,6 @@ func (s *PendingTransactionService) CreateSellTransaction(ctx context.Context, b
 	return s.createTransaction(ctx, buyerBankId, assetId, -amount, username)
 }
 
-// Deprecated: Use CreateBuyTransaction or CreateSellTransaction instead
-func (s *PendingTransactionService) CreateTransaction(ctx context.Context, buyerBankId, assetId primitive.ObjectID, amount int64, username string) error {
-	// Validate amount is not zero
-	if amount == 0 {
-		return ErrInvalidAmount
-	}
-
-	return s.createTransaction(ctx, buyerBankId, assetId, amount, username)
-}
 
 func (s *PendingTransactionService) createTransaction(ctx context.Context, buyerBankId, assetId primitive.ObjectID, amount int64, username string) error {
 	// Validate buyer bank exists and is owned by the current player

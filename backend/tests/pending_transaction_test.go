@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func TestPendingTransactionService_CreateTransaction(t *testing.T) {
+func TestPendingTransactionService_CreateTransactions(t *testing.T) {
 	container, err := CreateTestDependencies("pending_transaction")
 	if err != nil {
 		t.Fatalf("Failed to create test dependencies: %v", err)
@@ -52,10 +52,10 @@ func TestPendingTransactionService_CreateTransaction(t *testing.T) {
 		t.Fatalf("Failed to create test asset type: %v", err)
 	}
 
-	t.Run("Valid transaction creation", func(t *testing.T) {
-		err := service.CreateTransaction(ctx, bank.Id, assetType.Id, 1000, username)
+	t.Run("Valid buy transaction creation", func(t *testing.T) {
+		err := service.CreateBuyTransaction(ctx, bank.Id, assetType.Id, 1000, username)
 		if err != nil {
-			t.Errorf("Expected no error for valid transaction, got: %v", err)
+			t.Errorf("Expected no error for valid buy transaction, got: %v", err)
 		}
 
 		// Verify transaction was created
@@ -71,16 +71,58 @@ func TestPendingTransactionService_CreateTransaction(t *testing.T) {
 		}
 	})
 
-	t.Run("Zero amount", func(t *testing.T) {
-		err := service.CreateTransaction(ctx, bank.Id, assetType.Id, 0, username)
+	t.Run("Valid sell transaction creation", func(t *testing.T) {
+		// Clear previous transactions
+		existingTransactions, _ := service.GetTransactionsByBuyerBankID(ctx, bank.Id)
+		for _, tx := range existingTransactions {
+			container.RepositoryContainer.PendingTransaction.Delete(ctx, tx.Id)
+		}
+
+		err := service.CreateSellTransaction(ctx, bank.Id, assetType.Id, 500, username)
+		if err != nil {
+			t.Errorf("Expected no error for valid sell transaction, got: %v", err)
+		}
+
+		// Verify transaction was created with negative amount (internal representation)
+		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id)
+		if err != nil {
+			t.Fatalf("Failed to get transactions: %v", err)
+		}
+		if len(transactions) != 1 {
+			t.Errorf("Expected 1 transaction, got %d", len(transactions))
+		}
+		if transactions[0].Amount != -500 {
+			t.Errorf("Expected amount -500 (internal representation), got %d", transactions[0].Amount)
+		}
+	})
+
+	t.Run("Zero amount rejected", func(t *testing.T) {
+		err := service.CreateBuyTransaction(ctx, bank.Id, assetType.Id, 0, username)
 		if err != services.ErrInvalidAmount {
-			t.Errorf("Expected ErrInvalidAmount for zero amount, got: %v", err)
+			t.Errorf("Expected ErrInvalidAmount for zero amount in buy transaction, got: %v", err)
+		}
+
+		err = service.CreateSellTransaction(ctx, bank.Id, assetType.Id, 0, username)
+		if err != services.ErrInvalidAmount {
+			t.Errorf("Expected ErrInvalidAmount for zero amount in sell transaction, got: %v", err)
+		}
+	})
+
+	t.Run("Negative amount rejected", func(t *testing.T) {
+		err := service.CreateBuyTransaction(ctx, bank.Id, assetType.Id, -100, username)
+		if err != services.ErrInvalidAmount {
+			t.Errorf("Expected ErrInvalidAmount for negative amount in buy transaction, got: %v", err)
+		}
+
+		err = service.CreateSellTransaction(ctx, bank.Id, assetType.Id, -100, username)
+		if err != services.ErrInvalidAmount {
+			t.Errorf("Expected ErrInvalidAmount for negative amount in sell transaction, got: %v", err)
 		}
 	})
 
 	t.Run("Non-existent bank", func(t *testing.T) {
 		nonExistentBankID := primitive.NewObjectID()
-		err := service.CreateTransaction(ctx, nonExistentBankID, assetType.Id, 1000, username)
+		err := service.CreateBuyTransaction(ctx, nonExistentBankID, assetType.Id, 1000, username)
 		if err != services.ErrInvalidBankID {
 			t.Errorf("Expected ErrInvalidBankID for non-existent bank, got: %v", err)
 		}
@@ -88,21 +130,21 @@ func TestPendingTransactionService_CreateTransaction(t *testing.T) {
 
 	t.Run("Non-existent asset", func(t *testing.T) {
 		nonExistentAssetID := primitive.NewObjectID()
-		err := service.CreateTransaction(ctx, bank.Id, nonExistentAssetID, 1000, username)
+		err := service.CreateBuyTransaction(ctx, bank.Id, nonExistentAssetID, 1000, username)
 		if err != services.ErrAssetNotFound {
 			t.Errorf("Expected ErrAssetNotFound for non-existent asset, got: %v", err)
 		}
 	})
 
 	t.Run("Self-investment", func(t *testing.T) {
-		err := service.CreateTransaction(ctx, bank.Id, bank.Id, 1000, username)
+		err := service.CreateBuyTransaction(ctx, bank.Id, bank.Id, 1000, username)
 		if err != services.ErrSelfInvestment {
 			t.Errorf("Expected ErrSelfInvestment for self-investment, got: %v", err)
 		}
 	})
 
 	t.Run("Non-existent user", func(t *testing.T) {
-		err := service.CreateTransaction(ctx, bank.Id, assetType.Id, 1000, "nonexistentuser")
+		err := service.CreateBuyTransaction(ctx, bank.Id, assetType.Id, 1000, "nonexistentuser")
 		if err != services.ErrInvalidBankID {
 			t.Errorf("Expected ErrInvalidBankID when user doesn't exist, got: %v", err)
 		}
@@ -170,130 +212,20 @@ func TestPendingTransactionService_BankOwnership(t *testing.T) {
 	}
 
 	t.Run("User owns bank", func(t *testing.T) {
-		err := service.CreateTransaction(ctx, bank1.Id, assetType.Id, 1000, user1Username)
+		err := service.CreateBuyTransaction(ctx, bank1.Id, assetType.Id, 1000, user1Username)
 		if err != nil {
 			t.Errorf("Expected no error when user uses their own bank, got: %v", err)
 		}
 	})
 
 	t.Run("User does not own bank", func(t *testing.T) {
-		err := service.CreateTransaction(ctx, bank2.Id, assetType.Id, 1000, user1Username)
+		err := service.CreateBuyTransaction(ctx, bank2.Id, assetType.Id, 1000, user1Username)
 		if err != services.ErrUnauthorizedBank {
 			t.Errorf("Expected ErrUnauthorizedBank when user tries to use another user's bank, got: %v", err)
 		}
 	})
 }
 
-func TestPendingTransactionService_TransactionCombining(t *testing.T) {
-	container, err := CreateTestDependencies("pending_transaction_combining")
-	if err != nil {
-		t.Fatalf("Failed to create test dependencies: %v", err)
-	}
-	defer CleanupTestDependencies(container)
-
-	ctx := context.Background()
-	service := container.ServiceContainer.PendingTransaction
-	timestamp := time.Now().Unix()
-
-	// Create test user and bank
-	username := fmt.Sprintf("testuser_%d", timestamp)
-	password := "testpass"
-	bankName := "Test Bank"
-	
-	_, err = CreateRegularUserForTest(container, username, password, bankName)
-	if err != nil {
-		t.Fatalf("Failed to create test user: %v", err)
-	}
-
-	user, err := container.RepositoryContainer.Player.FindByUsername(ctx, username)
-	if err != nil {
-		t.Fatalf("Failed to find test user: %v", err)
-	}
-
-	bank, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user.Id)
-	if err != nil {
-		t.Fatalf("Failed to find test bank: %v", err)
-	}
-
-	// Create test asset type
-	assetType := &models.AssetType{
-		Id:   primitive.NewObjectID(),
-		Name: "Test Asset",
-	}
-	err = container.RepositoryContainer.AssetType.Create(ctx, assetType)
-	if err != nil {
-		t.Fatalf("Failed to create test asset type: %v", err)
-	}
-
-	t.Run("Initial buy transaction", func(t *testing.T) {
-		err := service.CreateTransaction(ctx, bank.Id, assetType.Id, 1000, username)
-		if err != nil {
-			t.Fatalf("Failed to create initial transaction: %v", err)
-		}
-
-		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id)
-		if err != nil {
-			t.Fatalf("Failed to get transactions: %v", err)
-		}
-		if len(transactions) != 1 {
-			t.Fatalf("Expected 1 transaction, got %d", len(transactions))
-		}
-		if transactions[0].Amount != 1000 {
-			t.Errorf("Expected amount 1000, got %d", transactions[0].Amount)
-		}
-	})
-
-	t.Run("Additional buy transaction combines", func(t *testing.T) {
-		err := service.CreateTransaction(ctx, bank.Id, assetType.Id, 500, username)
-		if err != nil {
-			t.Fatalf("Failed to create second transaction: %v", err)
-		}
-
-		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id)
-		if err != nil {
-			t.Fatalf("Failed to get transactions: %v", err)
-		}
-		if len(transactions) != 1 {
-			t.Errorf("Expected 1 combined transaction, got %d", len(transactions))
-		}
-		if transactions[0].Amount != 1500 {
-			t.Errorf("Expected combined amount 1500, got %d", transactions[0].Amount)
-		}
-	})
-
-	t.Run("Sell transaction reduces amount", func(t *testing.T) {
-		err := service.CreateTransaction(ctx, bank.Id, assetType.Id, -800, username)
-		if err != nil {
-			t.Fatalf("Failed to create sell transaction: %v", err)
-		}
-
-		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id)
-		if err != nil {
-			t.Fatalf("Failed to get transactions: %v", err)
-		}
-		if len(transactions) != 1 {
-			t.Errorf("Expected 1 transaction after sell, got %d", len(transactions))
-		}
-		if transactions[0].Amount != 700 {
-			t.Errorf("Expected reduced amount 700, got %d", transactions[0].Amount)
-		}
-	})
-
-	t.Run("Sell all deletes transaction", func(t *testing.T) {
-		err := service.CreateTransaction(ctx, bank.Id, assetType.Id, -700, username)
-		if err != nil {
-			t.Fatalf("Failed to create final sell transaction: %v", err)
-		}
-
-		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id)
-		if err != nil {
-			t.Fatalf("Failed to get transactions: %v", err)
-		}
-		if len(transactions) != 0 {
-			t.Errorf("Expected 0 transactions after selling all, got %d", len(transactions))
-		}
-	})
-}
 
 func TestPendingTransactionService_BankAsAsset(t *testing.T) {
 	container, err := CreateTestDependencies("pending_transaction_bank_asset")
@@ -346,7 +278,7 @@ func TestPendingTransactionService_BankAsAsset(t *testing.T) {
 	}
 
 	t.Run("Invest in another bank", func(t *testing.T) {
-		err := service.CreateTransaction(ctx, bank1.Id, bank2.Id, 1000, user1Username)
+		err := service.CreateBuyTransaction(ctx, bank1.Id, bank2.Id, 1000, user1Username)
 		if err != nil {
 			t.Errorf("Expected no error when investing in another bank, got: %v", err)
 		}
@@ -415,12 +347,12 @@ func TestPendingTransactionService_MultipleAssets(t *testing.T) {
 	}
 
 	t.Run("Create transactions for different assets", func(t *testing.T) {
-		err := service.CreateTransaction(ctx, bank.Id, assetType1.Id, 1000, username)
+		err := service.CreateBuyTransaction(ctx, bank.Id, assetType1.Id, 1000, username)
 		if err != nil {
 			t.Fatalf("Failed to create transaction for asset 1: %v", err)
 		}
 
-		err = service.CreateTransaction(ctx, bank.Id, assetType2.Id, 2000, username)
+		err = service.CreateBuyTransaction(ctx, bank.Id, assetType2.Id, 2000, username)
 		if err != nil {
 			t.Fatalf("Failed to create transaction for asset 2: %v", err)
 		}
@@ -445,7 +377,7 @@ func TestPendingTransactionService_MultipleAssets(t *testing.T) {
 	})
 
 	t.Run("Add to existing asset combines", func(t *testing.T) {
-		err := service.CreateTransaction(ctx, bank.Id, assetType1.Id, 500, username)
+		err := service.CreateBuyTransaction(ctx, bank.Id, assetType1.Id, 500, username)
 		if err != nil {
 			t.Fatalf("Failed to add to transaction for asset 1: %v", err)
 		}
@@ -612,12 +544,12 @@ func TestPendingTransactionService_GetTransactionsByBankID(t *testing.T) {
 
 	t.Run("Valid bank owner can access transactions", func(t *testing.T) {
 		// Create some pending transactions
-		err := service.CreateTransaction(ctx, bank.Id, assetType.Id, 1000, username)
+		err := service.CreateBuyTransaction(ctx, bank.Id, assetType.Id, 1000, username)
 		if err != nil {
 			t.Fatalf("Failed to create first transaction: %v", err)
 		}
 
-		err = service.CreateTransaction(ctx, bank.Id, bank2.Id, 500, username)
+		err = service.CreateBuyTransaction(ctx, bank.Id, bank2.Id, 500, username)
 		if err != nil {
 			t.Fatalf("Failed to create second transaction: %v", err)
 		}
@@ -729,41 +661,8 @@ func TestPendingTransactionService_CreateBuyTransaction(t *testing.T) {
 		t.Fatalf("Failed to create test asset type: %v", err)
 	}
 
-	t.Run("Valid buy transaction creation", func(t *testing.T) {
-		err := service.CreateBuyTransaction(ctx, bank.Id, assetType.Id, 1000, username)
-		if err != nil {
-			t.Errorf("Expected no error for valid buy transaction, got: %v", err)
-		}
-
-		// Verify transaction was created with positive amount
-		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id)
-		if err != nil {
-			t.Fatalf("Failed to get transactions: %v", err)
-		}
-		if len(transactions) != 1 {
-			t.Errorf("Expected 1 transaction, got %d", len(transactions))
-		}
-		if transactions[0].Amount != 1000 {
-			t.Errorf("Expected amount 1000, got %d", transactions[0].Amount)
-		}
-	})
-
-	t.Run("Zero amount rejected", func(t *testing.T) {
-		err := service.CreateBuyTransaction(ctx, bank.Id, assetType.Id, 0, username)
-		if err != services.ErrInvalidAmount {
-			t.Errorf("Expected ErrInvalidAmount for zero amount, got: %v", err)
-		}
-	})
-
-	t.Run("Negative amount rejected", func(t *testing.T) {
-		err := service.CreateBuyTransaction(ctx, bank.Id, assetType.Id, -100, username)
-		if err != services.ErrInvalidAmount {
-			t.Errorf("Expected ErrInvalidAmount for negative amount, got: %v", err)
-		}
-	})
-
 	t.Run("Multiple buy transactions combine", func(t *testing.T) {
-		// Clear previous transactions
+		// Clear any existing transactions
 		existingTransactions, _ := service.GetTransactionsByBuyerBankID(ctx, bank.Id)
 		for _, tx := range existingTransactions {
 			container.RepositoryContainer.PendingTransaction.Delete(ctx, tx.Id)
@@ -836,41 +735,8 @@ func TestPendingTransactionService_CreateSellTransaction(t *testing.T) {
 		t.Fatalf("Failed to create test asset type: %v", err)
 	}
 
-	t.Run("Valid sell transaction creation", func(t *testing.T) {
-		err := service.CreateSellTransaction(ctx, bank.Id, assetType.Id, 500, username)
-		if err != nil {
-			t.Errorf("Expected no error for valid sell transaction, got: %v", err)
-		}
-
-		// Verify transaction was created with negative amount (internal representation)
-		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id)
-		if err != nil {
-			t.Fatalf("Failed to get transactions: %v", err)
-		}
-		if len(transactions) != 1 {
-			t.Errorf("Expected 1 transaction, got %d", len(transactions))
-		}
-		if transactions[0].Amount != -500 {
-			t.Errorf("Expected amount -500 (internal representation), got %d", transactions[0].Amount)
-		}
-	})
-
-	t.Run("Zero amount rejected", func(t *testing.T) {
-		err := service.CreateSellTransaction(ctx, bank.Id, assetType.Id, 0, username)
-		if err != services.ErrInvalidAmount {
-			t.Errorf("Expected ErrInvalidAmount for zero amount, got: %v", err)
-		}
-	})
-
-	t.Run("Negative amount rejected", func(t *testing.T) {
-		err := service.CreateSellTransaction(ctx, bank.Id, assetType.Id, -100, username)
-		if err != services.ErrInvalidAmount {
-			t.Errorf("Expected ErrInvalidAmount for negative amount, got: %v", err)
-		}
-	})
-
 	t.Run("Multiple sell transactions combine", func(t *testing.T) {
-		// Clear previous transactions
+		// Clear any existing transactions
 		existingTransactions, _ := service.GetTransactionsByBuyerBankID(ctx, bank.Id)
 		for _, tx := range existingTransactions {
 			container.RepositoryContainer.PendingTransaction.Delete(ctx, tx.Id)
