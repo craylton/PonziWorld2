@@ -23,12 +23,20 @@ func NewPendingTransactionHandler(container *config.Container) *PendingTransacti
 	}
 }
 
+// Transaction type for differentiating buy vs sell operations
+type transactionType string
+
+const (
+	transactionTypeBuy  transactionType = "buy"
+	transactionTypeSell transactionType = "sell"
+)
+
 func (h *PendingTransactionHandler) BuyAsset(w http.ResponseWriter, r *http.Request) {
-	h.handleBuyTransaction(w, r)
+	h.handleTransaction(w, r, transactionTypeBuy)
 }
 
 func (h *PendingTransactionHandler) SellAsset(w http.ResponseWriter, r *http.Request) {
-	h.handleSellTransaction(w, r)
+	h.handleTransaction(w, r, transactionTypeSell)
 }
 
 func (h *PendingTransactionHandler) GetPendingTransactions(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +77,7 @@ func (h *PendingTransactionHandler) GetPendingTransactions(w http.ResponseWriter
 	transactions, err := h.pendingTransactionService.GetTransactionsByBankID(ctx, bankId, username)
 	if err != nil {
 		log.Printf("Error fetching pending transactions: %v", err)
-		
+
 		switch err {
 		case services.ErrInvalidBankID:
 			w.WriteHeader(http.StatusNotFound)
@@ -95,7 +103,11 @@ func (h *PendingTransactionHandler) GetPendingTransactions(w http.ResponseWriter
 	json.NewEncoder(w).Encode(transactions)
 }
 
-func (h *PendingTransactionHandler) handleBuyTransaction(w http.ResponseWriter, r *http.Request) {
+func (h *PendingTransactionHandler) handleTransaction(
+	w http.ResponseWriter,
+	r *http.Request,
+	transactionType transactionType,
+) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -138,77 +150,30 @@ func (h *PendingTransactionHandler) handleBuyTransaction(w http.ResponseWriter, 
 		return
 	}
 
-	// Create the buy transaction
-	err = h.pendingTransactionService.CreateBuyTransaction(ctx, buyerBankObjectID, assetObjectID, req.Amount, username)
-	if err != nil {
-		log.Printf("Error creating buy transaction: %v", err)
-		h.handleTransactionError(w, err)
-		return
+	if transactionType == transactionTypeBuy {
+		err = h.pendingTransactionService.CreateBuyTransaction(ctx, buyerBankObjectID, assetObjectID, req.Amount, username)
+		if err != nil {
+			log.Printf("Error creating buy transaction: %v", err)
+			h.handleTransactionError(w, err)
+			return
+		}
+
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "buy transaction created successfully",
+		})
 	}
+	if transactionType == transactionTypeSell {
+		err = h.pendingTransactionService.CreateSellTransaction(ctx, buyerBankObjectID, assetObjectID, req.Amount, username)
+		if err != nil {
+			log.Printf("Error creating sell transaction: %v", err)
+			h.handleTransactionError(w, err)
+			return
+		}
 
-	// Return success response
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{
-		"message": "buy transaction created successfully",
-	})
-}
-
-func (h *PendingTransactionHandler) handleSellTransaction(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost)
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "sell transaction created successfully",
+		})
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-
-	// Get username from JWT (set by middleware) - used for authorization only
-	username := r.Header.Get("X-Username")
-	if username == "" {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Authentication required"})
-		return
-	}
-
-	ctx := r.Context()
-
-	// Parse the request body
-	var req models.PendingTransactionRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
-		return
-	}
-
-	// Convert buyerBankId string to ObjectID
-	buyerBankObjectID, err := primitive.ObjectIDFromHex(req.BuyerBankId)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid buyer bank ID format"})
-		return
-	}
-
-	// Convert assetId string to ObjectID
-	assetObjectID, err := primitive.ObjectIDFromHex(req.AssetId)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid asset ID format"})
-		return
-	}
-
-	// Create the sell transaction
-	err = h.pendingTransactionService.CreateSellTransaction(ctx, buyerBankObjectID, assetObjectID, req.Amount, username)
-	if err != nil {
-		log.Printf("Error creating sell transaction: %v", err)
-		h.handleTransactionError(w, err)
-		return
-	}
-
-	// Return success response
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{
-		"message": "sell transaction created successfully",
-	})
 }
 
 func (h *PendingTransactionHandler) handleTransactionError(w http.ResponseWriter, err error) {
@@ -233,5 +198,3 @@ func (h *PendingTransactionHandler) handleTransactionError(w http.ResponseWriter
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create transaction"})
 	}
 }
-
-// Deprecated: Use handleBuyTransaction or handleSellTransaction instead

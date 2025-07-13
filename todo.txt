@@ -1,17 +1,11 @@
 
 Right now:
-Get rid of CreateTransaction
-    And the tests surrounding it
-Extract some duplicate code from handleBuyTransaction and handleSellTransaction
-Get AssetList and maybe other files reviewed
-    pending transaction service
-    asset section
 Will pendingTransactions ever be null?
     Can we just assume it will always be there?
     just explicitly set it to 0 if not present?
 Show an error message in UI if buy/sell order failed
 Some components are getting hellishly complicated
-    do I create selectors for them? What the usual approach?
+    do I create selectors for them? What's the usual approach?
 
 
 Next up:

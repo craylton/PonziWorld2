@@ -74,8 +74,7 @@ export default function AssetDetailPopup({
       });
 
       if (response.ok) {
-        const result = await response.json();
-        console.log(`${transactionType} transaction successful:`, result);
+        //const result = await response.json();
         // todo: success notification
         setTransactionPopupOpen(false);
         onClose();

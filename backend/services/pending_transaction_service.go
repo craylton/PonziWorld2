@@ -10,12 +10,12 @@ import (
 )
 
 var (
-	ErrInvalidAssetID     = errors.New("invalid asset ID")
-	ErrInvalidAmount      = errors.New("amount must be positive")
-	ErrAssetNotFound      = errors.New("asset not found")
-	ErrInvalidBankID      = errors.New("invalid bank ID")
-	ErrSelfInvestment     = errors.New("bank cannot invest in itself")
-	ErrUnauthorizedBank   = errors.New("bank is not owned by the current player")
+	ErrInvalidAssetID   = errors.New("invalid asset ID")
+	ErrInvalidAmount    = errors.New("amount must be positive")
+	ErrAssetNotFound    = errors.New("asset not found")
+	ErrInvalidBankID    = errors.New("invalid bank ID")
+	ErrSelfInvestment   = errors.New("bank cannot invest in itself")
+	ErrUnauthorizedBank = errors.New("bank is not owned by the current player")
 )
 
 type PendingTransactionService struct {
@@ -39,8 +39,13 @@ func NewPendingTransactionService(
 	}
 }
 
-func (s *PendingTransactionService) CreateBuyTransaction(ctx context.Context, buyerBankId, assetId primitive.ObjectID, amount int64, username string) error {
-	// Validate amount is positive
+func (s *PendingTransactionService) CreateBuyTransaction(
+	ctx context.Context,
+	buyerBankId,
+	assetId primitive.ObjectID,
+	amount int64,
+	username string,
+) error {
 	if amount <= 0 {
 		return ErrInvalidAmount
 	}
@@ -48,18 +53,28 @@ func (s *PendingTransactionService) CreateBuyTransaction(ctx context.Context, bu
 	return s.createTransaction(ctx, buyerBankId, assetId, amount, username)
 }
 
-func (s *PendingTransactionService) CreateSellTransaction(ctx context.Context, buyerBankId, assetId primitive.ObjectID, amount int64, username string) error {
-	// Validate amount is positive
+func (s *PendingTransactionService) CreateSellTransaction(
+	ctx context.Context,
+	buyerBankId,
+	assetId primitive.ObjectID,
+	amount int64,
+	username string,
+) error {
 	if amount <= 0 {
 		return ErrInvalidAmount
 	}
 
-	// Convert to negative amount for internal storage (selling reduces holdings)
+	// Convert to negative amount for internal use
 	return s.createTransaction(ctx, buyerBankId, assetId, -amount, username)
 }
 
-
-func (s *PendingTransactionService) createTransaction(ctx context.Context, buyerBankId, assetId primitive.ObjectID, amount int64, username string) error {
+func (s *PendingTransactionService) createTransaction(
+	ctx context.Context,
+	buyerBankId,
+	assetId primitive.ObjectID,
+	amount int64,
+	username string,
+) error {
 	// Validate buyer bank exists and is owned by the current player
 	buyerBank, err := s.bankRepo.FindByID(ctx, buyerBankId)
 	if err != nil {
@@ -69,14 +84,13 @@ func (s *PendingTransactionService) createTransaction(ctx context.Context, buyer
 	// Validate bank ownership
 	player, err := s.playerRepo.FindByUsername(ctx, username)
 	if err != nil {
-		return ErrInvalidBankID // Player not found
+		return ErrPlayerNotFound
 	}
 
 	if buyerBank.PlayerId != player.Id {
 		return ErrUnauthorizedBank
 	}
 
-	// Validate asset exists (check both asset types and banks since banks are also assets)
 	assetExists, err := s.validateAssetExists(ctx, assetId)
 	if err != nil {
 		return err
@@ -100,12 +114,12 @@ func (s *PendingTransactionService) createTransaction(ctx context.Context, buyer
 	if len(existingTransactions) > 0 {
 		existingTransaction := existingTransactions[0]
 		newAmount := existingTransaction.Amount + amount
-		
+
 		// If the new amount is zero, delete the transaction
 		if newAmount == 0 {
 			return s.pendingTransactionRepo.Delete(ctx, existingTransaction.Id)
 		}
-		
+
 		// Otherwise, update the existing transaction
 		return s.pendingTransactionRepo.UpdateAmount(ctx, existingTransaction.Id, newAmount)
 	}
