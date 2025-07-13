@@ -26,7 +26,7 @@ func TestPendingTransactionService_CreateTransactions(t *testing.T) {
 	username := fmt.Sprintf("testuser_%d", timestamp)
 	password := "testpass"
 	bankName := "Test Bank"
-	
+
 	_, err = CreateRegularUserForTest(container, username, password, bankName)
 	if err != nil {
 		t.Fatalf("Failed to create test user: %v", err)
@@ -126,6 +126,11 @@ func TestPendingTransactionService_CreateTransactions(t *testing.T) {
 		if err != services.ErrInvalidBankID {
 			t.Errorf("Expected ErrInvalidBankID for non-existent bank, got: %v", err)
 		}
+		// Sell side should error the same way
+		err = service.CreateSellTransaction(ctx, nonExistentBankID, assetType.Id, 1000, username)
+		if err != services.ErrInvalidBankID {
+			t.Errorf("Expected ErrInvalidBankID for non-existent bank in sell transaction, got: %v", err)
+		}
 	})
 
 	t.Run("Non-existent asset", func(t *testing.T) {
@@ -134,6 +139,11 @@ func TestPendingTransactionService_CreateTransactions(t *testing.T) {
 		if err != services.ErrAssetNotFound {
 			t.Errorf("Expected ErrAssetNotFound for non-existent asset, got: %v", err)
 		}
+		// Sell side should also detect missing asset
+		err = service.CreateSellTransaction(ctx, bank.Id, nonExistentAssetID, 1000, username)
+		if err != services.ErrAssetNotFound {
+			t.Errorf("Expected ErrAssetNotFound for non-existent asset in sell transaction, got: %v", err)
+		}
 	})
 
 	t.Run("Self-investment", func(t *testing.T) {
@@ -141,12 +151,22 @@ func TestPendingTransactionService_CreateTransactions(t *testing.T) {
 		if err != services.ErrSelfInvestment {
 			t.Errorf("Expected ErrSelfInvestment for self-investment, got: %v", err)
 		}
+		// Sell side self-investment should be rejected as well
+		err = service.CreateSellTransaction(ctx, bank.Id, bank.Id, 1000, username)
+		if err != services.ErrSelfInvestment {
+			t.Errorf("Expected ErrSelfInvestment for self-investment in sell transaction, got: %v", err)
+		}
 	})
 
 	t.Run("Non-existent user", func(t *testing.T) {
 		err := service.CreateBuyTransaction(ctx, bank.Id, assetType.Id, 1000, "nonexistentuser")
 		if err != services.ErrInvalidBankID {
 			t.Errorf("Expected ErrInvalidBankID when user doesn't exist, got: %v", err)
+		}
+		// Sell side should error similarly when user not found
+		err = service.CreateSellTransaction(ctx, bank.Id, assetType.Id, 1000, "nonexistentuser")
+		if err != services.ErrInvalidBankID {
+			t.Errorf("Expected ErrInvalidBankID for non-existent user in sell transaction, got: %v", err)
 		}
 	})
 }
@@ -166,7 +186,7 @@ func TestPendingTransactionService_BankOwnership(t *testing.T) {
 	user1Username := fmt.Sprintf("testuser1_%d", timestamp)
 	user1Password := "testpass1"
 	user1BankName := "Test Bank 1"
-	
+
 	_, err = CreateRegularUserForTest(container, user1Username, user1Password, user1BankName)
 	if err != nil {
 		t.Fatalf("Failed to create first test user: %v", err)
@@ -175,7 +195,7 @@ func TestPendingTransactionService_BankOwnership(t *testing.T) {
 	user2Username := fmt.Sprintf("testuser2_%d", timestamp)
 	user2Password := "testpass2"
 	user2BankName := "Test Bank 2"
-	
+
 	_, err = CreateRegularUserForTest(container, user2Username, user2Password, user2BankName)
 	if err != nil {
 		t.Fatalf("Failed to create second test user: %v", err)
@@ -212,20 +232,31 @@ func TestPendingTransactionService_BankOwnership(t *testing.T) {
 	}
 
 	t.Run("User owns bank", func(t *testing.T) {
+		// Buy should succeed
 		err := service.CreateBuyTransaction(ctx, bank1.Id, assetType.Id, 1000, user1Username)
 		if err != nil {
-			t.Errorf("Expected no error when user uses their own bank, got: %v", err)
+			t.Errorf("Expected no error when user uses their own bank for buy, got: %v", err)
+		}
+		// Sell should also succeed
+		err = service.CreateSellTransaction(ctx, bank1.Id, assetType.Id, 500, user1Username)
+		if err != nil {
+			t.Errorf("Expected no error when user uses their own bank for sell, got: %v", err)
 		}
 	})
 
 	t.Run("User does not own bank", func(t *testing.T) {
+		// Buy should be unauthorized
 		err := service.CreateBuyTransaction(ctx, bank2.Id, assetType.Id, 1000, user1Username)
 		if err != services.ErrUnauthorizedBank {
-			t.Errorf("Expected ErrUnauthorizedBank when user tries to use another user's bank, got: %v", err)
+			t.Errorf("Expected ErrUnauthorizedBank when user tries to use another user's bank for buy, got: %v", err)
+		}
+		// Sell should also be unauthorized
+		err = service.CreateSellTransaction(ctx, bank2.Id, assetType.Id, 500, user1Username)
+		if err != services.ErrUnauthorizedBank {
+			t.Errorf("Expected ErrUnauthorizedBank when user tries to use another user's bank for sell, got: %v", err)
 		}
 	})
 }
-
 
 func TestPendingTransactionService_BankAsAsset(t *testing.T) {
 	container, err := CreateTestDependencies("pending_transaction_bank_asset")
@@ -242,7 +273,7 @@ func TestPendingTransactionService_BankAsAsset(t *testing.T) {
 	user1Username := fmt.Sprintf("testuser1_%d", timestamp)
 	user1Password := "testpass1"
 	user1BankName := "Test Bank 1"
-	
+
 	_, err = CreateRegularUserForTest(container, user1Username, user1Password, user1BankName)
 	if err != nil {
 		t.Fatalf("Failed to create first test user: %v", err)
@@ -251,7 +282,7 @@ func TestPendingTransactionService_BankAsAsset(t *testing.T) {
 	user2Username := fmt.Sprintf("testuser2_%d", timestamp)
 	user2Password := "testpass2"
 	user2BankName := "Test Bank 2"
-	
+
 	_, err = CreateRegularUserForTest(container, user2Username, user2Password, user2BankName)
 	if err != nil {
 		t.Fatalf("Failed to create second test user: %v", err)
@@ -278,20 +309,42 @@ func TestPendingTransactionService_BankAsAsset(t *testing.T) {
 	}
 
 	t.Run("Invest in another bank", func(t *testing.T) {
+		// Buy in another bank asset
 		err := service.CreateBuyTransaction(ctx, bank1.Id, bank2.Id, 1000, user1Username)
 		if err != nil {
-			t.Errorf("Expected no error when investing in another bank, got: %v", err)
+			t.Errorf("Expected no error when investing in another bank for buy, got: %v", err)
 		}
-
 		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank1.Id)
 		if err != nil {
-			t.Fatalf("Failed to get transactions: %v", err)
+			t.Fatalf("Failed to get buy transactions: %v", err)
 		}
 		if len(transactions) != 1 {
-			t.Errorf("Expected 1 transaction, got %d", len(transactions))
+			t.Errorf("Expected 1 buy transaction, got %d", len(transactions))
 		}
 		if transactions[0].AssetId != bank2.Id {
-			t.Errorf("Expected AssetId to be bank2 ID, got different ID")
+			t.Errorf("Expected AssetId to be bank2 ID for buy, got different ID")
+		}
+		// Sell bank asset should also work
+		// Clear previous transactions
+		for _, tx := range transactions {
+			container.RepositoryContainer.PendingTransaction.Delete(ctx, tx.Id)
+		}
+		err = service.CreateSellTransaction(ctx, bank1.Id, bank2.Id, 500, user1Username)
+		if err != nil {
+			t.Errorf("Expected no error when investing in another bank for sell, got: %v", err)
+		}
+		sellTxs, err := service.GetTransactionsByBuyerBankID(ctx, bank1.Id)
+		if err != nil {
+			t.Fatalf("Failed to get sell transactions: %v", err)
+		}
+		if len(sellTxs) != 1 {
+			t.Errorf("Expected 1 sell transaction, got %d", len(sellTxs))
+		}
+		if sellTxs[0].AssetId != bank2.Id {
+			t.Errorf("Expected AssetId to be bank2 ID for sell, got different ID")
+		}
+		if sellTxs[0].Amount != -500 {
+			t.Errorf("Expected sell transaction amount -500, got %d", sellTxs[0].Amount)
 		}
 	})
 }
@@ -311,7 +364,7 @@ func TestPendingTransactionService_MultipleAssets(t *testing.T) {
 	username := fmt.Sprintf("testuser_%d", timestamp)
 	password := "testpass"
 	bankName := "Test Bank"
-	
+
 	_, err = CreateRegularUserForTest(container, username, password, bankName)
 	if err != nil {
 		t.Fatalf("Failed to create test user: %v", err)
@@ -375,10 +428,54 @@ func TestPendingTransactionService_MultipleAssets(t *testing.T) {
 			}
 		}
 	})
+	t.Run("Create sell transactions for different assets", func(t *testing.T) {
+		// Clear previous transactions
+		existing, _ := service.GetTransactionsByBuyerBankID(ctx, bank.Id)
+		for _, tx := range existing {
+			container.RepositoryContainer.PendingTransaction.Delete(ctx, tx.Id)
+		}
+		// Create sell transactions for two assets
+		err := service.CreateSellTransaction(ctx, bank.Id, assetType1.Id, 300, username)
+		if err != nil {
+			t.Fatalf("Failed to create sell transaction for asset 1: %v", err)
+		}
+		err = service.CreateSellTransaction(ctx, bank.Id, assetType2.Id, 400, username)
+		if err != nil {
+			t.Fatalf("Failed to create sell transaction for asset 2: %v", err)
+		}
+		sellTxs, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id)
+		if err != nil {
+			t.Fatalf("Failed to get sell transactions: %v", err)
+		}
+		if len(sellTxs) != 2 {
+			t.Errorf("Expected 2 sell transactions for different assets, got %d", len(sellTxs))
+		}
+		// Verify negative amounts are correct
+		for _, txn := range sellTxs {
+			if txn.AssetId == assetType1.Id && txn.Amount != -300 {
+				t.Errorf("Expected amount -300 for sell asset 1, got %d", txn.Amount)
+			}
+			if txn.AssetId == assetType2.Id && txn.Amount != -400 {
+				t.Errorf("Expected amount -400 for sell asset 2, got %d", txn.Amount)
+			}
+		}
+	})
 
 	t.Run("Add to existing asset combines", func(t *testing.T) {
-		err := service.CreateBuyTransaction(ctx, bank.Id, assetType1.Id, 500, username)
-		if err != nil {
+		// Reset to initial two buy transactions before combining
+		existing, _ := service.GetTransactionsByBuyerBankID(ctx, bank.Id)
+		for _, tx := range existing {
+			container.RepositoryContainer.PendingTransaction.Delete(ctx, tx.Id)
+		}
+		// Create initial buy transactions
+		if err := service.CreateBuyTransaction(ctx, bank.Id, assetType1.Id, 1000, username); err != nil {
+			t.Fatalf("Failed to create initial buy for asset 1: %v", err)
+		}
+		if err := service.CreateBuyTransaction(ctx, bank.Id, assetType2.Id, 2000, username); err != nil {
+			t.Fatalf("Failed to create initial buy for asset 2: %v", err)
+		}
+		// Add to existing asset combines
+		if err := service.CreateBuyTransaction(ctx, bank.Id, assetType1.Id, 500, username); err != nil {
 			t.Fatalf("Failed to add to transaction for asset 1: %v", err)
 		}
 
@@ -416,7 +513,7 @@ func TestPendingTransactionService_GetTransactions(t *testing.T) {
 	username := fmt.Sprintf("testuser_%d", timestamp)
 	password := "testpass"
 	bankName := "Test Bank"
-	
+
 	_, err = CreateRegularUserForTest(container, username, password, bankName)
 	if err != nil {
 		t.Fatalf("Failed to create test user: %v", err)
@@ -496,7 +593,7 @@ func TestPendingTransactionService_GetTransactionsByBankID(t *testing.T) {
 	username := fmt.Sprintf("testuser_%d", timestamp)
 	password := "testpass"
 	bankName := "Test Bank"
-	
+
 	_, err = CreateRegularUserForTest(container, username, password, bankName)
 	if err != nil {
 		t.Fatalf("Failed to create test user: %v", err)
@@ -516,7 +613,7 @@ func TestPendingTransactionService_GetTransactionsByBankID(t *testing.T) {
 	username2 := fmt.Sprintf("testuser2_%d", timestamp)
 	password2 := "testpass2"
 	bankName2 := "Test Bank 2"
-	
+
 	_, err = CreateRegularUserForTest(container, username2, password2, bankName2)
 	if err != nil {
 		t.Fatalf("Failed to create second test user: %v", err)
@@ -635,7 +732,7 @@ func TestPendingTransactionService_CreateBuyTransaction(t *testing.T) {
 	username := fmt.Sprintf("testuser_%d", timestamp)
 	password := "testpass"
 	bankName := "Test Bank"
-	
+
 	_, err = CreateRegularUserForTest(container, username, password, bankName)
 	if err != nil {
 		t.Fatalf("Failed to create test user: %v", err)
@@ -709,7 +806,7 @@ func TestPendingTransactionService_CreateSellTransaction(t *testing.T) {
 	username := fmt.Sprintf("testuser_%d", timestamp)
 	password := "testpass"
 	bankName := "Test Bank"
-	
+
 	_, err = CreateRegularUserForTest(container, username, password, bankName)
 	if err != nil {
 		t.Fatalf("Failed to create test user: %v", err)
@@ -783,7 +880,7 @@ func TestPendingTransactionService_BuyAndSellCombination(t *testing.T) {
 	username := fmt.Sprintf("testuser_%d", timestamp)
 	password := "testpass"
 	bankName := "Test Bank"
-	
+
 	_, err = CreateRegularUserForTest(container, username, password, bankName)
 	if err != nil {
 		t.Fatalf("Failed to create test user: %v", err)
