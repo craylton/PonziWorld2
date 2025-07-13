@@ -1,10 +1,12 @@
 
 Right now:
+Get rid of CreateTransaction
+    And the tests surrounding it
+Extract some duplicate code from handleBuyTransaction and handleSellTransaction
+Get AssetList and maybe other files reviewed
+Will pendingTransactions ever be null?
+    Can we just assume it will always be there?
 Show an error message in UI if buy/sell order failed
-Show pending buy orders in UI
-Show pending sell orders in UI
-The above 2 points require looking up pending orders in the dashboard
-If we have a pending buy order but don't yet own the asset, it should go in 'Your assets' list
 
 
 Next up:

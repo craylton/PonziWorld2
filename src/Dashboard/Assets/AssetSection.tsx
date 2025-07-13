@@ -3,6 +3,7 @@ import type { Asset } from './Asset';
 import type { PendingTransaction } from '../../models/PendingTransaction';
 import { makeAuthenticatedRequest } from '../../auth';
 import { useBankContext } from '../../contexts/useBankContext';
+import AssetProvider from '../../contexts/AssetContext';
 import AssetList from './AssetList';
 
 const generateRandomDataPoints = (length = 8): number[] => {
@@ -129,7 +130,7 @@ export default function AssetSection({ bankAssets }: AssetSectionProps) {
   };
 
   return (
-    <>
+    <AssetProvider>
       <AssetList
         title="Your Assets"
         onLoad={getInvestedAssetTypes}
@@ -141,6 +142,6 @@ export default function AssetSection({ bankAssets }: AssetSectionProps) {
         onLoad={fetchAvailableAssetTypes}
         isExpandedByDefault={false}
       />
-    </>
+    </AssetProvider>
   );
 }

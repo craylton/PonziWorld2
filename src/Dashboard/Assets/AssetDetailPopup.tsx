@@ -4,24 +4,23 @@ import LineGraph from './LineGraph';
 import { formatCurrency } from '../../utils/currency';
 import { makeAuthenticatedRequest } from '../../auth';
 import { useBankContext } from '../../contexts/useBankContext';
+import { useAssetContext } from '../../contexts/useAssetContext';
 import TransactionPopup from './TransactionPopup';
+import type { Asset } from './Asset';
 
 interface AssetDetailPopupProps {
   isOpen: boolean;
   onClose: () => void;
-  assetType: string;
-  assetTypeId: string;
-  investedAmount: number;
+  asset: Asset;
 }
 
 export default function AssetDetailPopup({
   isOpen,
   onClose,
-  assetType,
-  assetTypeId,
-  investedAmount
+  asset
 }: AssetDetailPopupProps) {
   const { bankId } = useBankContext();
+  const { refreshAssets } = useAssetContext();
   const [transactionPopupOpen, setTransactionPopupOpen] = useState(false);
   const [transactionType, setTransactionType] = useState<'buy' | 'sell'>('buy');
 
@@ -59,9 +58,8 @@ export default function AssetDetailPopup({
 
   const handleTransactionConfirm = async (amount: number) => {
     try {
-      // Determine the endpoint and amount based on transaction type
+      // Determine the endpoint based on transaction type
       const endpoint = transactionType === 'buy' ? '/api/buy' : '/api/sell';
-      const finalAmount = transactionType === 'buy' ? amount : -amount; // Negative for sell
 
       const response = await makeAuthenticatedRequest(endpoint, {
         method: 'POST',
@@ -70,25 +68,26 @@ export default function AssetDetailPopup({
         },
         body: JSON.stringify({
           buyerBankId: bankId,
-          assetId: assetTypeId,
-          amount: finalAmount,
+          assetId: asset.assetTypeId,
+          amount,
         }),
       });
 
       if (response.ok) {
         const result = await response.json();
         console.log(`${transactionType} transaction successful:`, result);
-        // You could add a success notification here
-        // For now, just close the popup
+        // todo: success notification
         setTransactionPopupOpen(false);
+        onClose();
+        refreshAssets();
       } else {
         const error = await response.json();
         console.error(`${transactionType} transaction failed:`, error);
-        // You could add an error notification here
+        // todo: error notification
       }
     } catch (error) {
       console.error(`Error during ${transactionType} transaction:`, error);
-      // You could add an error notification here
+      // todo: error notification
     }
   };
 
@@ -103,6 +102,8 @@ export default function AssetDetailPopup({
   }, [isOpen]);
 
   if (!isOpen) return null;
+  
+  const hasInvestmentOrPending = asset.amount > 0 || (asset.pendingAmount !== undefined && asset.pendingAmount !== 0);
 
   return (
     <div
@@ -114,7 +115,7 @@ export default function AssetDetailPopup({
     >
       <div className="capital-popup">
         <div className="capital-popup__header">
-          <h2 id="popup-title" className="capital-popup__title">{assetType} Details</h2>
+          <h2 id="popup-title" className="capital-popup__title">{asset.assetType} Details</h2>
           <button
             className="capital-popup__close-button"
             onClick={onClose}
@@ -124,22 +125,22 @@ export default function AssetDetailPopup({
           </button>
         </div>
         <div className="capital-popup__content">
-          {investedAmount > 0 && (
+          {asset.amount > 0 && (
             <div className="capital-popup__value">
-              {formatCurrency(investedAmount)}
+              {formatCurrency(asset.amount)}
             </div>
           )}
           <div className="capital-popup__chart">
             <LineGraph
               data={chartData}
-              title={assetType}
+              title={asset.assetType}
               formatTooltip={(value) => `${value}%`}
               formatYAxisTick={(value) => `${value}%`}
             />
           </div>
         </div>
         <div className="capital-popup__footer">
-          {investedAmount > 0 ? (
+          {hasInvestmentOrPending ? (
             <>
               <button
                 className="capital-popup__buy-button"
@@ -167,9 +168,9 @@ export default function AssetDetailPopup({
       <TransactionPopup
         isOpen={transactionPopupOpen}
         onClose={handleTransactionClose}
-        assetType={assetType}
+        assetType={asset.assetType}
         transactionType={transactionType}
-        currentHoldings={investedAmount || 0}
+        currentHoldings={asset.amount + (asset.pendingAmount || 0)}
         onConfirm={handleTransactionConfirm}
       />
     </div>

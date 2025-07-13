@@ -4,6 +4,7 @@ import ChevronIcon from '../ChevronIcon';
 import { useState, useEffect, useCallback } from 'react';
 import InvestedAssetSummary from './InvestedAssetSummary';
 import UninvestedAssetSummary from './UninvestedAssetSummary';
+import { useAssetContext } from '../../contexts/useAssetContext';
 
 interface AssetListProps {
     title: string;
@@ -16,6 +17,34 @@ export default function AssetList({ title, onLoad, isExpandedByDefault }: AssetL
     const [isExpanded, setIsExpanded] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [hasLoadedAssetTypes, setHasLoadedAssetTypes] = useState(false);
+    const { registerRefreshCallback, unregisterRefreshCallback } = useAssetContext();
+
+    const loadAssets = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const assets = await onLoad();
+            setAllAssets(assets);
+            setHasLoadedAssetTypes(true);
+        } catch (error) {
+            console.error('Error loading asset types:', error);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [onLoad]);
+
+    const handleRefresh = useCallback(async () => {
+        if (hasLoadedAssetTypes && isExpanded) {
+            await loadAssets();
+        }
+    }, [hasLoadedAssetTypes, isExpanded, loadAssets]);
+
+    // Register for refresh callbacks
+    useEffect(() => {
+        registerRefreshCallback(handleRefresh);
+        return () => {
+            unregisterRefreshCallback(handleRefresh);
+        };
+    }, [registerRefreshCallback, unregisterRefreshCallback, handleRefresh]);
 
     const handleToggleAssets = useCallback(async () => {
         if (isExpanded) {
@@ -28,17 +57,9 @@ export default function AssetList({ title, onLoad, isExpandedByDefault }: AssetL
             return;
         }
 
-        setIsLoading(true);
-        try {
-            setAllAssets(await onLoad());
-            setHasLoadedAssetTypes(true);
-            setIsExpanded(true);
-        } catch (error) {
-            console.error('Error loading asset types:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [isExpanded, hasLoadedAssetTypes, onLoad]);
+        await loadAssets();
+        setIsExpanded(true);
+    }, [isExpanded, hasLoadedAssetTypes, loadAssets]);
 
     useEffect(() => {
         if (isExpandedByDefault && !hasLoadedAssetTypes) {
