@@ -102,7 +102,7 @@ export default function AssetDetailPopup({
 
   if (!isOpen) return null;
   
-  const hasInvestmentOrPending = asset.amount > 0 || (asset.pendingAmount !== undefined && asset.pendingAmount !== 0);
+  const hasInvestmentOrPending = asset.amount > 0 || asset.pendingAmount !== 0;
 
   return (
     <div
@@ -169,7 +169,7 @@ export default function AssetDetailPopup({
         onClose={handleTransactionClose}
         assetType={asset.assetType}
         transactionType={transactionType}
-        currentHoldings={asset.amount + (asset.pendingAmount || 0)}
+        currentHoldings={asset.amount + asset.pendingAmount}
         onConfirm={handleTransactionConfirm}
       />
     </div>

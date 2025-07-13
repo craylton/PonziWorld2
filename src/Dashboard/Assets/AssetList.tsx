@@ -92,7 +92,7 @@ export default function AssetList({ title, onLoad, isExpandedByDefault }: AssetL
                         </div>
                     ) : (
                         allAssets.map((asset, index) => {
-                            const hasInvestmentOrPending = asset.amount > 0 || (asset.pendingAmount !== undefined && asset.pendingAmount !== 0);
+                            const hasInvestmentOrPending = asset.amount > 0 || asset.pendingAmount !== 0;
                             return hasInvestmentOrPending ? (
                                 <InvestedAssetSummary
                                     key={`${asset.assetType}-${index}`}

@@ -126,7 +126,6 @@ func TestPendingTransactionService_CreateTransactions(t *testing.T) {
 		if err != services.ErrInvalidBankID {
 			t.Errorf("Expected ErrInvalidBankID for non-existent bank, got: %v", err)
 		}
-		// Sell side should error the same way
 		err = service.CreateSellTransaction(ctx, nonExistentBankID, assetType.Id, 1000, username)
 		if err != services.ErrInvalidBankID {
 			t.Errorf("Expected ErrInvalidBankID for non-existent bank in sell transaction, got: %v", err)
@@ -139,7 +138,6 @@ func TestPendingTransactionService_CreateTransactions(t *testing.T) {
 		if err != services.ErrAssetNotFound {
 			t.Errorf("Expected ErrAssetNotFound for non-existent asset, got: %v", err)
 		}
-		// Sell side should also detect missing asset
 		err = service.CreateSellTransaction(ctx, bank.Id, nonExistentAssetID, 1000, username)
 		if err != services.ErrAssetNotFound {
 			t.Errorf("Expected ErrAssetNotFound for non-existent asset in sell transaction, got: %v", err)
@@ -151,7 +149,6 @@ func TestPendingTransactionService_CreateTransactions(t *testing.T) {
 		if err != services.ErrSelfInvestment {
 			t.Errorf("Expected ErrSelfInvestment for self-investment, got: %v", err)
 		}
-		// Sell side self-investment should be rejected as well
 		err = service.CreateSellTransaction(ctx, bank.Id, bank.Id, 1000, username)
 		if err != services.ErrSelfInvestment {
 			t.Errorf("Expected ErrSelfInvestment for self-investment in sell transaction, got: %v", err)
@@ -160,12 +157,11 @@ func TestPendingTransactionService_CreateTransactions(t *testing.T) {
 
 	t.Run("Non-existent user", func(t *testing.T) {
 		err := service.CreateBuyTransaction(ctx, bank.Id, assetType.Id, 1000, "nonexistentuser")
-		if err != services.ErrInvalidBankID {
+		if err != services.ErrPlayerNotFound {
 			t.Errorf("Expected ErrInvalidBankID when user doesn't exist, got: %v", err)
 		}
-		// Sell side should error similarly when user not found
 		err = service.CreateSellTransaction(ctx, bank.Id, assetType.Id, 1000, "nonexistentuser")
-		if err != services.ErrInvalidBankID {
+		if err != services.ErrPlayerNotFound {
 			t.Errorf("Expected ErrInvalidBankID for non-existent user in sell transaction, got: %v", err)
 		}
 	})
@@ -232,12 +228,10 @@ func TestPendingTransactionService_BankOwnership(t *testing.T) {
 	}
 
 	t.Run("User owns bank", func(t *testing.T) {
-		// Buy should succeed
 		err := service.CreateBuyTransaction(ctx, bank1.Id, assetType.Id, 1000, user1Username)
 		if err != nil {
 			t.Errorf("Expected no error when user uses their own bank for buy, got: %v", err)
 		}
-		// Sell should also succeed
 		err = service.CreateSellTransaction(ctx, bank1.Id, assetType.Id, 500, user1Username)
 		if err != nil {
 			t.Errorf("Expected no error when user uses their own bank for sell, got: %v", err)
@@ -245,12 +239,10 @@ func TestPendingTransactionService_BankOwnership(t *testing.T) {
 	})
 
 	t.Run("User does not own bank", func(t *testing.T) {
-		// Buy should be unauthorized
 		err := service.CreateBuyTransaction(ctx, bank2.Id, assetType.Id, 1000, user1Username)
 		if err != services.ErrUnauthorizedBank {
 			t.Errorf("Expected ErrUnauthorizedBank when user tries to use another user's bank for buy, got: %v", err)
 		}
-		// Sell should also be unauthorized
 		err = service.CreateSellTransaction(ctx, bank2.Id, assetType.Id, 500, user1Username)
 		if err != services.ErrUnauthorizedBank {
 			t.Errorf("Expected ErrUnauthorizedBank when user tries to use another user's bank for sell, got: %v", err)
@@ -309,7 +301,6 @@ func TestPendingTransactionService_BankAsAsset(t *testing.T) {
 	}
 
 	t.Run("Invest in another bank", func(t *testing.T) {
-		// Buy in another bank asset
 		err := service.CreateBuyTransaction(ctx, bank1.Id, bank2.Id, 1000, user1Username)
 		if err != nil {
 			t.Errorf("Expected no error when investing in another bank for buy, got: %v", err)
@@ -324,7 +315,7 @@ func TestPendingTransactionService_BankAsAsset(t *testing.T) {
 		if transactions[0].AssetId != bank2.Id {
 			t.Errorf("Expected AssetId to be bank2 ID for buy, got different ID")
 		}
-		// Sell bank asset should also work
+		
 		// Clear previous transactions
 		for _, tx := range transactions {
 			container.RepositoryContainer.PendingTransaction.Delete(ctx, tx.Id)

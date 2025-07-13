@@ -9,7 +9,7 @@ interface AssetSummaryProps {
 }
 
 export default function InvestedAssetSummary({ asset, historicalValues }: AssetSummaryProps) {
-  const hasPendingAmount = asset.pendingAmount !== undefined && asset.pendingAmount !== 0;
+  const hasPendingAmount = asset.pendingAmount !== 0;
   
   return (
     <>
@@ -19,11 +19,11 @@ export default function InvestedAssetSummary({ asset, historicalValues }: AssetS
           <div className="asset-list__amount">
             {hasPendingAmount ? (
               <>
-                {formatCurrency(asset.amount)} {asset.pendingAmount! > 0 ? '+' : '-'} {' '}
+                {formatCurrency(asset.amount)} {asset.pendingAmount > 0 ? '+' : '-'} {' '}
                 <span 
-                  className={`asset-list__pending ${asset.pendingAmount! > 0 ? 'asset-list__pending--positive' : 'asset-list__pending--negative'}`}
+                  className={`asset-list__pending ${asset.pendingAmount > 0 ? 'asset-list__pending--positive' : 'asset-list__pending--negative'}`}
                 >
-                  {formatCurrency(Math.abs(asset.pendingAmount!))}
+                  {formatCurrency(Math.abs(asset.pendingAmount))}
                 </span>
               </>
             ) : (

@@ -1,5 +1,6 @@
 import type { Asset } from "./Asset";
 
+
 export interface Bank {
     id: string;
     bankName: string;

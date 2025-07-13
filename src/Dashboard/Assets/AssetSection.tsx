@@ -69,7 +69,8 @@ export default function AssetSection({ bankAssets }: AssetSectionProps) {
       .map(assetType => ({
         assetType: assetType.name,
         assetTypeId: assetType.id,
-        amount: 0
+        amount: 0,
+        pendingAmount: 0
       }));
   }, [bankAssets]);
 
