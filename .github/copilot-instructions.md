@@ -26,9 +26,10 @@ The app contains the following screens:
 - Login - for existing players to log in
 - New Bank - for registering a new player
 - Dashboard - the main screen for logged-in players, showing their bank details and transactions
-The dashboard is the main screen and is divided into several sections:
-  - Bank Details - shows the player's bank details in the header
-  - Assets - shows the player's investments and stats in the middle
+  - Header - shows the player's bank details at a glance
+  - Assets - shows the player's investments in the middle of the screen
+    - Clicking an asset will show a popup with more details
+    - After clicking an asset, the player has the option to buy or sell that asset
   - Investors - shows the list of investors at the left side
   - Settings - shows the settings at the right side
 Much of this is still in development, so you may not see all features implemented yet. And there is still more to come.

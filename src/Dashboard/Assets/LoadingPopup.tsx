@@ -42,10 +42,16 @@ export default function LoadingPopup({
 
     const canClose = status === 'success' || status === 'error';
 
+    const onClickOutside = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (canClose && e.target === e.currentTarget) {
+            onClose();
+        }
+    }
+
     return (
         <div
             className="capital-popup-overlay"
-            onClick={canClose ? (e => e.target === e.currentTarget && onClose()) : undefined}
+            onClick={onClickOutside}
             role="dialog"
             aria-modal="true"
             aria-labelledby="loading-popup-title"
