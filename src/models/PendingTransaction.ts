@@ -3,5 +3,4 @@ export interface PendingTransaction {
   buyerBankId: string;
   assetId: string;
   amount: number; // Positive = buy, negative = sell
-  createdAt: string;
 }

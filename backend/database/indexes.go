@@ -125,14 +125,6 @@ func EnsurePendingTransactionIndexes(dbConfig *config.DatabaseConfig) error {
 		return err
 	}
 
-	// Index on assetId for efficient lookups by asset
-	if err := ensureIndex(dbConfig, "pendingTransactions", "pending_assetId_idx", mongo.IndexModel{
-		Keys:    bson.D{{Key: "assetId", Value: 1}},
-		Options: options.Index().SetName("pending_assetId_idx"),
-	}); err != nil {
-		return err
-	}
-
 	// Compound index on buyerBankId and assetId for efficient duplicate checking
 	return ensureIndex(dbConfig, "pendingTransactions", "pending_buyer_asset_idx", mongo.IndexModel{
 		Keys:    bson.D{{Key: "buyerBankId", Value: 1}, {Key: "assetId", Value: 1}},

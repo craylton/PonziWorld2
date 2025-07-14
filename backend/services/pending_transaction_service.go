@@ -91,6 +91,7 @@ func (s *PendingTransactionService) createTransaction(
 		return ErrUnauthorizedBank
 	}
 
+	// Validate asset exists
 	assetExists, err := s.validateAssetExists(ctx, assetId)
 	if err != nil {
 		return err
@@ -134,7 +135,10 @@ func (s *PendingTransactionService) createTransaction(
 	return s.pendingTransactionRepo.Create(ctx, transaction)
 }
 
-func (s *PendingTransactionService) validateAssetExists(ctx context.Context, assetId primitive.ObjectID) (bool, error) {
+func (s *PendingTransactionService) validateAssetExists(
+	ctx context.Context,
+	assetId primitive.ObjectID,
+) (bool, error) {
 	// First check if it's an asset type
 	_, err := s.assetTypeRepo.FindByID(ctx, assetId)
 	if err == nil {
@@ -150,15 +154,11 @@ func (s *PendingTransactionService) validateAssetExists(ctx context.Context, ass
 	return false, nil
 }
 
-func (s *PendingTransactionService) GetTransactionsByBuyerBankID(ctx context.Context, buyerBankID primitive.ObjectID) ([]models.PendingTransaction, error) {
-	return s.pendingTransactionRepo.FindByBuyerBankID(ctx, buyerBankID)
-}
-
-func (s *PendingTransactionService) GetTransactionsByAssetID(ctx context.Context, assetID primitive.ObjectID) ([]models.PendingTransaction, error) {
-	return s.pendingTransactionRepo.FindByAssetID(ctx, assetID)
-}
-
-func (s *PendingTransactionService) GetTransactionsByBankID(ctx context.Context, bankID primitive.ObjectID, username string) ([]models.PendingTransaction, error) {
+func (s *PendingTransactionService) GetTransactionsByBuyerBankID(
+	ctx context.Context,
+	bankID primitive.ObjectID,
+	username string,
+) ([]models.PendingTransaction, error) {
 	// Validate bank exists and is owned by the current player
 	bank, err := s.bankRepo.FindByID(ctx, bankID)
 	if err != nil {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"ponziworld/backend/models"
-	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -25,7 +24,6 @@ func (r *PendingTransactionRepositoryImpl) Create(ctx context.Context, transacti
 	if transaction.Id.IsZero() {
 		transaction.Id = primitive.NewObjectID()
 	}
-	transaction.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
 
 	_, err := r.collection.InsertOne(ctx, transaction)
 	if err != nil {
@@ -37,7 +35,10 @@ func (r *PendingTransactionRepositoryImpl) Create(ctx context.Context, transacti
 	return nil
 }
 
-func (r *PendingTransactionRepositoryImpl) FindByBuyerBankID(ctx context.Context, buyerBankID primitive.ObjectID) ([]models.PendingTransaction, error) {
+func (r *PendingTransactionRepositoryImpl) FindByBuyerBankID(
+	ctx context.Context,
+	buyerBankID primitive.ObjectID,
+) ([]models.PendingTransaction, error) {
 	filter := bson.M{"buyerBankId": buyerBankID}
 	cursor, err := r.collection.Find(ctx, filter)
 	if err != nil {
@@ -53,23 +54,11 @@ func (r *PendingTransactionRepositoryImpl) FindByBuyerBankID(ctx context.Context
 	return transactions, nil
 }
 
-func (r *PendingTransactionRepositoryImpl) FindByAssetID(ctx context.Context, assetID primitive.ObjectID) ([]models.PendingTransaction, error) {
-	filter := bson.M{"assetId": assetID}
-	cursor, err := r.collection.Find(ctx, filter)
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(ctx)
-
-	var transactions []models.PendingTransaction
-	if err = cursor.All(ctx, &transactions); err != nil {
-		return nil, err
-	}
-
-	return transactions, nil
-}
-
-func (r *PendingTransactionRepositoryImpl) FindByBuyerBankIDAndAssetID(ctx context.Context, buyerBankID, assetID primitive.ObjectID) ([]models.PendingTransaction, error) {
+func (r *PendingTransactionRepositoryImpl) FindByBuyerBankIDAndAssetID(
+	ctx context.Context,
+	buyerBankID,
+	assetID primitive.ObjectID,
+) ([]models.PendingTransaction, error) {
 	filter := bson.M{
 		"buyerBankId": buyerBankID,
 		"assetId":     assetID,
@@ -88,7 +77,11 @@ func (r *PendingTransactionRepositoryImpl) FindByBuyerBankIDAndAssetID(ctx conte
 	return transactions, nil
 }
 
-func (r *PendingTransactionRepositoryImpl) UpdateAmount(ctx context.Context, id primitive.ObjectID, newAmount int64) error {
+func (r *PendingTransactionRepositoryImpl) UpdateAmount(
+	ctx context.Context,
+	id primitive.ObjectID,
+	newAmount int64,
+) error {
 	filter := bson.M{"_id": id}
 	update := bson.M{"$set": bson.M{"amount": newAmount}}
 

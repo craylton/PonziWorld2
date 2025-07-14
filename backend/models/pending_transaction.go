@@ -7,7 +7,6 @@ type PendingTransaction struct {
 	BuyerBankId  primitive.ObjectID `bson:"buyerBankId" json:"buyerBankId"`
 	AssetId      primitive.ObjectID `bson:"assetId" json:"assetId"`
 	Amount       int64              `bson:"amount" json:"amount"` // Internal: Positive = buy, negative = sell
-	CreatedAt    primitive.DateTime `bson:"createdAt" json:"createdAt"`
 }
 
 type PendingTransactionRequest struct {

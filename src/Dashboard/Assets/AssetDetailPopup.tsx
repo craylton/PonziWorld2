@@ -63,7 +63,10 @@ export default function AssetDetailPopup({
   const handleTransactionConfirm = async (amount: number) => {
     // Close both popups and notify parent to show loading
     setTransactionPopupOpen(false);
-    onClose();
+    // Close the asset detail popup with a slight delay to ensure loading popup appears
+    setTimeout(() => {
+      onClose();
+    }, 10);
     onTransactionStart();
 
     try {
@@ -83,7 +86,6 @@ export default function AssetDetailPopup({
       });
 
       if (response.ok) {
-        // Success
         onTransactionComplete(true, 'Transaction completed successfully');
         // Refresh assets in the background
         refreshAssets();

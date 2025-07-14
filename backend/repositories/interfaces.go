@@ -57,7 +57,6 @@ type GameRepository interface {
 type PendingTransactionRepository interface {
 	Create(ctx context.Context, transaction *models.PendingTransaction) error
 	FindByBuyerBankID(ctx context.Context, buyerBankID primitive.ObjectID) ([]models.PendingTransaction, error)
-	FindByAssetID(ctx context.Context, assetID primitive.ObjectID) ([]models.PendingTransaction, error)
 	FindByBuyerBankIDAndAssetID(ctx context.Context, buyerBankID, assetID primitive.ObjectID) ([]models.PendingTransaction, error)
 	UpdateAmount(ctx context.Context, id primitive.ObjectID, newAmount int64) error
 	Delete(ctx context.Context, id primitive.ObjectID) error

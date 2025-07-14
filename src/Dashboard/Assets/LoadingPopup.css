@@ -1,4 +1,3 @@
-/* Loading Popup Specific Styles */
 .loading-popup {
     min-height: 200px;
     display: flex;
@@ -17,14 +16,13 @@
 }
 
 .loading-popup__message--success {
-    color: #22c55e; /* Green color for success */
+    color: #22c55e;
 }
 
 .loading-popup__message--error {
-    color: #ef4444; /* Red color for error */
+    color: #ef4444;
 }
 
-/* Loading Spinner */
 .loading-popup__spinner {
     width: 40px;
     height: 40px;
@@ -37,17 +35,4 @@
 @keyframes loading-spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
-}
-
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-    .loading-popup__message {
-        padding: 1.5rem;
-        font-size: 1rem;
-    }
-    
-    .loading-popup__spinner {
-        width: 32px;
-        height: 32px;
-    }
 }

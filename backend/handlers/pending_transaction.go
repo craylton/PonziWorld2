@@ -74,7 +74,7 @@ func (h *PendingTransactionHandler) GetPendingTransactions(w http.ResponseWriter
 	ctx := r.Context()
 
 	// Get pending transactions for the bank
-	transactions, err := h.pendingTransactionService.GetTransactionsByBankID(ctx, bankId, username)
+	transactions, err := h.pendingTransactionService.GetTransactionsByBuyerBankID(ctx, bankId, username)
 	if err != nil {
 		log.Printf("Error fetching pending transactions: %v", err)
 
