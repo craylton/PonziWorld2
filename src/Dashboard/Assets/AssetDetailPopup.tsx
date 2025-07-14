@@ -12,12 +12,16 @@ interface AssetDetailPopupProps {
   isOpen: boolean;
   onClose: () => void;
   asset: Asset;
+  onTransactionStart: () => void;
+  onTransactionComplete: (success: boolean, message: string) => void;
 }
 
 export default function AssetDetailPopup({
   isOpen,
   onClose,
-  asset
+  asset,
+  onTransactionStart,
+  onTransactionComplete
 }: AssetDetailPopupProps) {
   const { bankId } = useBankContext();
   const { refreshAssets } = useAssetContext();
@@ -57,6 +61,11 @@ export default function AssetDetailPopup({
   };
 
   const handleTransactionConfirm = async (amount: number) => {
+    // Close both popups and notify parent to show loading
+    setTransactionPopupOpen(false);
+    onClose();
+    onTransactionStart();
+
     try {
       // Determine the endpoint based on transaction type
       const endpoint = transactionType === 'buy' ? '/api/buy' : '/api/sell';
@@ -74,19 +83,20 @@ export default function AssetDetailPopup({
       });
 
       if (response.ok) {
-        //const result = await response.json();
-        // todo: success notification
-        setTransactionPopupOpen(false);
-        onClose();
+        // Success
+        onTransactionComplete(true, 'Transaction completed successfully');
+        // Refresh assets in the background
         refreshAssets();
       } else {
+        // Error from server
         const error = await response.json();
         console.error(`${transactionType} transaction failed:`, error);
-        // todo: error notification
+        onTransactionComplete(false, error.error || 'Transaction failed');
       }
     } catch (error) {
+      // Network or other error
       console.error(`Error during ${transactionType} transaction:`, error);
-      // todo: error notification
+      onTransactionComplete(false, 'Network error occurred');
     }
   };
 

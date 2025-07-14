@@ -1,0 +1,53 @@
+/* Loading Popup Specific Styles */
+.loading-popup {
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.loading-popup__message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 2rem;
+    font-size: 1.1rem;
+    text-align: center;
+}
+
+.loading-popup__message--success {
+    color: #22c55e; /* Green color for success */
+}
+
+.loading-popup__message--error {
+    color: #ef4444; /* Red color for error */
+}
+
+/* Loading Spinner */
+.loading-popup__spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f4f6;
+    border-top: 4px solid #3b82f6;
+    border-radius: 50%;
+    animation: loading-spin 1s linear infinite;
+}
+
+@keyframes loading-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .loading-popup__message {
+        padding: 1.5rem;
+        font-size: 1rem;
+    }
+    
+    .loading-popup__spinner {
+        width: 32px;
+        height: 32px;
+    }
+}

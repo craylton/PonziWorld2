@@ -1,9 +1,7 @@
 
 Right now:
-Will pendingTransactions ever be null?
-    Can we just assume it will always be there?
-    just explicitly set it to 0 if not present?
 Show an error message in UI if buy/sell order failed
+    And success if successful
 
 
 Next up:
