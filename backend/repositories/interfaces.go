@@ -52,3 +52,12 @@ type GameRepository interface {
 	IncrementDay(ctx context.Context) (int, error)
 	CreateInitialGame(ctx context.Context, initialDay int) error
 }
+
+// PendingTransactionRepository defines the interface for pending transaction database operations
+type PendingTransactionRepository interface {
+	Create(ctx context.Context, transaction *models.PendingTransaction) error
+	FindByBuyerBankID(ctx context.Context, buyerBankID primitive.ObjectID) ([]models.PendingTransaction, error)
+	FindByBuyerBankIDAndAssetID(ctx context.Context, buyerBankID, assetID primitive.ObjectID) ([]models.PendingTransaction, error)
+	UpdateAmount(ctx context.Context, id primitive.ObjectID, newAmount int64) error
+	Delete(ctx context.Context, id primitive.ObjectID) error
+}

@@ -7,6 +7,7 @@ import InvestorsPanel from './SidePanel/Investors/InvestorsPanel';
 import SettingsPanel from './SidePanel/Settings/SettingsPanel';
 import AssetSection from './Assets/AssetSection';
 import { makeAuthenticatedRequest } from '../auth';
+import { BankProvider } from '../contexts/BankContext';
 import type { Bank } from '../models/Bank';
 import type { PerformanceHistory } from '../models/PerformanceHistory';
 import type { Player } from '../models/User';
@@ -97,7 +98,9 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             isLeftPanelOpen={isLeftPanelOpen}
             onClick={() => setIsLeftPanelOpen(!isLeftPanelOpen)}
           />
-          <AssetSection bankAssets={bank.assets} />
+          <BankProvider bankId={bank.id}>
+            <AssetSection bankAssets={bank.assets} />
+          </BankProvider>
 
           <SettingsButton
             isRightPanelOpen={isRightPanelOpen}

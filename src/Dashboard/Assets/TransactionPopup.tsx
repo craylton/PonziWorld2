@@ -115,11 +115,6 @@ export default function TransactionPopup({
                     </button>
                 </div>
                 <div className="capital-popup__content">
-                    {transactionType === 'sell' && (
-                        <div className="transaction-popup__holdings">
-                            Current holdings: {currentHoldings}
-                        </div>
-                    )}
                     <div className="transaction-popup__input-group">
                         <label htmlFor="amount-input" className="transaction-popup__label">
                             Amount:

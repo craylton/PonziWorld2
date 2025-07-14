@@ -13,6 +13,7 @@ type RepositoryContainer struct {
 	HistoricalPerformance repositories.HistoricalPerformanceRepository
 	Player                repositories.PlayerRepository
 	Game                  repositories.GameRepository
+	PendingTransaction    repositories.PendingTransactionRepository
 }
 
 func NewRepositoryContainer(database *mongo.Database) *RepositoryContainer {
@@ -22,6 +23,7 @@ func NewRepositoryContainer(database *mongo.Database) *RepositoryContainer {
 	assetTypeRepo := repositories.NewAssetTypeRepository(database)
 	historyRepo := repositories.NewHistoricalPerformanceRepository(database)
 	gameRepo := repositories.NewGameRepository(database)
+	pendingTransactionRepo := repositories.NewPendingTransactionRepository(database)
 
 	return &RepositoryContainer{
 		Bank:                  bankRepo,
@@ -30,5 +32,6 @@ func NewRepositoryContainer(database *mongo.Database) *RepositoryContainer {
 		HistoricalPerformance: historyRepo,
 		Player:                playerRepo,
 		Game:                  gameRepo,
+		PendingTransaction:    pendingTransactionRepo,
 	}
 }
