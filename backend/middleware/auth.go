@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"ponziworld/backend/auth"
+	"ponziworld/backend/requestcontext"
 	"ponziworld/backend/services"
 )
 
@@ -46,9 +47,9 @@ func JwtMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		// Add username to request context for use in handlers
-		r.Header.Set("X-Username", username)
-		next(w, r)
+		// Store username in context for business logic
+		ctx := requestcontext.WithUsername(r.Context(), username)
+		next(w, r.WithContext(ctx))
 	}
 }
 
@@ -78,8 +79,8 @@ func AdminJwtMiddleware(next http.HandlerFunc, authService *services.AuthService
 			return
 		}
 
-		// Add username to request context for use in handlers
-		r.Header.Set("X-Username", username)
-		next(w, r)
+		// Store username in context for downstream handlers
+		ctx = requestcontext.WithUsername(ctx, username)
+		next(w, r.WithContext(ctx))
 	}
 }

@@ -6,15 +6,14 @@ import (
 	"net/http"
 
 	"ponziworld/backend/config"
+	"ponziworld/backend/requestcontext"
 	"ponziworld/backend/services"
 )
 
-// BankHandler handles bank-related requests
 type BankHandler struct {
 	bankService *services.BankService
 }
 
-// NewBankHandler creates a new BankHandler
 func NewBankHandler(container *config.Container) *BankHandler {
 	return &BankHandler{
 		bankService: container.ServiceContainer.Bank,
@@ -31,16 +30,14 @@ func (h *BankHandler) GetBank(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	// Get username from the JWT (set by middleware)
-	username := r.Header.Get("X-Username")
-	if username == "" {
+	// Get username from context (set by JwtMiddleware)
+	ctx := r.Context()
+	username, ok := requestcontext.UsernameFromContext(ctx)
+	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Authentication required"})
 		return
 	}
-
-	// Use the request context for proper cancellation handling
-	ctx := r.Context()
 
 	// Get bank by username
 	bankResponse, err := h.bankService.GetBankByUsername(ctx, username)

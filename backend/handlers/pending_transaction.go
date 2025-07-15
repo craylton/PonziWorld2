@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"ponziworld/backend/config"
 	"ponziworld/backend/models"
+	"ponziworld/backend/requestcontext"
 	"ponziworld/backend/services"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -48,9 +49,10 @@ func (h *PendingTransactionHandler) GetPendingTransactions(w http.ResponseWriter
 
 	w.Header().Set("Content-Type", "application/json")
 
-	// Get username from JWT (set by middleware) - used for authorization
-	username := r.Header.Get("X-Username")
-	if username == "" {
+	// Get username from context (set by JwtMiddleware)
+	ctx := r.Context()
+	username, ok := requestcontext.UsernameFromContext(ctx)
+	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Authentication required"})
 		return
@@ -70,8 +72,6 @@ func (h *PendingTransactionHandler) GetPendingTransactions(w http.ResponseWriter
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid bank ID format"})
 		return
 	}
-
-	ctx := r.Context()
 
 	// Get pending transactions for the bank
 	transactions, err := h.pendingTransactionService.GetTransactionsByBuyerBankID(ctx, bankId, username)
@@ -116,15 +116,14 @@ func (h *PendingTransactionHandler) handleTransaction(
 
 	w.Header().Set("Content-Type", "application/json")
 
-	// Get username from JWT (set by middleware) - used for authorization only
-	username := r.Header.Get("X-Username")
-	if username == "" {
+	// Get username from context (set by JwtMiddleware)
+	ctx := r.Context()
+	username, ok := requestcontext.UsernameFromContext(ctx)
+	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Authentication required"})
 		return
 	}
-
-	ctx := r.Context()
 
 	// Parse the request body
 	var req models.PendingTransactionRequest

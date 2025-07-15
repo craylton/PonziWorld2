@@ -6,16 +6,15 @@ import (
 	"strings"
 
 	"ponziworld/backend/config"
+	"ponziworld/backend/requestcontext"
 	"ponziworld/backend/services"
 )
 
-// PlayerHandler handles player-related requests
 type PlayerHandler struct {
 	authService   *services.AuthService
 	playerService *services.PlayerService
 }
 
-// NewBankHandler creates a new BankHandler
 func NewPlayerHandler(container *config.Container) *PlayerHandler {
 	return &PlayerHandler{
 		authService:   container.ServiceContainer.Auth,
@@ -54,7 +53,6 @@ func (h *PlayerHandler) CreateNewPlayer(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Use the request context for proper cancellation handling
 	ctx := r.Context()
 
 	// Create new player with bank and initial assets
@@ -83,16 +81,14 @@ func (h *PlayerHandler) GetPlayer(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	// Get username from JWT middleware
-	username := r.Header.Get("X-Username")
-	if username == "" {
+	// Get username from context (set by JwtMiddleware)
+	ctx := r.Context()
+	username, ok := requestcontext.UsernameFromContext(ctx)
+	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Username not found in token"})
 		return
 	}
-
-	// Use the request context for proper cancellation handling
-	ctx := r.Context()
 
 	player, err := h.authService.GetPlayerByUsername(ctx, username)
 	if err != nil {
@@ -101,6 +97,5 @@ func (h *PlayerHandler) GetPlayer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Return player data (password field is already excluded by JSON tag)
 	json.NewEncoder(w).Encode(player)
 }

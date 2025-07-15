@@ -3,19 +3,17 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-
 	"ponziworld/backend/config"
+	"ponziworld/backend/requestcontext"
 	"ponziworld/backend/services"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// PerformanceHistoryHandler handles performance history-related requests
 type PerformanceHistoryHandler struct {
 	performanceHistoryService *services.PerformanceService
 }
 
-// NewPerformanceHistoryHandler creates a new PerformanceHistoryHandler
 func NewPerformanceHistoryHandler(container *config.Container) *PerformanceHistoryHandler {
 	return &PerformanceHistoryHandler{
 		performanceHistoryService: container.ServiceContainer.Performance,
@@ -31,9 +29,10 @@ func (h *PerformanceHistoryHandler) GetPerformanceHistory(w http.ResponseWriter,
 	}
 	w.Header().Set("Content-Type", "application/json")
 
-	// Get username from JWT
-	username := r.Header.Get("X-Username")
-	if username == "" {
+	// Get username from context (set by JwtMiddleware)
+	ctx := r.Context()
+	username, ok := requestcontext.UsernameFromContext(ctx)
+	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Authentication required"})
 		return
@@ -53,9 +52,6 @@ func (h *PerformanceHistoryHandler) GetPerformanceHistory(w http.ResponseWriter,
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid bank ID"})
 		return
 	}
-
-	// Use the request context for proper cancellation handling
-	ctx := r.Context()
 
 	// Get performance history
 	response, err := h.performanceHistoryService.GetPerformanceHistory(ctx, username, bankId)

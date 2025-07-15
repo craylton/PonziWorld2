@@ -12,6 +12,7 @@ import (
 
 	"ponziworld/backend/auth"
 	"ponziworld/backend/middleware"
+	"ponziworld/backend/requestcontext"
 	"ponziworld/backend/services"
 )
 
@@ -49,12 +50,13 @@ func TestJwtAuth(t *testing.T) {
 }
 
 func TestJwtMiddleware(t *testing.T) {
-	// Create a test handler that the middleware will protect
-	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		username := r.Header.Get("X-Username")
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{"username": username})
-	})
+   // Create a test handler that the middleware will protect
+   testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	   // Extract username from context
+	   username, _ := requestcontext.UsernameFromContext(r.Context())
+	   w.Header().Set("Content-Type", "application/json")
+	   json.NewEncoder(w).Encode(map[string]string{"username": username})
+   })
 
 	t.Run("Valid token", func(t *testing.T) {
 		// Generate a valid token
