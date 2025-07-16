@@ -37,10 +37,12 @@ func TestPendingTransactionService_CreateTransactions(t *testing.T) {
 		t.Fatalf("Failed to find test user: %v", err)
 	}
 
-	bank, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user.Id)
-	if err != nil {
-		t.Fatalf("Failed to find test bank: %v", err)
+	// Get the banks for the user
+	banks, err := container.RepositoryContainer.Bank.FindAllByPlayerID(ctx, user.Id)
+	if err != nil { 
+		t.Fatalf("Failed to find test banks: %v", err)
 	}
+	bank := banks[0]
 
 	// Create test asset type
 	assetType := &models.AssetType{
@@ -219,15 +221,17 @@ func TestPendingTransactionService_BankOwnership(t *testing.T) {
 		t.Fatalf("Failed to find second test user: %v", err)
 	}
 
-	bank1, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user1.Id)
-	if err != nil {
-		t.Fatalf("Failed to find first test bank: %v", err)
+	banks1, err := container.RepositoryContainer.Bank.FindAllByPlayerID(ctx, user1.Id)
+	if err != nil { 
+		t.Fatalf("Failed to find first test banks: %v", err)
 	}
-
-	bank2, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user2.Id)
-	if err != nil {
-		t.Fatalf("Failed to find second test bank: %v", err)
+	bank1 := banks1[0]
+	
+	banks2, err := container.RepositoryContainer.Bank.FindAllByPlayerID(ctx, user2.Id)
+	if err != nil { 
+		t.Fatalf("Failed to find second test banks: %v", err)
 	}
+	bank2 := banks2[0]
 
 	// Create test asset type
 	assetType := &models.AssetType{
@@ -288,10 +292,11 @@ func TestPendingTransactionService_MultipleAssets(t *testing.T) {
 		t.Fatalf("Failed to find test user: %v", err)
 	}
 
-	bank, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user.Id)
-	if err != nil {
-		t.Fatalf("Failed to find test bank: %v", err)
+	banks, err := container.RepositoryContainer.Bank.FindAllByPlayerID(ctx, user.Id)
+	if err != nil { 
+		t.Fatalf("Failed to find test banks: %v", err)
 	}
+	bank := banks[0]
 
 	// Create multiple asset types
 	assetType1 := &models.AssetType{
@@ -401,10 +406,11 @@ func TestPendingTransactionService_GetTransactionsByBankID(t *testing.T) {
 		t.Fatalf("Failed to find test user: %v", err)
 	}
 
-	bank, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user.Id)
-	if err != nil {
-		t.Fatalf("Failed to find test bank: %v", err)
+	banks, err := container.RepositoryContainer.Bank.FindAllByPlayerID(ctx, user.Id)
+	if err != nil { 
+		t.Fatalf("Failed to find test banks: %v", err)
 	}
+	bank := banks[0]
 
 	// Create second test user and bank for unauthorized access test
 	username2 := fmt.Sprintf("testuser2_%d", timestamp)
@@ -421,10 +427,11 @@ func TestPendingTransactionService_GetTransactionsByBankID(t *testing.T) {
 		t.Fatalf("Failed to find second test user: %v", err)
 	}
 
-	bank2, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user2.Id)
-	if err != nil {
-		t.Fatalf("Failed to find second test bank: %v", err)
+	banks2, err := container.RepositoryContainer.Bank.FindAllByPlayerID(ctx, user2.Id)
+	if err != nil { 
+		t.Fatalf("Failed to find second test banks: %v", err)
 	}
+	bank2 := banks2[0]
 
 	// Create test asset type
 	assetType := &models.AssetType{
@@ -540,10 +547,11 @@ func TestPendingTransactionService_CreateBuyTransaction(t *testing.T) {
 		t.Fatalf("Failed to find test user: %v", err)
 	}
 
-	bank, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user.Id)
-	if err != nil {
-		t.Fatalf("Failed to find test bank: %v", err)
+	banks, err := container.RepositoryContainer.Bank.FindAllByPlayerID(ctx, user.Id)
+	if err != nil { 
+		t.Fatalf("Failed to find test banks: %v", err)
 	}
+	bank := banks[0]
 
 	// Create test asset type
 	assetType := &models.AssetType{
@@ -614,10 +622,11 @@ func TestPendingTransactionService_CreateSellTransaction(t *testing.T) {
 		t.Fatalf("Failed to find test user: %v", err)
 	}
 
-	bank, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user.Id)
-	if err != nil {
-		t.Fatalf("Failed to find test bank: %v", err)
+	banks, err := container.RepositoryContainer.Bank.FindAllByPlayerID(ctx, user.Id)
+	if err != nil { 
+		t.Fatalf("Failed to find test banks: %v", err)
 	}
+	bank := banks[0]
 
 	// Create test asset type
 	assetType := &models.AssetType{
@@ -688,10 +697,11 @@ func TestPendingTransactionService_BuyAndSellCombination(t *testing.T) {
 		t.Fatalf("Failed to find test user: %v", err)
 	}
 
-	bank, err := container.RepositoryContainer.Bank.FindByPlayerID(ctx, user.Id)
-	if err != nil {
-		t.Fatalf("Failed to find test bank: %v", err)
+	banks, err := container.RepositoryContainer.Bank.FindAllByPlayerID(ctx, user.Id)
+	if err != nil { 
+		t.Fatalf("Failed to find test banks: %v", err)
 	}
+	bank := banks[0]
 
 	// Create test asset type
 	assetType := &models.AssetType{

@@ -20,7 +20,7 @@ func RegisterRoutes(mux *http.ServeMux, container *config.Container) {
 
 	// Register routes
 	mux.HandleFunc("/api/newPlayer", playerHandler.CreateNewPlayer)
-	mux.HandleFunc("/api/bank", middleware.JwtMiddleware(bankHandler.GetBank))
+	mux.HandleFunc("/api/banks", middleware.JwtMiddleware(bankHandler.HandleBank))
 	mux.HandleFunc("/api/login", loginHandler.LogIn)
 	mux.HandleFunc("/api/currentDay", gameHandler.GetCurrentDay)
 	mux.HandleFunc("/api/player", middleware.JwtMiddleware(playerHandler.GetPlayer))

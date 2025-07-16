@@ -18,7 +18,7 @@ type PlayerRepository interface {
 type BankRepository interface {
 	Create(ctx context.Context, bank *models.Bank) error
 	FindByID(ctx context.Context, id primitive.ObjectID) (*models.Bank, error)
-	FindByPlayerID(ctx context.Context, playerID primitive.ObjectID) (*models.Bank, error)
+	FindAllByPlayerID(ctx context.Context, playerID primitive.ObjectID) ([]models.Bank, error)
 }
 
 // AssetRepository defines the interface for asset database operations

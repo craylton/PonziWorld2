@@ -48,19 +48,21 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         setPlayer(playerData);
 
         // Fetch bank data
-        const bankResponse = await makeAuthenticatedRequest('/api/bank');
+        const bankResponse = await makeAuthenticatedRequest('/api/banks');
         if (!bankResponse.ok) {
           onLogout();
           return;
         }
-        const bankData: Bank = await bankResponse.json();
-        setBank(bankData);
+        const bankData: Bank[] = await bankResponse.json();
+        // For now, we'll just use the first bank
+        const firstBank = bankData[0];
+        setBank(firstBank);
 
         // All essential data pieces loaded
         setIsInitialDataLoading(false);
 
         // Fetch performance history (non-essential, can load separately)
-        const historyResponse = await makeAuthenticatedRequest(`/api/historicalPerformance/ownbank/${bankData.id}`);
+        const historyResponse = await makeAuthenticatedRequest(`/api/historicalPerformance/ownbank/${firstBank.id}`);
         if (historyResponse.ok) {
           const historyData: HistoricalPerformance = await historyResponse.json();
           setHistoricalPerformance(historyData);
