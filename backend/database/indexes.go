@@ -27,7 +27,7 @@ func EnsureAllIndexes(dbConfig *config.DatabaseConfig) error {
 		return err
 	}
 
-	if err := EnsurePerformanceHistoryIndexes(dbConfig); err != nil {
+	if err := EnsureHistoricalPerformanceIndexes(dbConfig); err != nil {
 		return err
 	}
 
@@ -90,7 +90,7 @@ func EnsureAssetTypeIndexes(dbConfig *config.DatabaseConfig) error {
 	})
 }
 
-func EnsurePerformanceHistoryIndexes(dbConfig *config.DatabaseConfig) error {
+func EnsureHistoricalPerformanceIndexes(dbConfig *config.DatabaseConfig) error {
 	// Index for efficient queries by bankId, isClaimed, and day
 	err := ensureIndex(dbConfig, "historicalPerformance", "performance_bankId_isClaimed_day_idx", mongo.IndexModel{
 		Keys:    bson.D{{Key: "bankId", Value: 1}, {Key: "isClaimed", Value: 1}, {Key: "day", Value: 1}},

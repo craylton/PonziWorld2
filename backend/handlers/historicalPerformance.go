@@ -10,18 +10,18 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type PerformanceHistoryHandler struct {
-	performanceHistoryService *services.PerformanceService
+type HistoricalPerformanceHandler struct {
+	historicalPerformanceService *services.HistoricalPerformanceService
 }
 
-func NewPerformanceHistoryHandler(container *config.Container) *PerformanceHistoryHandler {
-	return &PerformanceHistoryHandler{
-		performanceHistoryService: container.ServiceContainer.Performance,
+func NewHistoricalPerformanceHandler(container *config.Container) *HistoricalPerformanceHandler {
+	return &HistoricalPerformanceHandler{
+		historicalPerformanceService: container.ServiceContainer.HistoricalPerformance,
 	}
 }
 
-// GetPerformanceHistoryHandler handles GET /api/performanceHistory/ownbank/{bankId}
-func (h *PerformanceHistoryHandler) GetPerformanceHistory(w http.ResponseWriter, r *http.Request) {
+// GetHistoricalPerformanceHandler handles GET /api/historicalperformance/ownbank/{bankId}
+func (h *HistoricalPerformanceHandler) GetHistoricalPerformance(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -54,7 +54,7 @@ func (h *PerformanceHistoryHandler) GetPerformanceHistory(w http.ResponseWriter,
 	}
 
 	// Get performance history
-	response, err := h.performanceHistoryService.GetPerformanceHistory(ctx, username, bankId)
+	response, err := h.historicalPerformanceService.GetHistoricalPerformance(ctx, username, bankId)
 	if err != nil {
 		if err == services.ErrPlayerNotFound {
 			w.WriteHeader(http.StatusNotFound)

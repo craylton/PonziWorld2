@@ -15,7 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func TestPerformanceService_GetPerformanceHistory(t *testing.T) {
+func TestHistoricalPerformanceService_GetHistoricalPerformance(t *testing.T) {
 	// Create test dependencies
 	container, err := CreateTestDependencies("histPerf")
 	if err != nil {
@@ -47,7 +47,7 @@ func TestPerformanceService_GetPerformanceHistory(t *testing.T) {
 	}
 
 	// Test performance history service directly
-	historyResponse, err := container.ServiceContainer.Performance.GetPerformanceHistory(ctx, testUsername, bankID)
+	historyResponse, err := container.ServiceContainer.HistoricalPerformance.GetHistoricalPerformance(ctx, testUsername, bankID)
 	if err != nil {
 		t.Fatalf("Failed to get performance history: %v", err)
 	}
@@ -107,7 +107,7 @@ func TestPerformanceService_GetPerformanceHistory(t *testing.T) {
 	}
 }
 
-func TestPerformanceHistoryUnauthorized(t *testing.T) {
+func TestHistoricalPerformanceUnauthorized(t *testing.T) {
 	// Create test dependencies
 	container, err := CreateTestDependencies("histPerf")
 	if err != nil {
@@ -121,7 +121,7 @@ func TestPerformanceHistoryUnauthorized(t *testing.T) {
 	defer server.Close()
 
 	// Test without authentication
-	req, err := http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/507f1f77bcf86cd799439011", nil)
+	req, err := http.NewRequest("GET", server.URL+"/api/historicalPerformance/ownbank/507f1f77bcf86cd799439011", nil)
 	if err != nil {
 		t.Fatalf("Failed to create request: %v", err)
 	}
@@ -138,7 +138,7 @@ func TestPerformanceHistoryUnauthorized(t *testing.T) {
 	}
 }
 
-func TestPerformanceService_GetPerformanceHistoryInvalidBankID(t *testing.T) {
+func TestHistoricalPerformanceService_GetHistoricalPerformanceInvalidBankID(t *testing.T) {
 	// Create test dependencies
 	container, err := CreateTestDependencies("histPerf")
 	if err != nil {
@@ -160,7 +160,7 @@ func TestPerformanceService_GetPerformanceHistoryInvalidBankID(t *testing.T) {
 
 	// Test with invalid bank ID - this should return error for bank not found
 	invalidBankID := primitive.NewObjectID()
-	_, err = container.ServiceContainer.Performance.GetPerformanceHistory(ctx, testUsername, invalidBankID)
+	_, err = container.ServiceContainer.HistoricalPerformance.GetHistoricalPerformance(ctx, testUsername, invalidBankID)
 	
 	// Should return error since the bank doesn't exist
 	if err == nil {
@@ -168,7 +168,7 @@ func TestPerformanceService_GetPerformanceHistoryInvalidBankID(t *testing.T) {
 	}
 }
 
-func TestPerformanceHistoryOtherPlayersBank(t *testing.T) {
+func TestHistoricalPerformanceOtherPlayersBank(t *testing.T) {
 	// Create test dependencies
 	container, err := CreateTestDependencies("histPerf")
 	if err != nil {
@@ -275,7 +275,7 @@ func TestPerformanceHistoryOtherPlayersBank(t *testing.T) {
 	player2BankId := bankResponse.Id
 
 	// Now, as player 1, try to access player 2's bank performance history
-	req, err = http.NewRequest("GET", server.URL+"/api/performanceHistory/ownbank/"+player2BankId, nil)
+	req, err = http.NewRequest("GET", server.URL+"/api/historicalPerformance/ownbank/"+player2BankId, nil)
 	if err != nil {
 		t.Fatalf("Failed to create performance history request: %v", err)
 	}
@@ -293,7 +293,7 @@ func TestPerformanceHistoryOtherPlayersBank(t *testing.T) {
 	}
 }
 
-func TestPerformanceService_GetPerformanceHistoryDataPersistence(t *testing.T) {
+func TestHistoricalPerformanceService_GetHistoricalPerformanceDataPersistence(t *testing.T) {
 	// Create test dependencies
 	container, err := CreateTestDependencies("histPerf")
 	if err != nil {
@@ -325,13 +325,13 @@ func TestPerformanceService_GetPerformanceHistoryDataPersistence(t *testing.T) {
 	}
 
 	// First call to performance history service
-	firstResponse, err := container.ServiceContainer.Performance.GetPerformanceHistory(ctx, testUsername, bankID)
+	firstResponse, err := container.ServiceContainer.HistoricalPerformance.GetHistoricalPerformance(ctx, testUsername, bankID)
 	if err != nil {
 		t.Fatalf("Failed to get performance history first time: %v", err)
 	}
 
 	// Second call to performance history service (should return identical data)
-	secondResponse, err := container.ServiceContainer.Performance.GetPerformanceHistory(ctx, testUsername, bankID)
+	secondResponse, err := container.ServiceContainer.HistoricalPerformance.GetHistoricalPerformance(ctx, testUsername, bankID)
 	if err != nil {
 		t.Fatalf("Failed to get performance history second time: %v", err)
 	}

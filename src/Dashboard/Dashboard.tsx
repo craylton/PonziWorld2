@@ -9,7 +9,7 @@ import AssetSection from './Assets/AssetSection';
 import { makeAuthenticatedRequest } from '../auth';
 import { BankProvider } from '../contexts/BankContext';
 import type { Bank } from '../models/Bank';
-import type { PerformanceHistory } from '../models/PerformanceHistory';
+import type { HistoricalPerformance } from '../models/HistoricalPerformance';
 import type { Player } from '../models/User';
 
 interface DashboardProps {
@@ -19,7 +19,7 @@ interface DashboardProps {
 export default function Dashboard({ onLogout }: DashboardProps) {
   const [bank, setBank] = useState<Bank | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
-  const [performanceHistory, setPerformanceHistory] = useState<PerformanceHistory | null>(null);
+  const [historicalPerformance, setHistoricalPerformance] = useState<HistoricalPerformance | null>(null);
   const [currentDay, setCurrentDay] = useState<number | null>(null);
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
@@ -60,10 +60,10 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         setIsInitialDataLoading(false);
 
         // Fetch performance history (non-essential, can load separately)
-        const historyResponse = await makeAuthenticatedRequest(`/api/performanceHistory/ownbank/${bankData.id}`);
+        const historyResponse = await makeAuthenticatedRequest(`/api/historicalPerformance/ownbank/${bankData.id}`);
         if (historyResponse.ok) {
-          const historyData: PerformanceHistory = await historyResponse.json();
-          setPerformanceHistory(historyData);
+          const historyData: HistoricalPerformance = await historyResponse.json();
+          setHistoricalPerformance(historyData);
         }
       } catch {
         onLogout();
@@ -85,7 +85,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         bankName={bank.bankName}
         claimedCapital={bank.claimedCapital}
         actualCapital={bank.actualCapital}
-        performanceHistory={performanceHistory}
+        historicalPerformance={historicalPerformance}
         isHistoryLoading={isHistoryLoading}
       />
       <div className="dashboard-layout">

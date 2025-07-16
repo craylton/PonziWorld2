@@ -13,7 +13,7 @@ func RegisterRoutes(mux *http.ServeMux, container *config.Container) {
 	gameHandler := handlers.NewGameHandler(container)
 	playerHandler := handlers.NewPlayerHandler(container)
 	loginHandler := handlers.NewLoginHandler(container)
-	performanceHistoryHandler := handlers.NewPerformanceHistoryHandler(container)
+	historicalPerformanceHandler := handlers.NewHistoricalPerformanceHandler(container)
 	assetTypeHandler := handlers.NewAssetTypeHandler(container)
 	pendingTransactionHandler := handlers.NewPendingTransactionHandler(container)
 
@@ -32,7 +32,7 @@ func RegisterRoutes(mux *http.ServeMux, container *config.Container) {
 		middleware.AdminJwtMiddleware(gameHandler.AdvanceToNextDay, container.ServiceContainer.Auth),
 	)
 	mux.HandleFunc(
-		"/api/performanceHistory/ownbank/{bankId}",
-		middleware.JwtMiddleware(performanceHistoryHandler.GetPerformanceHistory),
+		"/api/historicalPerformance/ownbank/{bankId}",
+		middleware.JwtMiddleware(historicalPerformanceHandler.GetHistoricalPerformance),
 	)
 }

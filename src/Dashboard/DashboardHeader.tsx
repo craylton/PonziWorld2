@@ -3,14 +3,14 @@ import './DashboardHeader.css';
 import CapitalPopup from './CapitalPopup';
 import ChevronIcon from './ChevronIcon';
 import { formatCurrency } from '../utils/currency';
-import type { PerformanceHistory } from '../models/PerformanceHistory';
+import type { HistoricalPerformance } from '../models/HistoricalPerformance';
 
 interface DashboardHeaderProps {
   currentDay: number;
   bankName: string;
   claimedCapital: number;
   actualCapital: number;
-  performanceHistory: PerformanceHistory | null;
+  historicalPerformance: HistoricalPerformance | null;
   isHistoryLoading: boolean;
 }
 
@@ -21,7 +21,7 @@ export default function DashboardHeader({
   bankName,
   claimedCapital,
   actualCapital,
-  performanceHistory,
+  historicalPerformance: historicalPerformance,
   isHistoryLoading
 }: DashboardHeaderProps) {
   const [activePopup, setActivePopup] = useState<PopupType>(null);
@@ -43,11 +43,11 @@ export default function DashboardHeader({
   };
 
   const getPopupPerformanceHistory = () => {
-    if (!performanceHistory) return [];
+    if (!historicalPerformance) return [];
 
     return activePopup === 'claimed'
-      ? performanceHistory.claimedHistory
-      : performanceHistory.actualHistory;
+      ? historicalPerformance.claimedHistory
+      : historicalPerformance.actualHistory;
   };
 
   return (
@@ -88,7 +88,7 @@ export default function DashboardHeader({
         onClose={handleClosePopup}
         title={getPopupTitle()}
         value={getPopupValue()}
-        performanceHistory={getPopupPerformanceHistory()}
+        historicalPerformance={getPopupPerformanceHistory()}
         isHistoryLoading={isHistoryLoading}
       />
     </>

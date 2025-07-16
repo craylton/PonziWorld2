@@ -9,29 +9,29 @@ import (
 )
 
 const (
-	PerformanceHistoryDays  = 30
+	HistoricalPerformanceDays  = 30
 	DefaultPerformanceValue = 1000
 )
 
-type PerformanceService struct {
+type HistoricalPerformanceService struct {
 	bankService *BankService
 	gameService *GameService
 	historyRepo repositories.HistoricalPerformanceRepository
 }
 
-func NewPerformanceService(
+func NewHistoricalPerformanceService(
 	bankService *BankService,
 	gameService *GameService,
 	historyRepo repositories.HistoricalPerformanceRepository,
-) *PerformanceService {
-	return &PerformanceService{
+) *HistoricalPerformanceService {
+	return &HistoricalPerformanceService{
 		bankService: bankService,
 		gameService: gameService,
 		historyRepo: historyRepo,
 	}
 }
 
-func (s *PerformanceService) GetPerformanceHistory(ctx context.Context, username string, bankID primitive.ObjectID) (*models.PerformanceHistoryResponse, error) {
+func (s *HistoricalPerformanceService) GetHistoricalPerformance(ctx context.Context, username string, bankID primitive.ObjectID) (*models.OwnBankHistoricalPerformanceResponse, error) {
 	// Validate ownership
 	if err := s.bankService.ValidateBankOwnership(ctx, username, bankID); err != nil {
 		return nil, err
@@ -41,7 +41,7 @@ func (s *PerformanceService) GetPerformanceHistory(ctx context.Context, username
 	if err != nil {
 		return nil, err
 	}
-	startDay := currentDay - PerformanceHistoryDays
+	startDay := currentDay - HistoricalPerformanceDays
 
 	// Get performance data
 	claimedHistory, actualHistory, err := s.getPerformanceData(ctx, bankID, startDay, currentDay)
@@ -49,13 +49,13 @@ func (s *PerformanceService) GetPerformanceHistory(ctx context.Context, username
 		return nil, err
 	}
 
-	return &models.PerformanceHistoryResponse{
+	return &models.OwnBankHistoricalPerformanceResponse{
 		ClaimedHistory: convertToResponse(claimedHistory),
 		ActualHistory:  convertToResponse(actualHistory),
 	}, nil
 }
 
-func (s *PerformanceService) getPerformanceData(ctx context.Context, bankID primitive.ObjectID, startDay, endDay int) (
+func (s *HistoricalPerformanceService) getPerformanceData(ctx context.Context, bankID primitive.ObjectID, startDay, endDay int) (
 	[]models.HistoricalPerformance,
 	[]models.HistoricalPerformance, error,
 ) {
@@ -86,7 +86,7 @@ func (s *PerformanceService) getPerformanceData(ctx context.Context, bankID prim
 	return claimedHistory, actualHistory, nil
 }
 
-func (s *PerformanceService) ensureClaimedHistory(
+func (s *HistoricalPerformanceService) ensureClaimedHistory(
 	ctx context.Context,
 	bankID primitive.ObjectID,
 	startDay,
@@ -131,7 +131,7 @@ func (s *PerformanceService) ensureClaimedHistory(
 	return finalClaimedHistory, nil
 }
 
-func (s *PerformanceService) CreateInitialPerformanceHistory(
+func (s *HistoricalPerformanceService) CreateInitialHistoricalPerformance(
 	ctx context.Context,
 	bankID primitive.ObjectID,
 	initialCapital int64,
@@ -141,7 +141,7 @@ func (s *PerformanceService) CreateInitialPerformanceHistory(
 		return err
 	}
 
-	startDay := currentDay - PerformanceHistoryDays
+	startDay := currentDay - HistoricalPerformanceDays
 	_, err = s.ensureClaimedHistory(ctx, bankID, startDay, currentDay, []models.HistoricalPerformance{})
 	if err != nil {
 		return err

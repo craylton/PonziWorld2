@@ -5,14 +5,14 @@ import (
 )
 
 type ServiceContainer struct {
-	Auth               *services.AuthService
-	Bank               *services.BankService
-	Asset              *services.AssetService
-	AssetType          *services.AssetTypeService
-	Performance        *services.PerformanceService
-	Player             *services.PlayerService
-	Game               *services.GameService
-	PendingTransaction *services.PendingTransactionService
+	Auth                  *services.AuthService
+	Bank                  *services.BankService
+	Asset                 *services.AssetService
+	AssetType             *services.AssetTypeService
+	HistoricalPerformance *services.HistoricalPerformanceService
+	Player                *services.PlayerService
+	Game                  *services.GameService
+	PendingTransaction    *services.PendingTransactionService
 }
 
 func NewServiceContainer(repositoryContainer *RepositoryContainer) *ServiceContainer {
@@ -26,7 +26,7 @@ func NewServiceContainer(repositoryContainer *RepositoryContainer) *ServiceConta
 	assetService := services.NewAssetService(repositoryContainer.Asset, repositoryContainer.AssetType)
 	assetTypeService := services.NewAssetTypeService(repositoryContainer.AssetType)
 	gameService := services.NewGameService(repositoryContainer.Game)
-	performanceService := services.NewPerformanceService(
+	historicalPerformanceService := services.NewHistoricalPerformanceService(
 		bankService,
 		gameService,
 		repositoryContainer.HistoricalPerformance,
@@ -35,7 +35,7 @@ func NewServiceContainer(repositoryContainer *RepositoryContainer) *ServiceConta
 		authService,
 		bankService,
 		assetService,
-		performanceService,
+		historicalPerformanceService,
 	)
 	pendingTransactionService := services.NewPendingTransactionService(
 		repositoryContainer.PendingTransaction,
@@ -45,13 +45,13 @@ func NewServiceContainer(repositoryContainer *RepositoryContainer) *ServiceConta
 	)
 
 	return &ServiceContainer{
-		Auth:               authService,
-		Bank:               bankService,
-		Asset:              assetService,
-		AssetType:          assetTypeService,
-		Performance:        performanceService,
-		Player:             playerService,
-		Game:               gameService,
-		PendingTransaction: pendingTransactionService,
+		Auth:                  authService,
+		Bank:                  bankService,
+		Asset:                 assetService,
+		AssetType:             assetTypeService,
+		HistoricalPerformance: historicalPerformanceService,
+		Player:                playerService,
+		Game:                  gameService,
+		PendingTransaction:    pendingTransactionService,
 	}
 }

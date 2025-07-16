@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import './CapitalPopup.css';
 import { formatCurrency } from '../utils/currency';
-import type { PerformanceHistoryEntry } from '../models/PerformanceHistory';
+import type { HistoricalPerformanceEntry } from '../models/HistoricalPerformance';
 import LineGraph from './Assets/LineGraph';
 
 interface CapitalPopupProps {
@@ -9,7 +9,7 @@ interface CapitalPopupProps {
   onClose: () => void;
   title: string;
   value: number;
-  performanceHistory: PerformanceHistoryEntry[] | null;
+  historicalPerformance: HistoricalPerformanceEntry[] | null;
   isHistoryLoading: boolean;
 }
 
@@ -18,14 +18,14 @@ export default function CapitalPopup({
   onClose,
   title,
   value,
-  performanceHistory,
+  historicalPerformance: historicalPerformance,
   isHistoryLoading
 }: CapitalPopupProps) {
   // Format the chart data based on the performance history
   const getChartData = () => {
-    if (!performanceHistory) return [];
+    if (!historicalPerformance) return [];
 
-    return performanceHistory.map(entry => ({
+    return historicalPerformance.map(entry => ({
       day: entry.day,
       value: entry.value
     }));
@@ -69,7 +69,7 @@ export default function CapitalPopup({
             <div className="capital-popup__loading">
               <p>Loading chart data...</p>
             </div>
-          ) : performanceHistory ? (
+          ) : historicalPerformance ? (
             <div className="capital-popup__chart">
               <LineGraph
                 data={chartData}

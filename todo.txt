@@ -1,7 +1,6 @@
 
 
 Next up:
-Revisit go contexts
 Make all purchases come out of cash
 Put assets in the history collection
     Also display that history when you click an asset
