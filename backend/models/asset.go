@@ -14,3 +14,9 @@ type AssetResponse struct {
 	AssetTypeId string `json:"assetTypeId"`
 	AssetType   string `json:"assetType"`
 }
+
+type AssetDetailsResponse struct {
+	InvestedAmount  int64                           `json:"investedAmount"`
+	PendingAmount   int64                           `json:"pendingAmount"`
+	HistoricalData  []HistoricalPerformanceResponse `json:"historicalData"`
+}

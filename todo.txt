@@ -1,4 +1,37 @@
 
+Right now:
+When going to the dashboard we currently look up a list of all assets owned by this bank
+We then separately look up a list of all assets
+I think this is fine, except the data we return should probably be simpler
+Actually I don't think it's fine
+When we look up a list of all assets owned by this bank we should probably return all available assets
+That way we can create an AssetSummary for each asset
+Each asset then needs to look up its own data
+So this looks like:
+    UI requests bank data
+    Backend returns: 
+        id
+        name
+        actual amount
+        claimed amount
+        list of all available assets
+            asset ID
+            name
+            isInvestedOrPending
+    UI populates the header with basic data
+    UI creates an AssetSummary for each available asset
+    Each AssetSummary makes a new request to fetch more detail
+    Backend returns:
+        invested amount
+        pending amount
+        7 day history (%)
+    You then have the option to drill deeper into the asset where you can get up to 30 days history
+
+I can split this up into the following tasks:
+    1. Create a new endpoint that gets the details of a particular asset (/api/asset/{assetId})
+    2. Modify the /api/bank/ endpoint to return minimal asset data and associated UI changes
+    3. Get the asset summary component to look up the asset details
+
 
 Next up:
 Make all purchases come out of cash

@@ -77,6 +77,24 @@ func (r *PendingTransactionRepositoryImpl) FindByBuyerBankIDAndAssetID(
 	return transactions, nil
 }
 
+func (r *PendingTransactionRepositoryImpl) SumPendingAmountByBankIDAndAssetID(
+	ctx context.Context,
+	buyerBankID,
+	assetID primitive.ObjectID,
+) (int64, error) {
+	transactions, err := r.FindByBuyerBankIDAndAssetID(ctx, buyerBankID, assetID)
+	if err != nil {
+		return 0, err
+	}
+
+	var totalAmount int64
+	for _, transaction := range transactions {
+		totalAmount += transaction.Amount
+	}
+
+	return totalAmount, nil
+}
+
 func (r *PendingTransactionRepositoryImpl) UpdateAmount(
 	ctx context.Context,
 	id primitive.ObjectID,

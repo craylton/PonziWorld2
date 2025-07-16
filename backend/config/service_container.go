@@ -23,14 +23,21 @@ func NewServiceContainer(repositoryContainer *RepositoryContainer) *ServiceConta
 		repositoryContainer.Asset,
 		repositoryContainer.AssetType,
 	)
-	assetService := services.NewAssetService(repositoryContainer.Asset, repositoryContainer.AssetType)
-	assetTypeService := services.NewAssetTypeService(repositoryContainer.AssetType)
 	gameService := services.NewGameService(repositoryContainer.Game)
 	historicalPerformanceService := services.NewHistoricalPerformanceService(
 		bankService,
 		gameService,
 		repositoryContainer.HistoricalPerformance,
 	)
+	assetService := services.NewAssetService(
+		repositoryContainer.Asset,
+		repositoryContainer.AssetType,
+		repositoryContainer.Bank,
+		bankService,
+		repositoryContainer.PendingTransaction,
+		historicalPerformanceService,
+	)
+	assetTypeService := services.NewAssetTypeService(repositoryContainer.AssetType)
 	playerService := services.NewPlayerService(
 		authService,
 		bankService,

@@ -25,6 +25,7 @@ type BankRepository interface {
 type AssetRepository interface {
 	Create(ctx context.Context, asset *models.Asset) error
 	FindByBankID(ctx context.Context, bankID primitive.ObjectID) ([]models.Asset, error)
+	FindByBankIDAndAssetTypeID(ctx context.Context, bankID, assetTypeID primitive.ObjectID) (*models.Asset, error)
 	CalculateActualCapital(ctx context.Context, bankID primitive.ObjectID) (int64, error)
 }
 
@@ -58,6 +59,7 @@ type PendingTransactionRepository interface {
 	Create(ctx context.Context, transaction *models.PendingTransaction) error
 	FindByBuyerBankID(ctx context.Context, buyerBankID primitive.ObjectID) ([]models.PendingTransaction, error)
 	FindByBuyerBankIDAndAssetID(ctx context.Context, buyerBankID, assetID primitive.ObjectID) ([]models.PendingTransaction, error)
+	SumPendingAmountByBankIDAndAssetID(ctx context.Context, buyerBankID, assetID primitive.ObjectID) (int64, error)
 	UpdateAmount(ctx context.Context, id primitive.ObjectID, newAmount int64) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
 }

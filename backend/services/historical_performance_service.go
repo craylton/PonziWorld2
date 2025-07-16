@@ -55,6 +55,22 @@ func (s *HistoricalPerformanceService) GetHistoricalPerformance(ctx context.Cont
 	}, nil
 }
 
+func (s *HistoricalPerformanceService) GetAssetHistoricalPerformance(ctx context.Context, assetID primitive.ObjectID, days int) ([]models.HistoricalPerformanceResponse, error) {
+	currentDay, err := s.gameService.GetCurrentDay(ctx)
+	if err != nil {
+		return nil, err
+	}
+	startDay := currentDay - days
+
+	// Get performance data for the asset
+	claimedHistory, _, err := s.getPerformanceData(ctx, assetID, startDay, currentDay)
+	if err != nil {
+		return nil, err
+	}
+
+	return convertToResponse(claimedHistory), nil
+}
+
 func (s *HistoricalPerformanceService) getPerformanceData(ctx context.Context, bankID primitive.ObjectID, startDay, endDay int) (
 	[]models.HistoricalPerformance,
 	[]models.HistoricalPerformance, error,
