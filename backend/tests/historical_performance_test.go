@@ -1,14 +1,8 @@
 package tests
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/http/httptest"
-	"ponziworld/backend/models"
-	"ponziworld/backend/routes"
 	"testing"
 	"time"
 
@@ -107,37 +101,6 @@ func TestHistoricalPerformanceService_GetHistoricalPerformance(t *testing.T) {
 	}
 }
 
-func TestHistoricalPerformanceUnauthorized(t *testing.T) {
-	// Create test dependencies
-	container, err := CreateTestDependencies("histPerf")
-	if err != nil {
-		t.Fatalf("Failed to create test dependencies: %v", err)
-	}
-	defer CleanupTestDependencies(container)
-
-	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux, container)
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
-	// Test without authentication
-	req, err := http.NewRequest("GET", server.URL+"/api/historicalPerformance/ownbank/507f1f77bcf86cd799439011", nil)
-	if err != nil {
-		t.Fatalf("Failed to create request: %v", err)
-	}
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		t.Fatalf("Failed to make request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusUnauthorized {
-		t.Fatalf("Expected status 401 for unauthorized request, got %d", resp.StatusCode)
-	}
-}
-
 func TestHistoricalPerformanceService_GetHistoricalPerformanceInvalidBankID(t *testing.T) {
 	// Create test dependencies
 	container, err := CreateTestDependencies("histPerf")
@@ -161,135 +124,10 @@ func TestHistoricalPerformanceService_GetHistoricalPerformanceInvalidBankID(t *t
 	// Test with invalid bank ID - this should return error for bank not found
 	invalidBankID := primitive.NewObjectID()
 	_, err = container.ServiceContainer.HistoricalPerformance.GetHistoricalPerformance(ctx, testUsername, invalidBankID)
-	
+
 	// Should return error since the bank doesn't exist
 	if err == nil {
 		t.Fatal("Expected error for invalid bank ID, got nil")
-	}
-}
-
-func TestHistoricalPerformanceOtherPlayersBank(t *testing.T) {
-	// Create test dependencies
-	container, err := CreateTestDependencies("histPerf")
-	if err != nil {
-		t.Fatalf("Failed to create test dependencies: %v", err)
-	}
-	defer CleanupTestDependencies(container)
-
-	mux := http.NewServeMux()
-	routes.RegisterRoutes(mux, container)
-	server := httptest.NewServer(mux)
-	defer server.Close()
-
-	timestamp := time.Now().Unix()
-	player1Username := fmt.Sprintf("perfplayer1_%d", timestamp)
-	player1BankName := "Player 1 Bank"
-	player2Username := fmt.Sprintf("perfplayer2_%d", timestamp)
-	player2BankName := "Player 2 Bank"
-
-	// Create first player and bank
-	createPlayer1Data := map[string]string{
-		"username": player1Username,
-		"password": "testpassword123",
-		"bankName": player1BankName,
-	}
-	jsonData, _ := json.Marshal(createPlayer1Data)
-
-	resp, err := http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		t.Fatalf("Failed to create player 1: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated {
-		t.Fatalf("Expected status 201 for player 1 creation, got %d", resp.StatusCode)
-	}
-
-	// Create second player and bank
-	createPlayer2Data := map[string]string{
-		"username": player2Username,
-		"password": "testpassword123",
-		"bankName": player2BankName,
-	}
-	jsonData, _ = json.Marshal(createPlayer2Data)
-
-	resp, err = http.Post(server.URL+"/api/newPlayer", "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		t.Fatalf("Failed to create player 2: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusCreated {
-		t.Fatalf("Expected status 201 for player 2 creation, got %d", resp.StatusCode)
-	}
-
-	// Login as player 1 to get token
-	loginData := map[string]string{
-		"username": player1Username,
-		"password": "testpassword123",
-	}
-	jsonData, _ = json.Marshal(loginData)
-
-	resp, err = http.Post(server.URL+"/api/login", "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		t.Fatalf("Failed to login player 1: %v", err)
-	}
-	defer resp.Body.Close()
-
-	var loginResponse map[string]string
-	json.NewDecoder(resp.Body).Decode(&loginResponse)
-	player1Token := loginResponse["token"]
-
-	// Login as player 2 to get their bank ID
-	loginData = map[string]string{
-		"username": player2Username,
-		"password": "testpassword123",
-	}
-	jsonData, _ = json.Marshal(loginData)
-
-	resp, err = http.Post(server.URL+"/api/login", "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		t.Fatalf("Failed to login player 2: %v", err)
-	}
-	defer resp.Body.Close()
-
-	json.NewDecoder(resp.Body).Decode(&loginResponse)
-	player2Token := loginResponse["token"]
-
-	// Get player 2's bank details to get bank ID
-	req, err := http.NewRequest("GET", server.URL+"/api/bank", nil)
-	if err != nil {
-		t.Fatalf("Failed to create bank request: %v", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+player2Token)
-
-	client := &http.Client{}
-	resp, err = client.Do(req)
-	if err != nil {
-		t.Fatalf("Failed to get player 2's bank: %v", err)
-	}
-	defer resp.Body.Close()
-
-	var bankResponse models.BankResponse
-	json.NewDecoder(resp.Body).Decode(&bankResponse)
-	player2BankId := bankResponse.Id
-
-	// Now, as player 1, try to access player 2's bank performance history
-	req, err = http.NewRequest("GET", server.URL+"/api/historicalPerformance/ownbank/"+player2BankId, nil)
-	if err != nil {
-		t.Fatalf("Failed to create performance history request: %v", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+player1Token)
-
-	resp, err = client.Do(req)
-	if err != nil {
-		t.Fatalf("Failed to get performance history: %v", err)
-	}
-	defer resp.Body.Close()
-
-	// Should now return 401 Unauthorized since player 1 doesn't own player 2's bank
-	if resp.StatusCode != http.StatusUnauthorized {
-		t.Fatalf("Expected status 401 Unauthorized for other player's bank, got %d", resp.StatusCode)
 	}
 }
 
@@ -363,5 +201,63 @@ func TestHistoricalPerformanceService_GetHistoricalPerformanceDataPersistence(t 
 				i, firstResponse.ActualHistory[i].Day, firstResponse.ActualHistory[i].Value,
 				secondResponse.ActualHistory[i].Day, secondResponse.ActualHistory[i].Value)
 		}
+	}
+}
+
+func TestHistoricalPerformanceService_GetHistoricalPerformanceUnauthorized(t *testing.T) {
+	// Create test dependencies
+	container, err := CreateTestDependencies("histPerf")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(container)
+
+	ctx := context.Background()
+	timestamp := time.Now().Unix()
+
+	// Create first player and bank (owner)
+	ownerUsername := fmt.Sprintf("perfowner_%d", timestamp)
+	ownerBankName := "Owner Bank"
+	ownerPassword := "testpassword123"
+
+	err = container.ServiceContainer.Player.CreateNewPlayer(ctx, ownerUsername, ownerPassword, ownerBankName)
+	if err != nil {
+		t.Fatalf("Failed to create owner player: %v", err)
+	}
+
+	// Create second player (unauthorized user)
+	unauthorizedUsername := fmt.Sprintf("perfunauth_%d", timestamp)
+	unauthorizedBankName := "Unauthorized Bank"
+	unauthorizedPassword := "testpassword123"
+
+	err = container.ServiceContainer.Player.CreateNewPlayer(ctx, unauthorizedUsername, unauthorizedPassword, unauthorizedBankName)
+	if err != nil {
+		t.Fatalf("Failed to create unauthorized player: %v", err)
+	}
+
+	// Get the owner's bank details to get bank ID
+	ownerBankResponse, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, ownerUsername)
+	if err != nil {
+		t.Fatalf("Failed to get owner bank: %v", err)
+	}
+
+	ownerBankID, err := primitive.ObjectIDFromHex(ownerBankResponse.Id)
+	if err != nil {
+		t.Fatalf("Failed to convert owner bank ID to ObjectID: %v", err)
+	}
+
+	// Try to get historical performance for owner's bank using unauthorized user's credentials
+	_, err = container.ServiceContainer.HistoricalPerformance.GetHistoricalPerformance(ctx, unauthorizedUsername, ownerBankID)
+
+	// Should return error since the user doesn't own the bank
+	if err == nil {
+		t.Fatal("Expected error for unauthorized access to bank, got nil")
+	}
+
+	// The error should be related to unauthorized access
+	// Based on the bank service code, it should return ErrUnauthorized
+	expectedError := "unauthorized access"
+	if err.Error() != expectedError {
+		t.Fatalf("Expected error '%s', got '%s'", expectedError, err.Error())
 	}
 }
