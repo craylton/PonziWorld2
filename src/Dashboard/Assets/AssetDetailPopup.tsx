@@ -28,18 +28,18 @@ export default function AssetDetailPopup({
   const getChartData = () => {
     const data = [];
     let currentValue = 100;
-    
+
     for (let i = 0; i < 30; i++) {
       data.push({
         day: i + 1,
         value: Math.round(currentValue)
       });
-      
+
       // Use the same algorithm: multiply by random factor between 0.9 and 1.2
       const factor = 0.9 + Math.random() * 0.3; // 0.9 to 1.2
       currentValue = currentValue * factor;
     }
-    
+
     return data;
   };
 
@@ -79,16 +79,13 @@ export default function AssetDetailPopup({
 
       if (response.ok) {
         showLoadingPopup('success', 'Transaction completed successfully');
-        
-        // Refresh data in the background after user sees the success message
-        setTimeout(async () => {
-          // Refresh bank data first (to update availableAssets list)
-          if (refreshBank) {
-            await refreshBank();
-          }
-          // Then refresh individual asset details
-          refreshAssets();
-        }, 1500); // 1.5 second delay
+
+        // Refresh bank data first (to update availableAssets list)
+        if (refreshBank) {
+          await refreshBank();
+        }
+        // Then refresh individual asset details
+        refreshAssets();
       } else {
         // Error from server
         const error = await response.json();
@@ -113,7 +110,7 @@ export default function AssetDetailPopup({
   }, [isOpen]);
 
   if (!isOpen) return null;
-  
+
   const hasInvestmentOrPending = asset.investedAmount > 0 || asset.pendingAmount !== 0;
 
   return (

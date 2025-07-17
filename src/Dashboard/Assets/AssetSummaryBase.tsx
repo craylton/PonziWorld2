@@ -6,7 +6,6 @@ import AssetDetailPopup from './AssetDetailPopup';
 
 interface AssetSummaryBaseProps {
   asset: AssetDetailsResponse;
-  skipDataFetch?: boolean; // New prop to skip data fetching when AssetSummary already provides it
 }
 
 export default function AssetSummaryBase({ asset }: AssetSummaryBaseProps) {

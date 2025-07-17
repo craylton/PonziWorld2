@@ -1,6 +1,7 @@
 import type { AvailableAsset } from '../../models/AvailableAsset';
 import AssetProvider from '../../contexts/AssetContext';
 import AssetList from './AssetList';
+import { useEffect, useState } from 'react';
 
 interface AssetSectionProps {
   availableAssets: AvailableAsset[];
@@ -8,25 +9,27 @@ interface AssetSectionProps {
 }
 
 export default function AssetSection({ availableAssets, onRefreshBank }: AssetSectionProps) {
-  const loadInvestedAssets = async (): Promise<AvailableAsset[]> => {
-    return availableAssets.filter(asset => asset.isInvestedOrPending);
-  };
+  const [investedAssets, setInvestedAssets] = useState<AvailableAsset[]>([]);
+  const [uninvestedAssets, setUninvestedAssets] = useState<AvailableAsset[]>([]);
 
-  const loadAvailableAssets = async (): Promise<AvailableAsset[]> => {
-    return availableAssets.filter(asset => !asset.isInvestedOrPending);
-  };
+  useEffect(() => {
+    const invested = availableAssets.filter(asset => asset.isInvestedOrPending);
+    const uninvested = availableAssets.filter(asset => !asset.isInvestedOrPending);
+    setInvestedAssets(invested);
+    setUninvestedAssets(uninvested);
+  }, [availableAssets]);
 
   return (
     <AssetProvider refreshBank={onRefreshBank}>
       <AssetList
         title="Your Assets"
-        onLoad={loadInvestedAssets}
         isExpandedByDefault={true}
+        assets={investedAssets}
       />
-      
+
       <AssetList
         title="Available Assets"
-        onLoad={loadAvailableAssets}
+        assets={uninvestedAssets}
         isExpandedByDefault={false}
       />
     </AssetProvider>

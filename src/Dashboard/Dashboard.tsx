@@ -26,7 +26,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [isInitialDataLoading, setIsInitialDataLoading] = useState(true);
   const [isHistoryLoading, setIsHistoryLoading] = useState(true);
 
-  const fetchBankData = useCallback(async (currentBankId?: string) => {
+  const fetchBankData = useCallback(async () => {
     try {
       // Fetch bank data
       const bankResponse = await makeAuthenticatedRequest('/api/banks');
@@ -38,15 +38,6 @@ export default function Dashboard({ onLogout }: DashboardProps) {
       // For now, we'll just use the first bank
       const firstBank = bankData[0];
       setBank(firstBank);
-
-      // If this is an update (not initial load), refresh historical performance too
-      if (currentBankId) {
-        const historyResponse = await makeAuthenticatedRequest(`/api/historicalPerformance/ownbank/${firstBank.id}`);
-        if (historyResponse.ok) {
-          const historyData: HistoricalPerformance = await historyResponse.json();
-          setHistoricalPerformance(historyData);
-        }
-      }
 
       return firstBank;
     } catch {
@@ -127,9 +118,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
           <BankProvider bankId={bank.id}>
             <AssetSection 
               availableAssets={bank.availableAssets} 
-              onRefreshBank={async () => {
-                await fetchBankData(bank.id);
-              }}
+              onRefreshBank={async () => { await fetchBankData(); }}
             />
           </BankProvider>
 
