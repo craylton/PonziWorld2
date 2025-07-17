@@ -55,6 +55,7 @@ export default function LoadingPopup({
             role="dialog"
             aria-modal="true"
             aria-labelledby="loading-popup-title"
+            style={{ zIndex: 2500 }} // Higher z-index to appear above other popups
         >
             <div className="capital-popup loading-popup">
                 <div className="capital-popup__header">

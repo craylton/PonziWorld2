@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import './Dashboard.css';
 import DashboardHeader from './DashboardHeader';
 import InvestorsButton from './SidePanel/Investors/InvestorsButton';
@@ -26,6 +26,35 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [isInitialDataLoading, setIsInitialDataLoading] = useState(true);
   const [isHistoryLoading, setIsHistoryLoading] = useState(true);
 
+  const fetchBankData = useCallback(async (currentBankId?: string) => {
+    try {
+      // Fetch bank data
+      const bankResponse = await makeAuthenticatedRequest('/api/banks');
+      if (!bankResponse.ok) {
+        onLogout();
+        return null;
+      }
+      const bankData: Bank[] = await bankResponse.json();
+      // For now, we'll just use the first bank
+      const firstBank = bankData[0];
+      setBank(firstBank);
+
+      // If this is an update (not initial load), refresh historical performance too
+      if (currentBankId) {
+        const historyResponse = await makeAuthenticatedRequest(`/api/historicalPerformance/ownbank/${firstBank.id}`);
+        if (historyResponse.ok) {
+          const historyData: HistoricalPerformance = await historyResponse.json();
+          setHistoricalPerformance(historyData);
+        }
+      }
+
+      return firstBank;
+    } catch {
+      onLogout();
+      return null;
+    }
+  }, [onLogout]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -48,15 +77,10 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         setPlayer(playerData);
 
         // Fetch bank data
-        const bankResponse = await makeAuthenticatedRequest('/api/banks');
-        if (!bankResponse.ok) {
-          onLogout();
+        const firstBank = await fetchBankData();
+        if (!firstBank) {
           return;
         }
-        const bankData: Bank[] = await bankResponse.json();
-        // For now, we'll just use the first bank
-        const firstBank = bankData[0];
-        setBank(firstBank);
 
         // All essential data pieces loaded
         setIsInitialDataLoading(false);
@@ -74,7 +98,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
       }
     };
     fetchData();
-  }, [onLogout]);
+  }, [onLogout, fetchBankData]);
 
   if (isInitialDataLoading || !bank || !player || currentDay === null) {
     return <div>Loading...</div>;
@@ -101,7 +125,12 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             onClick={() => setIsLeftPanelOpen(!isLeftPanelOpen)}
           />
           <BankProvider bankId={bank.id}>
-            <AssetSection availableAssets={bank.availableAssets} />
+            <AssetSection 
+              availableAssets={bank.availableAssets} 
+              onRefreshBank={async () => {
+                await fetchBankData(bank.id);
+              }}
+            />
           </BankProvider>
 
           <SettingsButton

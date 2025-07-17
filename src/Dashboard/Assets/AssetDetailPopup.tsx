@@ -12,19 +12,15 @@ interface AssetDetailPopupProps {
   isOpen: boolean;
   onClose: () => void;
   asset: AssetDetailsResponse;
-  onTransactionStart: () => void;
-  onTransactionComplete: (success: boolean, message: string) => void;
 }
 
 export default function AssetDetailPopup({
   isOpen,
   onClose,
-  asset,
-  onTransactionStart,
-  onTransactionComplete
+  asset
 }: AssetDetailPopupProps) {
   const { bankId } = useBankContext();
-  const { refreshAssets } = useAssetContext();
+  const { refreshAssets, refreshBank, showLoadingPopup } = useAssetContext();
   const [transactionPopupOpen, setTransactionPopupOpen] = useState(false);
   const [transactionType, setTransactionType] = useState<'buy' | 'sell'>('buy');
 
@@ -61,13 +57,9 @@ export default function AssetDetailPopup({
   };
 
   const handleTransactionConfirm = async (amount: number) => {
-    // Close both popups and notify parent to show loading
+    // Close transaction popup and show global loading popup
     setTransactionPopupOpen(false);
-    // Close the asset detail popup with a slight delay to ensure loading popup appears
-    setTimeout(() => {
-      onClose();
-    }, 10);
-    onTransactionStart();
+    showLoadingPopup('loading', 'Processing transaction...');
 
     try {
       // Determine the endpoint based on transaction type
@@ -86,19 +78,27 @@ export default function AssetDetailPopup({
       });
 
       if (response.ok) {
-        onTransactionComplete(true, 'Transaction completed successfully');
-        // Refresh assets in the background
-        refreshAssets();
+        showLoadingPopup('success', 'Transaction completed successfully');
+        
+        // Refresh data in the background after user sees the success message
+        setTimeout(async () => {
+          // Refresh bank data first (to update availableAssets list)
+          if (refreshBank) {
+            await refreshBank();
+          }
+          // Then refresh individual asset details
+          refreshAssets();
+        }, 1500); // 1.5 second delay
       } else {
         // Error from server
         const error = await response.json();
         console.error(`${transactionType} transaction failed:`, error);
-        onTransactionComplete(false, error.error || 'Transaction failed');
+        showLoadingPopup('error', error.error || 'Transaction failed');
       }
     } catch (error) {
       // Network or other error
       console.error(`Error during ${transactionType} transaction:`, error);
-      onTransactionComplete(false, 'Network error occurred');
+      showLoadingPopup('error', 'Network error occurred');
     }
   };
 

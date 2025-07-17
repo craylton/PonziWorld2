@@ -3,7 +3,6 @@ import type { AssetDetailsResponse } from '../../models/AssetDetails';
 import './AssetList.css';
 import AssetSummaryChart from './AssetSummaryChart';
 import AssetDetailPopup from './AssetDetailPopup';
-import LoadingPopup from './LoadingPopup';
 
 interface AssetSummaryBaseProps {
   asset: AssetDetailsResponse;
@@ -12,9 +11,6 @@ interface AssetSummaryBaseProps {
 
 export default function AssetSummaryBase({ asset }: AssetSummaryBaseProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [loadingPopupOpen, setLoadingPopupOpen] = useState(false);
-  const [loadingStatus, setLoadingStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [loadingMessage, setLoadingMessage] = useState<string>('');
 
   // Use historical data values for calculations, or empty array if loading
   const historicalValues = asset?.historicalData?.map(entry => entry.value) || [];
@@ -38,21 +34,6 @@ export default function AssetSummaryBase({ asset }: AssetSummaryBaseProps) {
 
   const handleChartClick = () => setIsPopupOpen(true);
   const handleClosePopup = () => setIsPopupOpen(false);
-
-  const handleTransactionStart = () => {
-    setLoadingPopupOpen(true);
-    setLoadingStatus('loading');
-    setLoadingMessage('');
-  };
-
-  const handleTransactionComplete = (success: boolean, message: string) => {
-    setLoadingStatus(success ? 'success' : 'error');
-    setLoadingMessage(message);
-  };
-
-  const handleLoadingClose = () => {
-    setLoadingPopupOpen(false);
-  };
 
   return (
     <>
@@ -81,14 +62,6 @@ export default function AssetSummaryBase({ asset }: AssetSummaryBaseProps) {
         isOpen={isPopupOpen}
         onClose={handleClosePopup}
         asset={asset}
-        onTransactionStart={handleTransactionStart}
-        onTransactionComplete={handleTransactionComplete}
-      />
-      <LoadingPopup
-        isOpen={loadingPopupOpen}
-        onClose={handleLoadingClose}
-        status={loadingStatus}
-        message={loadingMessage}
       />
     </>
   );

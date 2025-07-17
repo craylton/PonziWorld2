@@ -4,9 +4,10 @@ import AssetList from './AssetList';
 
 interface AssetSectionProps {
   availableAssets: AvailableAsset[];
+  onRefreshBank: () => Promise<void>;
 }
 
-export default function AssetSection({ availableAssets }: AssetSectionProps) {
+export default function AssetSection({ availableAssets, onRefreshBank }: AssetSectionProps) {
   const loadInvestedAssets = async (): Promise<AvailableAsset[]> => {
     return availableAssets.filter(asset => asset.isInvestedOrPending);
   };
@@ -16,7 +17,7 @@ export default function AssetSection({ availableAssets }: AssetSectionProps) {
   };
 
   return (
-    <AssetProvider>
+    <AssetProvider refreshBank={onRefreshBank}>
       <AssetList
         title="Your Assets"
         onLoad={loadInvestedAssets}
