@@ -1,4 +1,5 @@
 import type { AssetType } from '../../models/AssetType';
+import type { Asset as ModelAsset } from '../../models/Asset';
 import type { Asset } from './Asset';
 import type { PendingTransaction } from '../../models/PendingTransaction';
 import { makeAuthenticatedRequest } from '../../auth';
@@ -7,21 +8,8 @@ import AssetProvider from '../../contexts/AssetContext';
 import AssetList from './AssetList';
 import { useCallback } from 'react';
 
-const generateRandomDataPoints = (length = 8): number[] => {
-  const dataPoints: number[] = [];
-  let currentValue = 100;
-
-  for (let i = 0; i < length; i++) {
-    dataPoints.push(currentValue);
-    const factor = 0.8 + Math.random() * 0.5; // 0.8 to 1.3
-    currentValue = Math.round(currentValue * factor);
-  }
-
-  return dataPoints;
-};
-
 interface AssetSectionProps {
-  bankAssets: Asset[];
+  bankAssets: ModelAsset[];
 }
 
 export default function AssetSection({ bankAssets }: AssetSectionProps) {
@@ -80,10 +68,7 @@ export default function AssetSection({ bankAssets }: AssetSectionProps) {
       fetchPendingTransactions(),
     ]);
 
-    return getFilteredAssetTypes(assetTypes, pendingTransactions).map(asset => ({
-      ...asset,
-      dataPoints: generateRandomDataPoints(),
-    }));
+    return getFilteredAssetTypes(assetTypes, pendingTransactions);
   }, [fetchAssetTypes, fetchPendingTransactions, getFilteredAssetTypes]);
 
   const getInvestedAssetTypes = useCallback(async (): Promise<Asset[]> => {
@@ -101,7 +86,6 @@ export default function AssetSection({ bankAssets }: AssetSectionProps) {
         assetType: asset.assetType,
         assetTypeId: asset.assetTypeId,
         amount: asset.amount,
-        dataPoints: generateRandomDataPoints(),
         pendingAmount: pendingTransaction?.amount || 0,
       };
     });
@@ -114,7 +98,6 @@ export default function AssetSection({ bankAssets }: AssetSectionProps) {
         assetType: assetTypeMap.get(pt.assetId) || 'Unknown Asset',
         assetTypeId: pt.assetId,
         amount: 0,
-        dataPoints: generateRandomDataPoints(),
         pendingAmount: pt.amount,
       }));
 

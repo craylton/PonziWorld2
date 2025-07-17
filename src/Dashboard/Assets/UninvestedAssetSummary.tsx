@@ -4,17 +4,16 @@ import './AssetList.css';
 
 interface AssetSummaryProps {
   asset: Asset;
-  historicalValues: number[];
 }
 
-export default function UninvestedAssetSummary({ asset, historicalValues }: AssetSummaryProps) {
+export default function UninvestedAssetSummary({ asset }: AssetSummaryProps) {
   return (
     <>
       <div className="asset-list__item">
         <div className="asset-list__content">
           <div className="asset-list__type">{asset.assetType}</div>
         </div>
-        <AssetSummaryBase asset={asset} historicalValues={historicalValues} />
+        <AssetSummaryBase asset={asset} />
       </div>
     </>
   );

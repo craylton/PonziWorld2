@@ -97,13 +97,11 @@ export default function AssetList({ title, onLoad, isExpandedByDefault }: AssetL
                                 <InvestedAssetSummary
                                     key={`${asset.assetType}-${index}`}
                                     asset={asset}
-                                    historicalValues={asset.dataPoints ?? []}
                                 />
                             ) : (
                                 <UninvestedAssetSummary
                                     key={`${asset.assetType}-${index}`}
                                     asset={asset}
-                                    historicalValues={asset.dataPoints ?? []}
                                 />
                             );
                         })
