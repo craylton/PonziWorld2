@@ -16,10 +16,11 @@ var (
 )
 
 type BankService struct {
-	playerRepo    repositories.PlayerRepository
-	bankRepo      repositories.BankRepository
-	assetRepo     repositories.AssetRepository
-	assetTypeRepo repositories.AssetTypeRepository
+	playerRepo              repositories.PlayerRepository
+	bankRepo                repositories.BankRepository
+	assetRepo               repositories.AssetRepository
+	assetTypeRepo           repositories.AssetTypeRepository
+	pendingTransactionRepo  repositories.PendingTransactionRepository
 }
 
 func NewBankService(
@@ -27,12 +28,14 @@ func NewBankService(
 	bankRepo repositories.BankRepository,
 	assetRepo repositories.AssetRepository,
 	assetTypeRepo repositories.AssetTypeRepository,
+	pendingTransactionRepo repositories.PendingTransactionRepository,
 ) *BankService {
 	return &BankService{
-		playerRepo:    playerRepo,
-		bankRepo:      bankRepo,
-		assetRepo:     assetRepo,
-		assetTypeRepo: assetTypeRepo,
+		playerRepo:             playerRepo,
+		bankRepo:               bankRepo,
+		assetRepo:              assetRepo,
+		assetTypeRepo:          assetTypeRepo,
+		pendingTransactionRepo: pendingTransactionRepo,
 	}
 }
 
@@ -68,28 +71,50 @@ func (s *BankService) GetBankByUsername(ctx context.Context, username string) (*
 		return nil, err
 	}
 
-	// Convert assets to AssetResponse with asset type information
-	assetResponses := make([]models.AssetResponse, len(assets))
-	for i, asset := range assets {
-		assetType, err := s.assetTypeRepo.FindByID(ctx, asset.AssetTypeId)
-		if err != nil {
-			return nil, err
-		}
+	// Get all asset types
+	allAssetTypes, err := s.assetTypeRepo.FindAll(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-		assetResponses[i] = models.AssetResponse{
-			Amount:      asset.Amount,
-			AssetTypeId: asset.AssetTypeId.Hex(),
-			AssetType:   assetType.Name,
+	// Get all pending transactions for this bank
+	pendingTransactions, err := s.pendingTransactionRepo.FindByBuyerBankID(ctx, bank.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create maps for quick lookup
+	investedAssetTypes := make(map[string]bool)
+	for _, asset := range assets {
+		investedAssetTypes[asset.AssetTypeId.Hex()] = true
+	}
+
+	pendingAssetTypes := make(map[string]bool)
+	for _, transaction := range pendingTransactions {
+		// AssetId in pending transaction refers to the AssetType.Id
+		pendingAssetTypes[transaction.AssetId.Hex()] = true
+	}
+
+	// Create available assets response
+	availableAssets := make([]models.AvailableAssetResponse, len(allAssetTypes))
+	for i, assetType := range allAssetTypes {
+		assetTypeIdStr := assetType.Id.Hex()
+		isInvestedOrPending := investedAssetTypes[assetTypeIdStr] || pendingAssetTypes[assetTypeIdStr]
+
+		availableAssets[i] = models.AvailableAssetResponse{
+			AssetTypeId:         assetTypeIdStr,
+			AssetType:           assetType.Name,
+			IsInvestedOrPending: isInvestedOrPending,
 		}
 	}
 
 	// Create response
 	response := &models.BankResponse{
-		Id:             bank.Id.Hex(),
-		BankName:       bank.BankName,
-		ClaimedCapital: bank.ClaimedCapital,
-		ActualCapital:  actualCapital,
-		Assets:         assetResponses,
+		Id:              bank.Id.Hex(),
+		BankName:        bank.BankName,
+		ClaimedCapital:  bank.ClaimedCapital,
+		ActualCapital:   actualCapital,
+		AvailableAssets: availableAssets,
 	}
 
 	return response, nil
@@ -126,28 +151,50 @@ func (s *BankService) GetAllBanksByUsername(ctx context.Context, username string
 			return nil, err
 		}
 
-		// Convert assets to AssetResponse with asset type information
-		assetResponses := make([]models.AssetResponse, len(assets))
-		for j, asset := range assets {
-			assetType, err := s.assetTypeRepo.FindByID(ctx, asset.AssetTypeId)
-			if err != nil {
-				return nil, err
-			}
+		// Get all asset types
+		allAssetTypes, err := s.assetTypeRepo.FindAll(ctx)
+		if err != nil {
+			return nil, err
+		}
 
-			assetResponses[j] = models.AssetResponse{
-				Amount:      asset.Amount,
-				AssetTypeId: asset.AssetTypeId.Hex(),
-				AssetType:   assetType.Name,
+		// Get all pending transactions for this bank
+		pendingTransactions, err := s.pendingTransactionRepo.FindByBuyerBankID(ctx, bank.Id)
+		if err != nil {
+			return nil, err
+		}
+
+		// Create maps for quick lookup
+		investedAssetTypes := make(map[string]bool)
+		for _, asset := range assets {
+			investedAssetTypes[asset.AssetTypeId.Hex()] = true
+		}
+
+		pendingAssetTypes := make(map[string]bool)
+		for _, transaction := range pendingTransactions {
+			// AssetId in pending transaction refers to the AssetType.Id
+			pendingAssetTypes[transaction.AssetId.Hex()] = true
+		}
+
+		// Create available assets response
+		availableAssets := make([]models.AvailableAssetResponse, len(allAssetTypes))
+		for j, assetType := range allAssetTypes {
+			assetTypeIdStr := assetType.Id.Hex()
+			isInvestedOrPending := investedAssetTypes[assetTypeIdStr] || pendingAssetTypes[assetTypeIdStr]
+
+			availableAssets[j] = models.AvailableAssetResponse{
+				AssetTypeId:         assetTypeIdStr,
+				AssetType:           assetType.Name,
+				IsInvestedOrPending: isInvestedOrPending,
 			}
 		}
 
 		// Create response
 		bankResponses[i] = models.BankResponse{
-			Id:             bank.Id.Hex(),
-			BankName:       bank.BankName,
-			ClaimedCapital: bank.ClaimedCapital,
-			ActualCapital:  actualCapital,
-			Assets:         assetResponses,
+			Id:              bank.Id.Hex(),
+			BankName:        bank.BankName,
+			ClaimedCapital:  bank.ClaimedCapital,
+			ActualCapital:   actualCapital,
+			AvailableAssets: availableAssets,
 		}
 	}
 

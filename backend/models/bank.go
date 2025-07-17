@@ -10,9 +10,9 @@ type Bank struct {
 }
 
 type BankResponse struct {
-	Id             string          `json:"id"`
-	BankName       string          `json:"bankName"`
-	ClaimedCapital int64           `json:"claimedCapital"`
-	ActualCapital  int64           `json:"actualCapital"`
-	Assets         []AssetResponse `json:"assets"`
+	Id               string                   `json:"id"`
+	BankName         string                   `json:"bankName"`
+	ClaimedCapital   int64                    `json:"claimedCapital"`
+	ActualCapital    int64                    `json:"actualCapital"`
+	AvailableAssets  []AvailableAssetResponse `json:"availableAssets"`
 }

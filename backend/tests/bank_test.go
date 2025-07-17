@@ -6,6 +6,8 @@ import (
 	"ponziworld/backend/models"
 	"testing"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func TestBankService_GetBankByUsername(t *testing.T) {
@@ -44,18 +46,28 @@ func TestBankService_GetBankByUsername(t *testing.T) {
 	if bankResponse.ActualCapital != 1000 {
 		t.Errorf("Expected actual capital 1000, got %d", bankResponse.ActualCapital)
 	}
-	if len(bankResponse.Assets) != 1 {
-		t.Errorf("Expected 1 asset, got %d", len(bankResponse.Assets))
+	if len(bankResponse.AvailableAssets) != 5 {
+		t.Errorf("Expected 5 available assets, got %d", len(bankResponse.AvailableAssets))
 	}
-	asset := bankResponse.Assets[0]
-	if asset.AssetType != "Cash" {
-		t.Errorf("Expected asset type 'Cash', got %q", asset.AssetType)
+	
+	// Find the cash asset
+	var cashAsset *models.AvailableAssetResponse
+	for _, asset := range bankResponse.AvailableAssets {
+		if asset.AssetType == "Cash" {
+			cashAsset = &asset
+			break
+		}
 	}
-	if asset.Amount != 1000 {
-		t.Errorf("Expected asset amount 1000, got %d", asset.Amount)
-	}
-	if asset.AssetTypeId == "" {
-		t.Error("Expected asset type ID to be present")
+	
+	if cashAsset == nil {
+		t.Error("Expected to find Cash asset in available assets")
+	} else {
+		if !cashAsset.IsInvestedOrPending {
+			t.Error("Expected Cash asset to be invested (bank has cash)")
+		}
+		if cashAsset.AssetTypeId == "" {
+			t.Error("Expected asset type ID to be present")
+		}
 	}
 }
 
@@ -139,19 +151,27 @@ func TestBankService_CreateBankForUsername(t *testing.T) {
 		t.Errorf("Expected original bank to have a valid ID, got empty string")
 	}
 	
-	if len(originalBank.Assets) != 1 {
-		t.Errorf("Expected original bank to have 1 asset (cash), got %d", len(originalBank.Assets))
+	if len(originalBank.AvailableAssets) != 5 {
+		t.Errorf("Expected original bank to have 5 available assets, got %d", len(originalBank.AvailableAssets))
 	} else {
-		// Validate the cash asset
-		cashAsset := originalBank.Assets[0]
-		if cashAsset.AssetType != "Cash" {
-			t.Errorf("Expected original bank first asset to be 'Cash', got '%s'", cashAsset.AssetType)
+		// Find the cash asset
+		var cashAsset *models.AvailableAssetResponse
+		for _, asset := range originalBank.AvailableAssets {
+			if asset.AssetType == "Cash" {
+				cashAsset = &asset
+				break
+			}
 		}
-		if cashAsset.Amount != 1000 {
-			t.Errorf("Expected original bank cash amount 1000, got %d", cashAsset.Amount)
-		}
-		if cashAsset.AssetTypeId == "" {
-			t.Errorf("Expected original bank cash asset to have a valid AssetTypeId, got empty string")
+		
+		if cashAsset == nil {
+			t.Error("Expected to find Cash asset in available assets")
+		} else {
+			if !cashAsset.IsInvestedOrPending {
+				t.Error("Expected Cash asset to be invested (bank has cash)")
+			}
+			if cashAsset.AssetTypeId == "" {
+				t.Error("Expected original bank cash asset to have a valid AssetTypeId")
+			}
 		}
 	}
 	
@@ -176,24 +196,207 @@ func TestBankService_CreateBankForUsername(t *testing.T) {
 		t.Errorf("Expected additional bank to have a valid ID, got empty string")
 	}
 	
-	if len(additionalBank.Assets) != 1 {
-		t.Errorf("Expected additional bank to have 1 asset (cash), got %d", len(additionalBank.Assets))
+	if len(additionalBank.AvailableAssets) != 5 {
+		t.Errorf("Expected additional bank to have 5 available assets, got %d", len(additionalBank.AvailableAssets))
 	} else {
-		// Validate the cash asset
-		cashAsset := additionalBank.Assets[0]
-		if cashAsset.AssetType != "Cash" {
-			t.Errorf("Expected additional bank first asset to be 'Cash', got '%s'", cashAsset.AssetType)
+		// Find the cash asset
+		var cashAsset *models.AvailableAssetResponse
+		for _, asset := range additionalBank.AvailableAssets {
+			if asset.AssetType == "Cash" {
+				cashAsset = &asset
+				break
+			}
 		}
-		if cashAsset.Amount != 100000 {
-			t.Errorf("Expected additional bank cash amount 100000, got %d", cashAsset.Amount)
-		}
-		if cashAsset.AssetTypeId == "" {
-			t.Errorf("Expected additional bank cash asset to have a valid AssetTypeId, got empty string")
+		
+		if cashAsset == nil {
+			t.Error("Expected to find Cash asset in available assets")
+		} else {
+			if !cashAsset.IsInvestedOrPending {
+				t.Error("Expected Cash asset to be invested (bank has cash)")
+			}
+			if cashAsset.AssetTypeId == "" {
+				t.Error("Expected additional bank cash asset to have a valid AssetTypeId")
+			}
 		}
 	}
 	
 	// Verify the two banks have different IDs
 	if originalBank.Id == additionalBank.Id {
 		t.Errorf("Expected banks to have different IDs, both have '%s'", originalBank.Id)
+	}
+}
+
+func TestBankService_IsInvestedOrPendingFlag(t *testing.T) {
+	// Create test dependencies
+	container, err := CreateTestDependencies("bank_invested_pending")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(container)
+
+	ctx := context.Background()
+	timestamp := time.Now().Unix()
+	testUsername := fmt.Sprintf("investedpendingtest_%d", timestamp)
+	testPassword := "testpass123"
+	testBankName := fmt.Sprintf("Test Bank %d", timestamp)
+	
+	// Create test user and bank
+	err = container.ServiceContainer.Player.CreateNewPlayer(ctx, testUsername, testPassword, testBankName)
+	if err != nil {
+		t.Fatalf("Failed to create test player: %v", err)
+	}
+
+	// Get the user's bank
+	bankResponse, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, testUsername)
+	if err != nil {
+		t.Fatalf("Failed to get bank by username: %v", err)
+	}
+
+	// Get asset types for testing
+	assetTypes, err := container.ServiceContainer.AssetType.GetAllAssetTypes(ctx)
+	if err != nil {
+		t.Fatalf("Failed to get asset types: %v", err)
+	}
+
+	// Find specific asset types
+	var cashAssetType, stocksAssetType, bondsAssetType *models.AssetType
+	for _, assetType := range assetTypes {
+		switch assetType.Name {
+		case "Cash":
+			cashAssetType = &assetType
+		case "Stocks":
+			stocksAssetType = &assetType
+		case "Bonds":
+			bondsAssetType = &assetType
+		}
+	}
+
+	if cashAssetType == nil || stocksAssetType == nil || bondsAssetType == nil {
+		t.Fatalf("Failed to find required asset types")
+	}
+
+	// Test initial state: Cash should be invested (bank starts with cash), others should not
+	initialBankResponse, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, testUsername)
+	if err != nil {
+		t.Fatalf("Failed to get initial bank response: %v", err)
+	}
+
+	assetMap := make(map[string]*models.AvailableAssetResponse)
+	for _, asset := range initialBankResponse.AvailableAssets {
+		assetMap[asset.AssetType] = &asset
+	}
+
+	// Cash should be invested (bank starts with cash)
+	if cashAsset, exists := assetMap["Cash"]; !exists {
+		t.Error("Cash asset should be present in available assets")
+	} else if !cashAsset.IsInvestedOrPending {
+		t.Error("Cash asset should be invested initially (bank starts with cash)")
+	}
+
+	// Stocks should not be invested or pending initially
+	if stocksAsset, exists := assetMap["Stocks"]; !exists {
+		t.Error("Stocks asset should be present in available assets")
+	} else if stocksAsset.IsInvestedOrPending {
+		t.Error("Stocks asset should not be invested or pending initially")
+	}
+
+	// Bonds should not be invested or pending initially
+	if bondsAsset, exists := assetMap["Bonds"]; !exists {
+		t.Error("Bonds asset should be present in available assets")
+	} else if bondsAsset.IsInvestedOrPending {
+		t.Error("Bonds asset should not be invested or pending initially")
+	}
+
+	// Create a pending transaction for Stocks
+	bankId, err := primitive.ObjectIDFromHex(bankResponse.Id)
+	if err != nil {
+		t.Fatalf("Failed to convert bank ID to ObjectID: %v", err)
+	}
+	
+	err = container.ServiceContainer.PendingTransaction.CreateBuyTransaction(
+		ctx, 
+		bankId, 
+		stocksAssetType.Id, 
+		100, 
+		testUsername,
+	)
+	if err != nil {
+		t.Fatalf("Failed to create pending transaction: %v", err)
+	}
+
+	// Test after pending transaction: Stocks should now be pending
+	afterPendingResponse, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, testUsername)
+	if err != nil {
+		t.Fatalf("Failed to get bank response after pending transaction: %v", err)
+	}
+
+	afterPendingAssetMap := make(map[string]*models.AvailableAssetResponse)
+	for _, asset := range afterPendingResponse.AvailableAssets {
+		afterPendingAssetMap[asset.AssetType] = &asset
+	}
+
+	// Cash should still be invested
+	if cashAsset, exists := afterPendingAssetMap["Cash"]; !exists {
+		t.Error("Cash asset should be present in available assets after pending transaction")
+	} else if !cashAsset.IsInvestedOrPending {
+		t.Error("Cash asset should still be invested after pending transaction")
+	}
+
+	// Stocks should now be pending
+	if stocksAsset, exists := afterPendingAssetMap["Stocks"]; !exists {
+		t.Error("Stocks asset should be present in available assets after pending transaction")
+	} else if !stocksAsset.IsInvestedOrPending {
+		t.Error("Stocks asset should be pending after creating pending transaction")
+	}
+
+	// Bonds should still not be invested or pending
+	if bondsAsset, exists := afterPendingAssetMap["Bonds"]; !exists {
+		t.Error("Bonds asset should be present in available assets after pending transaction")
+	} else if bondsAsset.IsInvestedOrPending {
+		t.Error("Bonds asset should still not be invested or pending after pending transaction")
+	}
+
+	// Create an actual investment in Bonds by directly adding an asset
+	bondsAsset := &models.Asset{
+		Id:          primitive.NewObjectID(),
+		BankId:      bankId,
+		Amount:      500,
+		AssetTypeId: bondsAssetType.Id,
+	}
+	err = container.RepositoryContainer.Asset.Create(ctx, bondsAsset)
+	if err != nil {
+		t.Fatalf("Failed to create bonds asset: %v", err)
+	}
+
+	// Test after actual investment: Bonds should now be invested
+	afterInvestmentResponse, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, testUsername)
+	if err != nil {
+		t.Fatalf("Failed to get bank response after investment: %v", err)
+	}
+
+	afterInvestmentAssetMap := make(map[string]*models.AvailableAssetResponse)
+	for _, asset := range afterInvestmentResponse.AvailableAssets {
+		afterInvestmentAssetMap[asset.AssetType] = &asset
+	}
+
+	// Cash should still be invested
+	if cashAsset, exists := afterInvestmentAssetMap["Cash"]; !exists {
+		t.Error("Cash asset should be present in available assets after investment")
+	} else if !cashAsset.IsInvestedOrPending {
+		t.Error("Cash asset should still be invested after investment")
+	}
+
+	// Stocks should still be pending
+	if stocksAsset, exists := afterInvestmentAssetMap["Stocks"]; !exists {
+		t.Error("Stocks asset should be present in available assets after investment")
+	} else if !stocksAsset.IsInvestedOrPending {
+		t.Error("Stocks asset should still be pending after investment")
+	}
+
+	// Bonds should now be invested
+	if bondsAsset, exists := afterInvestmentAssetMap["Bonds"]; !exists {
+		t.Error("Bonds asset should be present in available assets after investment")
+	} else if !bondsAsset.IsInvestedOrPending {
+		t.Error("Bonds asset should be invested after creating investment")
 	}
 }
