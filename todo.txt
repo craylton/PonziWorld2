@@ -1,7 +1,5 @@
 
 Right now:
-Make UI reload assets after making a transaction
-Need to look if there's any unused files after all these changes
 Need to rename assets into investments because it's getting very confusing
 
 
