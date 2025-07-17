@@ -6,12 +6,12 @@ import { makeAuthenticatedRequest } from '../../auth';
 import { useBankContext } from '../../contexts/useBankContext';
 import { useAssetContext } from '../../contexts/useAssetContext';
 import TransactionPopup from './TransactionPopup';
-import type { Asset } from './Asset';
+import type { AssetDetailsResponse } from '../../models/AssetDetails';
 
 interface AssetDetailPopupProps {
   isOpen: boolean;
   onClose: () => void;
-  asset: Asset;
+  asset: AssetDetailsResponse;
   onTransactionStart: () => void;
   onTransactionComplete: (success: boolean, message: string) => void;
 }
@@ -80,7 +80,7 @@ export default function AssetDetailPopup({
         },
         body: JSON.stringify({
           buyerBankId: bankId,
-          assetId: asset.assetTypeId,
+          assetId: asset.assetId,
           amount,
         }),
       });
@@ -114,7 +114,7 @@ export default function AssetDetailPopup({
 
   if (!isOpen) return null;
   
-  const hasInvestmentOrPending = asset.amount > 0 || asset.pendingAmount !== 0;
+  const hasInvestmentOrPending = asset.investedAmount > 0 || asset.pendingAmount !== 0;
 
   return (
     <div
@@ -126,7 +126,7 @@ export default function AssetDetailPopup({
     >
       <div className="capital-popup">
         <div className="capital-popup__header">
-          <h2 id="popup-title" className="capital-popup__title">{asset.assetType} Details</h2>
+          <h2 id="popup-title" className="capital-popup__title">{asset.name} Details</h2>
           <button
             className="capital-popup__close-button"
             onClick={onClose}
@@ -136,15 +136,15 @@ export default function AssetDetailPopup({
           </button>
         </div>
         <div className="capital-popup__content">
-          {asset.amount > 0 && (
+          {asset.investedAmount > 0 && (
             <div className="capital-popup__value">
-              {formatCurrency(asset.amount)}
+              {formatCurrency(asset.investedAmount)}
             </div>
           )}
           <div className="capital-popup__chart">
             <LineGraph
               data={chartData}
-              title={asset.assetType}
+              title={asset.name}
               formatTooltip={(value) => `${value}%`}
               formatYAxisTick={(value) => `${value}%`}
             />
@@ -179,9 +179,9 @@ export default function AssetDetailPopup({
       <TransactionPopup
         isOpen={transactionPopupOpen}
         onClose={handleTransactionClose}
-        assetType={asset.assetType}
+        assetType={asset.name}
         transactionType={transactionType}
-        currentHoldings={asset.amount + asset.pendingAmount}
+        currentHoldings={asset.investedAmount + asset.pendingAmount}
         onConfirm={handleTransactionConfirm}
       />
     </div>

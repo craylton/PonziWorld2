@@ -16,13 +16,15 @@ type AssetResponse struct {
 }
 
 type AvailableAssetResponse struct {
-	AssetTypeId           string `json:"assetTypeId"`
-	AssetType             string `json:"assetType"`
-	IsInvestedOrPending   bool   `json:"isInvestedOrPending"`
+	AssetTypeId         string `json:"assetTypeId"`
+	AssetType           string `json:"assetType"`
+	IsInvestedOrPending bool   `json:"isInvestedOrPending"`
 }
 
 type AssetDetailsResponse struct {
-	InvestedAmount  int64                           `json:"investedAmount"`
-	PendingAmount   int64                           `json:"pendingAmount"`
-	HistoricalData  []HistoricalPerformanceResponse `json:"historicalData"`
+	AssetId        string                          `json:"assetId"`
+	Name           string                          `json:"name"`
+	InvestedAmount int64                           `json:"investedAmount"`
+	PendingAmount  int64                           `json:"pendingAmount"`
+	HistoricalData []HistoricalPerformanceResponse `json:"historicalData"`
 }

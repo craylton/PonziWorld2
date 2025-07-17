@@ -101,7 +101,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             onClick={() => setIsLeftPanelOpen(!isLeftPanelOpen)}
           />
           <BankProvider bankId={bank.id}>
-            <AssetSection bankAssets={bank.assets} />
+            <AssetSection availableAssets={bank.availableAssets} />
           </BankProvider>
 
           <SettingsButton

@@ -1,9 +1,9 @@
 import AssetSummaryBase from './AssetSummaryBase';
-import type { Asset } from './Asset';
 import './AssetList.css';
+import type { AssetDetailsResponse } from '../../models/AssetDetails';
 
 interface AssetSummaryProps {
-  asset: Asset;
+  asset: AssetDetailsResponse;
 }
 
 export default function UninvestedAssetSummary({ asset }: AssetSummaryProps) {
@@ -11,7 +11,7 @@ export default function UninvestedAssetSummary({ asset }: AssetSummaryProps) {
     <>
       <div className="asset-list__item">
         <div className="asset-list__content">
-          <div className="asset-list__type">{asset.assetType}</div>
+          <div className="asset-list__type">{asset.name}</div>
         </div>
         <AssetSummaryBase asset={asset} />
       </div>

@@ -63,16 +63,19 @@ func (s *AssetService) CreateInitialAsset(
 
 func (s *AssetService) GetAssetDetails(ctx context.Context, username string, assetID primitive.ObjectID, bankID primitive.ObjectID) (*models.AssetDetailsResponse, error) {
 	// 1. Look up the asset by asset ID - first try asset types, then banks
-	var isBank bool
-	_, err := s.assetTypeRepo.FindByID(ctx, assetID)
+	assetName := ""
+	assetType, err := s.assetTypeRepo.FindByID(ctx, assetID)
 	if err != nil {
 		// Asset type not found, try to find it as a bank
-		_, err = s.bankRepo.FindByID(ctx, assetID)
+		bank, err := s.bankRepo.FindByID(ctx, assetID)
 		if err != nil {
 			return nil, ErrAssetNotFound
 		}
-		isBank = true
+		assetName = bank.BankName
+	} else {
+		assetName = assetType.Name
 	}
+
 
 	// 2. Look up the bank by bank ID and validate ownership
 	err = s.bankService.ValidateBankOwnership(ctx, username, bankID)
@@ -95,22 +98,15 @@ func (s *AssetService) GetAssetDetails(ctx context.Context, username string, ass
 	if err != nil {
 		return nil, err
 	}
-
-	// 5. Get the past 8 days of historical performance for this asset
-	// For banks, we use the bank ID as the asset ID for historical performance
-	historicalAssetID := assetID
-	if isBank {
-		// For bank assets, use the bank ID directly for historical performance
-		historicalAssetID = assetID
-	}
 	
-	historicalData, err := s.historicalPerformanceService.GetAssetHistoricalPerformance(ctx, historicalAssetID, 8)
+	historicalData, err := s.historicalPerformanceService.GetAssetHistoricalPerformance(ctx, assetID, 8)
 	if err != nil {
 		return nil, err
 	}
 
-	// 6. Return the response
 	return &models.AssetDetailsResponse{
+		AssetId:        assetID.Hex(),
+		Name:           assetName,
 		InvestedAmount: investedAmount,
 		PendingAmount:  pendingAmount,
 		HistoricalData: historicalData,

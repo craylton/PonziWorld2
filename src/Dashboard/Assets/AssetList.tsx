@@ -1,19 +1,18 @@
-import type { Asset } from './Asset';
 import './AssetList.css';
 import ChevronIcon from '../ChevronIcon';
 import { useState, useEffect, useCallback } from 'react';
-import InvestedAssetSummary from './InvestedAssetSummary';
-import UninvestedAssetSummary from './UninvestedAssetSummary';
 import { useAssetContext } from '../../contexts/useAssetContext';
+import type { AvailableAsset } from '../../models/AvailableAsset';
+import AssetSummary from './AssetSummary';
 
 interface AssetListProps {
     title: string;
-    onLoad: () => Promise<Asset[]>;
+    onLoad: () => Promise<AvailableAsset[]>;
     isExpandedByDefault: boolean;
 }
 
 export default function AssetList({ title, onLoad, isExpandedByDefault }: AssetListProps) {
-    const [allAssets, setAllAssets] = useState<Asset[]>([]);
+    const [allAssets, setAllAssets] = useState<AvailableAsset[]>([]);
     const [isExpanded, setIsExpanded] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [hasLoadedAssetTypes, setHasLoadedAssetTypes] = useState(false);
@@ -92,16 +91,10 @@ export default function AssetList({ title, onLoad, isExpandedByDefault }: AssetL
                         </div>
                     ) : (
                         allAssets.map((asset, index) => {
-                            const hasInvestmentOrPending = asset.amount > 0 || asset.pendingAmount !== 0;
-                            return hasInvestmentOrPending ? (
-                                <InvestedAssetSummary
+                            return (
+                                <AssetSummary
                                     key={`${asset.assetType}-${index}`}
-                                    asset={asset}
-                                />
-                            ) : (
-                                <UninvestedAssetSummary
-                                    key={`${asset.assetType}-${index}`}
-                                    asset={asset}
+                                    availableAsset={asset}
                                 />
                             );
                         })
