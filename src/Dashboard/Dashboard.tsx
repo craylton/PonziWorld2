@@ -9,7 +9,7 @@ import AssetSection from './Assets/AssetSection';
 import { makeAuthenticatedRequest } from '../auth';
 import { BankProvider } from '../contexts/BankContext';
 import type { Bank } from '../models/Bank';
-import type { HistoricalPerformance } from '../models/HistoricalPerformance';
+import type { OwnBankHistoricalPerformance } from '../models/HistoricalPerformance';
 import type { Player } from '../models/Player';
 
 interface DashboardProps {
@@ -19,7 +19,7 @@ interface DashboardProps {
 export default function Dashboard({ onLogout }: DashboardProps) {
   const [bank, setBank] = useState<Bank | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
-  const [historicalPerformance, setHistoricalPerformance] = useState<HistoricalPerformance | null>(null);
+  const [historicalPerformance, setHistoricalPerformance] = useState<OwnBankHistoricalPerformance | null>(null);
   const [currentDay, setCurrentDay] = useState<number | null>(null);
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
@@ -79,7 +79,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         // Fetch performance history (non-essential, can load separately)
         const historyResponse = await makeAuthenticatedRequest(`/api/historicalPerformance/ownbank/${firstBank.id}`);
         if (historyResponse.ok) {
-          const historyData: HistoricalPerformance = await historyResponse.json();
+          const historyData: OwnBankHistoricalPerformance = await historyResponse.json();
           setHistoricalPerformance(historyData);
         }
       } catch {

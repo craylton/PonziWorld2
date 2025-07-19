@@ -107,7 +107,13 @@ func (s *InvestmentService) GetInvestmentDetails(
 		return nil, err
 	}
 
-	historicalData, err := s.historicalPerformanceService.GetAssetHistoricalPerformance(ctx, investmentTargetId, 8)
+	historicalData, err := s.historicalPerformanceService.GetAssetHistoricalPerformance(
+		ctx, 
+		username,
+		investmentTargetId,
+		investmentSourceBankId,
+		8,
+	)
 	if err != nil {
 		return nil, err
 	}

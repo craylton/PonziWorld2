@@ -3,14 +3,14 @@ import './DashboardHeader.css';
 import CapitalPopup from './CapitalPopup';
 import ChevronIcon from './ChevronIcon';
 import { formatCurrency } from '../utils/currency';
-import type { HistoricalPerformance } from '../models/HistoricalPerformance';
+import type { OwnBankHistoricalPerformance } from '../models/HistoricalPerformance';
 
 interface DashboardHeaderProps {
   currentDay: number;
   bankName: string;
   claimedCapital: number;
   actualCapital: number;
-  historicalPerformance: HistoricalPerformance | null;
+  historicalPerformance: OwnBankHistoricalPerformance | null;
   isHistoryLoading: boolean;
 }
 

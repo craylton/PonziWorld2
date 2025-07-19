@@ -45,7 +45,7 @@ func TestHistoricalPerformanceService_GetHistoricalPerformance(t *testing.T) {
 	}
 
 	// Test performance history service directly
-	historyResponse, err := container.ServiceContainer.HistoricalPerformance.GetHistoricalPerformance(ctx, testUsername, bankID)
+	historyResponse, err := container.ServiceContainer.HistoricalPerformance.GetOwnBankHistoricalPerformance(ctx, testUsername, bankID)
 	if err != nil {
 		t.Fatalf("Failed to get performance history: %v", err)
 	}
@@ -127,7 +127,7 @@ func TestHistoricalPerformanceService_GetHistoricalPerformanceInvalidBankID(t *t
 
 	// Test with invalid bank ID - this should return error for bank not found
 	invalidBankID := primitive.NewObjectID()
-	_, err = container.ServiceContainer.HistoricalPerformance.GetHistoricalPerformance(ctx, testUsername, invalidBankID)
+	_, err = container.ServiceContainer.HistoricalPerformance.GetOwnBankHistoricalPerformance(ctx, testUsername, invalidBankID)
 
 	// Should return error since the bank doesn't exist
 	if err == nil {
@@ -171,13 +171,13 @@ func TestHistoricalPerformanceService_GetHistoricalPerformanceDataPersistence(t 
 	}
 
 	// First call to performance history service
-	firstResponse, err := container.ServiceContainer.HistoricalPerformance.GetHistoricalPerformance(ctx, testUsername, bankID)
+	firstResponse, err := container.ServiceContainer.HistoricalPerformance.GetOwnBankHistoricalPerformance(ctx, testUsername, bankID)
 	if err != nil {
 		t.Fatalf("Failed to get performance history first time: %v", err)
 	}
 
 	// Second call to performance history service (should return identical data)
-	secondResponse, err := container.ServiceContainer.HistoricalPerformance.GetHistoricalPerformance(ctx, testUsername, bankID)
+	secondResponse, err := container.ServiceContainer.HistoricalPerformance.GetOwnBankHistoricalPerformance(ctx, testUsername, bankID)
 	if err != nil {
 		t.Fatalf("Failed to get performance history second time: %v", err)
 	}
@@ -259,7 +259,7 @@ func TestHistoricalPerformanceService_GetHistoricalPerformanceUnauthorized(t *te
 	}
 
 	// Try to get historical performance for owner's bank using unauthorized user's credentials
-	_, err = container.ServiceContainer.HistoricalPerformance.GetHistoricalPerformance(ctx, unauthorizedUsername, ownerBankID)
+	_, err = container.ServiceContainer.HistoricalPerformance.GetOwnBankHistoricalPerformance(ctx, unauthorizedUsername, ownerBankID)
 
 	// Should return error since the user doesn't own the bank
 	if err == nil {
@@ -267,6 +267,169 @@ func TestHistoricalPerformanceService_GetHistoricalPerformanceUnauthorized(t *te
 	}
 
 	// The error should be related to unauthorized access
+	// Based on the bank service code, it should return ErrUnauthorized
+	expectedError := "unauthorized access"
+	if err.Error() != expectedError {
+		t.Fatalf("Expected error '%s', got '%s'", expectedError, err.Error())
+	}
+}
+
+func TestHistoricalPerformanceService_GetAssetHistoricalPerformanceForUser(t *testing.T) {
+	// Create test dependencies
+	container, err := CreateTestDependencies("assetHistPerf")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(container)
+
+	ctx := context.Background()
+	timestamp := time.Now().Unix()
+	testUsername1 := fmt.Sprintf("assetperftest1_%d", timestamp)
+	testUsername2 := fmt.Sprintf("assetperftest2_%d", timestamp)
+	testBankName1 := "Test Bank 1"
+	testBankName2 := "Test Bank 2"
+	testPassword := "testpassword123"
+
+	// Create two players and banks
+	err = container.ServiceContainer.Player.CreateNewPlayer(ctx, testUsername1, testPassword, testBankName1)
+	if err != nil {
+		t.Fatalf("Failed to create first player: %v", err)
+	}
+
+	err = container.ServiceContainer.Player.CreateNewPlayer(ctx, testUsername2, testPassword, testBankName2)
+	if err != nil {
+		t.Fatalf("Failed to create second player: %v", err)
+	}
+
+	// Get bank details for both players
+	bankResponses1, err := container.ServiceContainer.Bank.GetAllBanksByUsername(ctx, testUsername1)
+	if err != nil {
+		t.Fatalf("Failed to get banks for user 1: %v", err)
+	}
+	if len(bankResponses1) == 0 {
+		t.Fatalf("Expected at least one bank for user 1")
+	}
+	bankResponse1 := bankResponses1[0]
+
+	bankResponses2, err := container.ServiceContainer.Bank.GetAllBanksByUsername(ctx, testUsername2)
+	if err != nil {
+		t.Fatalf("Failed to get banks for user 2: %v", err)
+	}
+	if len(bankResponses2) == 0 {
+		t.Fatalf("Expected at least one bank for user 2")
+	}
+	bankResponse2 := bankResponses2[0]
+
+	bankID1, err := primitive.ObjectIDFromHex(bankResponse1.Id)
+	if err != nil {
+		t.Fatalf("Failed to convert bank ID 1 to ObjectID: %v", err)
+	}
+
+	bankID2, err := primitive.ObjectIDFromHex(bankResponse2.Id)
+	if err != nil {
+		t.Fatalf("Failed to convert bank ID 2 to ObjectID: %v", err)
+	}
+
+	// Test getting asset historical performance for user 1's bank from user 1's perspective
+	historyResponse, err := container.ServiceContainer.HistoricalPerformance.GetAssetHistoricalPerformance(
+		ctx,
+		testUsername1,
+		bankID2,
+		bankID1,
+		30,
+	)
+	if err != nil {
+		t.Fatalf("Failed to get asset historical performance: %v", err)
+	}
+
+	// Verify that we get 30 days of history
+	if len(historyResponse) != 30 {
+		t.Fatalf("Expected 30 days of historical performance, got %d", len(historyResponse))
+	}
+
+	// Verify that all entries are properly ordered by day
+	for i := 1; i < len(historyResponse); i++ {
+		if historyResponse[i].Day <= historyResponse[i-1].Day {
+			t.Fatal("Historical performance is not properly ordered by day")
+		}
+	}
+
+	// Verify that all entries have valid values
+	for _, entry := range historyResponse {
+		if entry.Value <= 0 {
+			t.Fatalf("Expected positive value, got %d for day %d", entry.Value, entry.Day)
+		}
+	}
+}
+
+func TestHistoricalPerformanceService_GetAssetHistoricalPerformanceForUser_Unauthorized(t *testing.T) {
+	// Create test dependencies
+	container, err := CreateTestDependencies("assetHistPerfUnauth")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(container)
+
+	ctx := context.Background()
+	timestamp := time.Now().Unix()
+	testUsername1 := fmt.Sprintf("assetperftest1_%d", timestamp)
+	testUsername2 := fmt.Sprintf("assetperftest2_%d", timestamp)
+	testBankName1 := "Test Bank 1"
+	testBankName2 := "Test Bank 2"
+	testPassword := "testpassword123"
+
+	// Create two players and banks
+	err = container.ServiceContainer.Player.CreateNewPlayer(ctx, testUsername1, testPassword, testBankName1)
+	if err != nil {
+		t.Fatalf("Failed to create first player: %v", err)
+	}
+
+	err = container.ServiceContainer.Player.CreateNewPlayer(ctx, testUsername2, testPassword, testBankName2)
+	if err != nil {
+		t.Fatalf("Failed to create second player: %v", err)
+	}
+
+	// Get bank details for both players
+	bankResponses1, err := container.ServiceContainer.Bank.GetAllBanksByUsername(ctx, testUsername1)
+	if err != nil {
+		t.Fatalf("Failed to get banks for user 1: %v", err)
+	}
+	if len(bankResponses1) == 0 {
+		t.Fatalf("Expected at least one bank for user 1")
+	}
+	bankResponse1 := bankResponses1[0]
+
+	bankResponses2, err := container.ServiceContainer.Bank.GetAllBanksByUsername(ctx, testUsername2)
+	if err != nil {
+		t.Fatalf("Failed to get banks for user 2: %v", err)
+	}
+	if len(bankResponses2) == 0 {
+		t.Fatalf("Expected at least one bank for user 2")
+	}
+	bankResponse2 := bankResponses2[0]
+
+	bankID1, err := primitive.ObjectIDFromHex(bankResponse1.Id)
+	if err != nil {
+		t.Fatalf("Failed to convert bank ID 1 to ObjectID: %v", err)
+	}
+
+	bankID2, err := primitive.ObjectIDFromHex(bankResponse2.Id)
+	if err != nil {
+		t.Fatalf("Failed to convert bank ID 2 to ObjectID: %v", err)
+	}
+
+	// Test trying to get asset historical performance using user 1's source bank from user 2's perspective (should fail)
+	_, err = container.ServiceContainer.HistoricalPerformance.GetAssetHistoricalPerformance(
+		ctx,
+		 testUsername2,
+		  bankID2,
+		  bankID1,
+		  8,
+	)
+	if err == nil {
+		t.Fatal("Expected error when trying to access another user's bank as source, but got none")
+	}
+
 	// Based on the bank service code, it should return ErrUnauthorized
 	expectedError := "unauthorized access"
 	if err.Error() != expectedError {

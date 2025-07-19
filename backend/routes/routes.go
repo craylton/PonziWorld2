@@ -43,4 +43,8 @@ func RegisterRoutes(mux *http.ServeMux, container *config.Container) {
 		"/api/historicalPerformance/ownbank/{bankId}",
 		middleware.JwtMiddleware(historicalPerformanceHandler.GetHistoricalPerformance),
 	)
+	mux.HandleFunc(
+		"/api/historicalPerformance/asset/{targetAssetId}/{sourceBankId}",
+		middleware.JwtMiddleware(historicalPerformanceHandler.GetAssetHistoricalPerformance),
+	)
 }
