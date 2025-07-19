@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	HistoricalPerformanceDays  = 30
-	DefaultPerformanceValue = 1000
+	HistoricalPerformanceDays = 30
+	DefaultPerformanceValue   = 1000
 )
 
 type HistoricalPerformanceService struct {
@@ -31,7 +31,11 @@ func NewHistoricalPerformanceService(
 	}
 }
 
-func (s *HistoricalPerformanceService) GetHistoricalPerformance(ctx context.Context, username string, bankID primitive.ObjectID) (*models.OwnBankHistoricalPerformanceResponse, error) {
+func (s *HistoricalPerformanceService) GetOwnBankHistoricalPerformance(
+	ctx context.Context,
+	username string,
+	bankID primitive.ObjectID,
+) (*models.OwnBankHistoricalPerformanceResponse, error) {
 	// Validate ownership
 	if err := s.bankService.ValidateBankOwnership(ctx, username, bankID); err != nil {
 		return nil, err
@@ -55,15 +59,26 @@ func (s *HistoricalPerformanceService) GetHistoricalPerformance(ctx context.Cont
 	}, nil
 }
 
-func (s *HistoricalPerformanceService) GetAssetHistoricalPerformance(ctx context.Context, assetID primitive.ObjectID, days int) ([]models.HistoricalPerformanceResponse, error) {
+func (s *HistoricalPerformanceService) GetAssetHistoricalPerformance(
+	ctx context.Context,
+	username string,
+	targetAssetID primitive.ObjectID,
+	sourceBankID primitive.ObjectID,
+	days int,
+) ([]models.HistoricalPerformanceResponse, error) {
+	// Validate that the source bank belongs to the user
+	if err := s.bankService.ValidateBankOwnership(ctx, username, sourceBankID); err != nil {
+		return nil, err
+	}
+
 	currentDay, err := s.gameService.GetCurrentDay(ctx)
 	if err != nil {
 		return nil, err
 	}
 	startDay := currentDay - days
 
-	// Get performance data for the asset
-	claimedHistory, _, err := s.getPerformanceData(ctx, assetID, startDay, currentDay)
+	// Get performance data for the target asset (claimed only, as requested)
+	claimedHistory, _, err := s.getPerformanceData(ctx, targetAssetID, startDay, currentDay)
 	if err != nil {
 		return nil, err
 	}

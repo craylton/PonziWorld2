@@ -3,7 +3,7 @@ export interface HistoricalPerformanceEntry {
     value: number;
 }
 
-export interface HistoricalPerformance {
+export interface OwnBankHistoricalPerformance {
     claimedHistory: HistoricalPerformanceEntry[];
     actualHistory: HistoricalPerformanceEntry[];
 }
