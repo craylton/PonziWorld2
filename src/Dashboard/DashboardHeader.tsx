@@ -21,7 +21,7 @@ export default function DashboardHeader({
   bankName,
   claimedCapital,
   actualCapital,
-  historicalPerformance: historicalPerformance,
+  historicalPerformance,
   isHistoryLoading
 }: DashboardHeaderProps) {
   const [activePopup, setActivePopup] = useState<PopupType>(null);

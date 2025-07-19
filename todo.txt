@@ -13,6 +13,7 @@ Ensure currencies are stored in correct format
     Also need to be huge, both positive and negative
 Redesign header so that claimed and actual capitals are in same graph
 Put some of the main components and so on into copilot instructions
+Make some API documentation and reference into copilot instructions
 Somehow prevent services from being passed into other services
 
 
@@ -29,6 +30,9 @@ Defensive programming when retrieving data from DB
 
 Allow player to create additional banks
     This will mean a redesign of the dashboard where a player can select their bank
+
+Figure out how to prevent users just reinvesting the same money into each other
+    it just seems like free money and I'm not sure how to stop it
 
 Add 'Today'/'Tomorrow' buttons
     To highlight what happened from yesterday to today
