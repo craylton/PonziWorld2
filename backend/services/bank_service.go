@@ -16,17 +16,17 @@ var (
 )
 
 type BankService struct {
-	playerRepo              repositories.PlayerRepository
-	bankRepo                repositories.BankRepository
-	assetRepo               repositories.AssetRepository
-	assetTypeRepo           repositories.AssetTypeRepository
-	pendingTransactionRepo  repositories.PendingTransactionRepository
+	playerRepo             repositories.PlayerRepository
+	bankRepo               repositories.BankRepository
+	assetRepo              repositories.InvestmentRepository
+	assetTypeRepo          repositories.AssetTypeRepository
+	pendingTransactionRepo repositories.PendingTransactionRepository
 }
 
 func NewBankService(
 	playerRepo repositories.PlayerRepository,
 	bankRepo repositories.BankRepository,
-	assetRepo repositories.AssetRepository,
+	assetRepo repositories.InvestmentRepository,
 	assetTypeRepo repositories.AssetTypeRepository,
 	pendingTransactionRepo repositories.PendingTransactionRepository,
 ) *BankService {
@@ -59,7 +59,7 @@ func (s *BankService) GetAllBanksByUsername(ctx context.Context, username string
 	bankResponses := make([]models.BankResponse, len(banks))
 	for i, bank := range banks {
 		// Get all assets for this bank
-		assets, err := s.assetRepo.FindByBankID(ctx, bank.Id)
+		assets, err := s.assetRepo.FindBySourceBankID(ctx, bank.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -77,7 +77,7 @@ func (s *BankService) GetAllBanksByUsername(ctx context.Context, username string
 		}
 
 		// Get all pending transactions for this bank
-		pendingTransactions, err := s.pendingTransactionRepo.FindByBuyerBankID(ctx, bank.Id)
+		pendingTransactions, err := s.pendingTransactionRepo.FindBySourceBankID(ctx, bank.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -85,13 +85,12 @@ func (s *BankService) GetAllBanksByUsername(ctx context.Context, username string
 		// Create maps for quick lookup
 		investedAssetTypes := make(map[string]bool)
 		for _, asset := range assets {
-			investedAssetTypes[asset.AssetTypeId.Hex()] = true
+			investedAssetTypes[asset.TargetAssetId.Hex()] = true
 		}
 
 		pendingAssetTypes := make(map[string]bool)
 		for _, transaction := range pendingTransactions {
-			// AssetId in pending transaction refers to the AssetType.Id
-			pendingAssetTypes[transaction.AssetId.Hex()] = true
+			pendingAssetTypes[transaction.TargetAssetId.Hex()] = true
 		}
 
 		// Create available assets response
@@ -102,7 +101,7 @@ func (s *BankService) GetAllBanksByUsername(ctx context.Context, username string
 
 			availableAssets[j] = models.AvailableAssetResponse{
 				AssetTypeId:         assetTypeIdStr,
-				AssetType:           assetType.Name,
+				AssetName:           assetType.Name,
 				IsInvestedOrPending: isInvestedOrPending,
 			}
 		}
@@ -120,7 +119,12 @@ func (s *BankService) GetAllBanksByUsername(ctx context.Context, username string
 	return bankResponses, nil
 }
 
-func (s *BankService) CreateBankForUsername(ctx context.Context, username string, bankName string, claimedCapital int64) (*models.Bank, error) {
+func (s *BankService) CreateBankForUsername(
+	ctx context.Context,
+	username string,
+	bankName string,
+	claimedCapital int64,
+) (*models.Bank, error) {
 	// Find the player
 	player, err := s.playerRepo.FindByUsername(ctx, username)
 	if err != nil {
@@ -152,17 +156,22 @@ func (s *BankService) createInitialCashAsset(ctx context.Context, bankID primiti
 		return err
 	}
 
-	asset := &models.Asset{
-		Id:          primitive.NewObjectID(),
-		BankId:      bankID,
-		Amount:      amount,
-		AssetTypeId: cashAssetType.Id,
+	asset := &models.Investment{
+		Id:            primitive.NewObjectID(),
+		SourceBankId:  bankID,
+		Amount:        amount,
+		TargetAssetId: cashAssetType.Id,
 	}
 
 	return s.assetRepo.Create(ctx, asset)
 }
 
-func (s *BankService) CreateBank(ctx context.Context, playerID primitive.ObjectID, bankName string, initialCapital int64) (*models.Bank, error) {
+func (s *BankService) CreateBank(
+	ctx context.Context,
+	playerID primitive.ObjectID,
+	bankName string,
+	initialCapital int64,
+) (*models.Bank, error) {
 	bank := &models.Bank{
 		Id:             primitive.NewObjectID(),
 		PlayerId:       playerID,

@@ -8,7 +8,7 @@ import (
 
 type RepositoryContainer struct {
 	Bank                  repositories.BankRepository
-	Asset                 repositories.AssetRepository
+	Investment            repositories.InvestmentRepository
 	AssetType             repositories.AssetTypeRepository
 	HistoricalPerformance repositories.HistoricalPerformanceRepository
 	Player                repositories.PlayerRepository
@@ -19,7 +19,7 @@ type RepositoryContainer struct {
 func NewRepositoryContainer(database *mongo.Database) *RepositoryContainer {
 	playerRepo := repositories.NewPlayerRepository(database)
 	bankRepo := repositories.NewBankRepository(database)
-	assetRepo := repositories.NewAssetRepository(database)
+	investmentRepo := repositories.NewInvestmentRepository(database)
 	assetTypeRepo := repositories.NewAssetTypeRepository(database)
 	historyRepo := repositories.NewHistoricalPerformanceRepository(database)
 	gameRepo := repositories.NewGameRepository(database)
@@ -27,7 +27,7 @@ func NewRepositoryContainer(database *mongo.Database) *RepositoryContainer {
 
 	return &RepositoryContainer{
 		Bank:                  bankRepo,
-		Asset:                 assetRepo,
+		Investment:            investmentRepo,
 		AssetType:             assetTypeRepo,
 		HistoricalPerformance: historyRepo,
 		Player:                playerRepo,

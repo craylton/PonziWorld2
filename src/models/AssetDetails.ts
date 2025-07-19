@@ -1,7 +1,7 @@
 import type { HistoricalPerformanceEntry } from './HistoricalPerformance';
 
-export interface AssetDetailsResponse {
-  assetId: string;
+export interface InvestmentDetailsResponse {
+  targetAssetId: string;
   name: string;
   investedAmount: number;
   pendingAmount: number;

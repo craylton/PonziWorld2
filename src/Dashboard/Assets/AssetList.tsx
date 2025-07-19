@@ -41,7 +41,7 @@ export default function AssetList({ title, isExpandedByDefault, assets }: AssetL
                         assets.map((asset, index) => {
                             return (
                                 <AssetSummary
-                                    key={`${asset.assetType}-${index}`}
+                                    key={`${asset.assetName}-${index}`}
                                     availableAsset={asset}
                                 />
                             );

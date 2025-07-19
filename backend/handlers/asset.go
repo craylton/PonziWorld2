@@ -11,18 +11,18 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type AssetHandler struct {
-	assetService *services.AssetService
+type InvestmentHandler struct {
+	investmentService *services.InvestmentService
 }
 
-func NewAssetHandler(container *config.Container) *AssetHandler {
-	return &AssetHandler{
-		assetService: container.ServiceContainer.Asset,
+func NewInvestmentHandler(container *config.Container) *InvestmentHandler {
+	return &InvestmentHandler{
+		investmentService: container.ServiceContainer.Investment,
 	}
 }
 
-// GetAssetDetails handles GET /api/asset/{assetId}/{bankId}
-func (h *AssetHandler) GetAssetDetails(w http.ResponseWriter, r *http.Request) {
+// GetInvestmentDetails handles GET /api/investment/{targetAssetId}/{sourceBankId}
+func (h *InvestmentHandler) GetInvestmentDetails(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -37,31 +37,31 @@ func (h *AssetHandler) GetAssetDetails(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get path parameters
-	assetIdStr := r.PathValue("assetId")
-	bankIdStr := r.PathValue("bankId")
+	targetAssetIdStr := r.PathValue("targetAssetId")
+	sourceBankIdStr := r.PathValue("sourceBankId")
 
-	// Validate and convert assetId
-	assetId, err := primitive.ObjectIDFromHex(assetIdStr)
+	// Validate and convert targetAssetId
+	targetAssetId, err := primitive.ObjectIDFromHex(targetAssetIdStr)
 	if err != nil {
 		http.Error(w, "invalid asset ID", http.StatusBadRequest)
 		return
 	}
 
-	// Validate and convert bankId
-	bankId, err := primitive.ObjectIDFromHex(bankIdStr)
+	// Validate and convert sourceBankId
+	sourceBankId, err := primitive.ObjectIDFromHex(sourceBankIdStr)
 	if err != nil {
 		http.Error(w, "invalid bank ID", http.StatusBadRequest)
 		return
 	}
 
-	// Get asset details
-	response, err := h.assetService.GetAssetDetails(r.Context(), username, assetId, bankId)
+	// Get investment details
+	response, err := h.investmentService.GetInvestmentDetails(r.Context(), username, targetAssetId, sourceBankId)
 	if err != nil {
 		switch err {
 		case services.ErrUnauthorized:
 			http.Error(w, "unauthorized access", http.StatusUnauthorized)
-		case services.ErrAssetNotFound:
-			http.Error(w, "asset not found", http.StatusNotFound)
+		case services.ErrTargetAssetNotFound:
+			http.Error(w, "target asset not found", http.StatusNotFound)
 		case services.ErrBankNotFound:
 			http.Error(w, "bank not found", http.StatusNotFound)
 		default:

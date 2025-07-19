@@ -1,10 +1,10 @@
 import AssetSummaryBase from './AssetSummaryBase';
 import './AssetList.css';
 import { formatCurrency } from '../../utils/currency';
-import type { AssetDetailsResponse } from '../../models/AssetDetails';
+import type { InvestmentDetailsResponse } from '../../models/AssetDetails';
 
 interface AssetSummaryProps {
-  asset: AssetDetailsResponse;
+  asset: InvestmentDetailsResponse;
 }
 
 export default function InvestedAssetSummary({ asset }: AssetSummaryProps) {

@@ -71,7 +71,7 @@ func TestAssetService_GetAssetDetails_ValidScenarios(t *testing.T) {
 
 	t.Run("Cash asset with initial investment", func(t *testing.T) {
 		// Test getting asset details for Cash (should have 1000 invested, 0 pending)
-		assetDetails, err := container.ServiceContainer.Asset.GetAssetDetails(ctx, testUsername, *cashAssetType, bankID)
+		assetDetails, err := container.ServiceContainer.Investment.GetInvestmentDetails(ctx, testUsername, *cashAssetType, bankID)
 		if err != nil {
 			t.Fatalf("Failed to get asset details: %v", err)
 		}
@@ -95,7 +95,7 @@ func TestAssetService_GetAssetDetails_ValidScenarios(t *testing.T) {
 
 	t.Run("Asset with no investment", func(t *testing.T) {
 		// Test getting asset details for Stocks (should have 0 invested, 0 pending)
-		assetDetails, err := container.ServiceContainer.Asset.GetAssetDetails(ctx, testUsername, *stocksAssetType, bankID)
+		assetDetails, err := container.ServiceContainer.Investment.GetInvestmentDetails(ctx, testUsername, *stocksAssetType, bankID)
 		if err != nil {
 			t.Fatalf("Failed to get asset details for Stocks: %v", err)
 		}
@@ -139,7 +139,7 @@ func TestAssetService_GetAssetDetails_ValidScenarios(t *testing.T) {
 		}
 
 		// Test getting asset details for Bonds (should have 0 invested, 400 pending = 500 buy - 100 sell)
-		assetDetails, err := container.ServiceContainer.Asset.GetAssetDetails(ctx, testUsername, *bondsAssetType, bankID)
+		assetDetails, err := container.ServiceContainer.Investment.GetInvestmentDetails(ctx, testUsername, *bondsAssetType, bankID)
 		if err != nil {
 			t.Fatalf("Failed to get asset details for Bonds: %v", err)
 		}
@@ -213,11 +213,11 @@ func TestAssetService_GetAssetDetails_ErrorCases(t *testing.T) {
 	t.Run("Invalid asset ID", func(t *testing.T) {
 		// Test with invalid asset ID
 		invalidAssetID := primitive.NewObjectID()
-		_, err = container.ServiceContainer.Asset.GetAssetDetails(ctx, testUsername, invalidAssetID, bankID)
+		_, err = container.ServiceContainer.Investment.GetInvestmentDetails(ctx, testUsername, invalidAssetID, bankID)
 		if err == nil {
 			t.Error("Expected error for invalid asset ID, got nil")
 		}
-		if err != services.ErrAssetNotFound {
+		if err != services.ErrTargetAssetNotFound {
 			t.Errorf("Expected ErrAssetNotFound, got %v", err)
 		}
 	})
@@ -225,7 +225,7 @@ func TestAssetService_GetAssetDetails_ErrorCases(t *testing.T) {
 	t.Run("Invalid bank ID", func(t *testing.T) {
 		// Test with invalid bank ID
 		invalidBankID := primitive.NewObjectID()
-		_, err = container.ServiceContainer.Asset.GetAssetDetails(ctx, testUsername, *cashAssetType, invalidBankID)
+		_, err = container.ServiceContainer.Investment.GetInvestmentDetails(ctx, testUsername, *cashAssetType, invalidBankID)
 		if err == nil {
 			t.Error("Expected error for invalid bank ID, got nil")
 		}
@@ -236,7 +236,7 @@ func TestAssetService_GetAssetDetails_ErrorCases(t *testing.T) {
 
 	t.Run("Non-existent user", func(t *testing.T) {
 		// Test with non-existent user
-		_, err = container.ServiceContainer.Asset.GetAssetDetails(ctx, "nonexistentuser", *cashAssetType, bankID)
+		_, err = container.ServiceContainer.Investment.GetInvestmentDetails(ctx, "nonexistentuser", *cashAssetType, bankID)
 		if err == nil {
 			t.Error("Expected error for non-existent user, got nil")
 		}
@@ -254,7 +254,7 @@ func TestAssetService_GetAssetDetails_ErrorCases(t *testing.T) {
 		}
 
 		// Try to access first bank's asset details with second user's credentials
-		_, err = container.ServiceContainer.Asset.GetAssetDetails(ctx, otherUsername, *cashAssetType, bankID)
+		_, err = container.ServiceContainer.Investment.GetInvestmentDetails(ctx, otherUsername, *cashAssetType, bankID)
 		if err == nil {
 			t.Error("Expected error for unauthorized access, got nil")
 		}
@@ -319,7 +319,7 @@ func TestAssetService_GetAssetDetails_HistoricalDataGeneration(t *testing.T) {
 
 	t.Run("Historical data generation for new asset", func(t *testing.T) {
 		// Get asset details for an asset with no existing historical data
-		assetDetails, err := container.ServiceContainer.Asset.GetAssetDetails(ctx, testUsername, *stocksAssetType, bankID)
+		assetDetails, err := container.ServiceContainer.Investment.GetInvestmentDetails(ctx, testUsername, *stocksAssetType, bankID)
 		if err != nil {
 			t.Fatalf("Failed to get asset details: %v", err)
 		}
@@ -349,12 +349,12 @@ func TestAssetService_GetAssetDetails_HistoricalDataGeneration(t *testing.T) {
 
 	t.Run("Historical data persistence", func(t *testing.T) {
 		// Call the endpoint twice to ensure data is persisted
-		assetDetails1, err := container.ServiceContainer.Asset.GetAssetDetails(ctx, testUsername, *stocksAssetType, bankID)
+		assetDetails1, err := container.ServiceContainer.Investment.GetInvestmentDetails(ctx, testUsername, *stocksAssetType, bankID)
 		if err != nil {
 			t.Fatalf("Failed to get asset details first time: %v", err)
 		}
 
-		assetDetails2, err := container.ServiceContainer.Asset.GetAssetDetails(ctx, testUsername, *stocksAssetType, bankID)
+		assetDetails2, err := container.ServiceContainer.Investment.GetInvestmentDetails(ctx, testUsername, *stocksAssetType, bankID)
 		if err != nil {
 			t.Fatalf("Failed to get asset details second time: %v", err)
 		}
@@ -435,7 +435,7 @@ func TestAssetService_GetAssetDetails_BankAsAsset(t *testing.T) {
 
 	t.Run("Bank as asset - no investment", func(t *testing.T) {
 		// Test investor 1 getting details about bank 2 as an asset (no investment yet)
-		assetDetails, err := container.ServiceContainer.Asset.GetAssetDetails(ctx, investor1Username, bank2ID, bank1ID)
+		assetDetails, err := container.ServiceContainer.Investment.GetInvestmentDetails(ctx, investor1Username, bank2ID, bank1ID)
 		if err != nil {
 			t.Fatalf("Failed to get asset details for bank as asset: %v", err)
 		}
@@ -460,7 +460,7 @@ func TestAssetService_GetAssetDetails_BankAsAsset(t *testing.T) {
 		}
 
 		// Test investor 1 getting details about bank 2 as an asset (with pending investment)
-		assetDetails, err := container.ServiceContainer.Asset.GetAssetDetails(ctx, investor1Username, bank2ID, bank1ID)
+		assetDetails, err := container.ServiceContainer.Investment.GetInvestmentDetails(ctx, investor1Username, bank2ID, bank1ID)
 		if err != nil {
 			t.Fatalf("Failed to get asset details for bank as asset with pending: %v", err)
 		}

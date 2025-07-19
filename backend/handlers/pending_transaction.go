@@ -96,7 +96,7 @@ func (h *PendingTransactionHandler) GetPendingTransactions(w http.ResponseWriter
 	}
 
 	if transactions == nil {
-		transactions = []models.PendingTransaction{}
+		transactions = []models.PendingTransactionResponse{}
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -133,24 +133,30 @@ func (h *PendingTransactionHandler) handleTransaction(
 		return
 	}
 
-	// Convert buyerBankId string to ObjectID
-	buyerBankObjectID, err := primitive.ObjectIDFromHex(req.BuyerBankId)
+	// Convert sourceBankId string to ObjectID
+	sourceBankObjectID, err := primitive.ObjectIDFromHex(req.SourceBankId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid buyer bank ID format"})
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid source bank ID format"})
 		return
 	}
 
 	// Convert assetId string to ObjectID
-	assetObjectID, err := primitive.ObjectIDFromHex(req.AssetId)
+	targetAssetObjectID, err := primitive.ObjectIDFromHex(req.TargetAssetId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid asset ID format"})
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid target asset ID format"})
 		return
 	}
 
 	if transactionType == transactionTypeBuy {
-		err = h.pendingTransactionService.CreateBuyTransaction(ctx, buyerBankObjectID, assetObjectID, req.Amount, username)
+		err = h.pendingTransactionService.CreateBuyTransaction(
+			ctx,
+			sourceBankObjectID,
+			targetAssetObjectID,
+			req.Amount,
+			username,
+		)
 		if err != nil {
 			log.Printf("Error creating buy transaction: %v", err)
 			h.handleTransactionError(w, err)
@@ -162,7 +168,13 @@ func (h *PendingTransactionHandler) handleTransaction(
 		})
 	}
 	if transactionType == transactionTypeSell {
-		err = h.pendingTransactionService.CreateSellTransaction(ctx, buyerBankObjectID, assetObjectID, req.Amount, username)
+		err = h.pendingTransactionService.CreateSellTransaction(
+			ctx,
+			sourceBankObjectID,
+			targetAssetObjectID,
+			req.Amount,
+			username,
+		)
 		if err != nil {
 			log.Printf("Error creating sell transaction: %v", err)
 			h.handleTransactionError(w, err)
@@ -180,7 +192,7 @@ func (h *PendingTransactionHandler) handleTransactionError(w http.ResponseWriter
 	case services.ErrInvalidAmount:
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Amount must be positive"})
-	case services.ErrAssetNotFound:
+	case services.ErrTargetAssetNotFound:
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Asset not found"})
 	case services.ErrInvalidBankID:

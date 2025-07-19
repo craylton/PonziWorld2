@@ -1,9 +1,9 @@
 import AssetSummaryBase from './AssetSummaryBase';
 import './AssetList.css';
-import type { AssetDetailsResponse } from '../../models/AssetDetails';
+import type { InvestmentDetailsResponse } from '../../models/AssetDetails';
 
 interface AssetSummaryProps {
-  asset: AssetDetailsResponse;
+  asset: InvestmentDetailsResponse;
 }
 
 export default function UninvestedAssetSummary({ asset }: AssetSummaryProps) {

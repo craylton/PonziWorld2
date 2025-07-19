@@ -1,8 +1,4 @@
 
-Right now:
-Need to rename assets into investments because it's getting very confusing
-
-
 Next up:
 Make all purchases come out of cash
 Apply pending transactions on new day

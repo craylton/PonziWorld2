@@ -20,7 +20,7 @@ func NewPendingTransactionRepository(database *mongo.Database) *PendingTransacti
 	}
 }
 
-func (r *PendingTransactionRepositoryImpl) Create(ctx context.Context, transaction *models.PendingTransaction) error {
+func (r *PendingTransactionRepositoryImpl) Create(ctx context.Context, transaction *models.PendingTransactionResponse) error {
 	if transaction.Id.IsZero() {
 		transaction.Id = primitive.NewObjectID()
 	}
@@ -35,18 +35,18 @@ func (r *PendingTransactionRepositoryImpl) Create(ctx context.Context, transacti
 	return nil
 }
 
-func (r *PendingTransactionRepositoryImpl) FindByBuyerBankID(
+func (r *PendingTransactionRepositoryImpl) FindBySourceBankID(
 	ctx context.Context,
-	buyerBankID primitive.ObjectID,
-) ([]models.PendingTransaction, error) {
-	filter := bson.M{"buyerBankId": buyerBankID}
+	sourceBankID primitive.ObjectID,
+) ([]models.PendingTransactionResponse, error) {
+	filter := bson.M{"sourceBankId": sourceBankID}
 	cursor, err := r.collection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
-	var transactions []models.PendingTransaction
+	var transactions []models.PendingTransactionResponse
 	if err = cursor.All(ctx, &transactions); err != nil {
 		return nil, err
 	}
@@ -54,14 +54,14 @@ func (r *PendingTransactionRepositoryImpl) FindByBuyerBankID(
 	return transactions, nil
 }
 
-func (r *PendingTransactionRepositoryImpl) FindByBuyerBankIDAndAssetID(
+func (r *PendingTransactionRepositoryImpl) FindBySourceBankIDAndTargetAssetID(
 	ctx context.Context,
-	buyerBankID,
-	assetID primitive.ObjectID,
-) ([]models.PendingTransaction, error) {
+	sourceBankID,
+	targetAssetID primitive.ObjectID,
+) ([]models.PendingTransactionResponse, error) {
 	filter := bson.M{
-		"buyerBankId": buyerBankID,
-		"assetId":     assetID,
+		"sourceBankId": sourceBankID,
+		"targetAssetId":     targetAssetID,
 	}
 	cursor, err := r.collection.Find(ctx, filter)
 	if err != nil {
@@ -69,7 +69,7 @@ func (r *PendingTransactionRepositoryImpl) FindByBuyerBankIDAndAssetID(
 	}
 	defer cursor.Close(ctx)
 
-	var transactions []models.PendingTransaction
+	var transactions []models.PendingTransactionResponse
 	if err = cursor.All(ctx, &transactions); err != nil {
 		return nil, err
 	}
@@ -77,12 +77,12 @@ func (r *PendingTransactionRepositoryImpl) FindByBuyerBankIDAndAssetID(
 	return transactions, nil
 }
 
-func (r *PendingTransactionRepositoryImpl) SumPendingAmountByBankIDAndAssetID(
+func (r *PendingTransactionRepositoryImpl) SumPendingAmountBySourceBankIdAndTargetAssetId(
 	ctx context.Context,
-	buyerBankID,
-	assetID primitive.ObjectID,
+	sourceBankID,
+	targetAssetID primitive.ObjectID,
 ) (int64, error) {
-	transactions, err := r.FindByBuyerBankIDAndAssetID(ctx, buyerBankID, assetID)
+	transactions, err := r.FindBySourceBankIDAndTargetAssetID(ctx, sourceBankID, targetAssetID)
 	if err != nil {
 		return 0, err
 	}

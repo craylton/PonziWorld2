@@ -9,14 +9,14 @@ import (
 type PlayerService struct {
 	authService                  *AuthService
 	bankService                  *BankService
-	assetService                 *AssetService
+	assetService                 *InvestmentService
 	historicalPerformanceService *HistoricalPerformanceService
 }
 
 func NewPlayerService(
 	authService *AuthService,
 	bankService *BankService,
-	assetService *AssetService,
+	assetService *InvestmentService,
 	historicalPerformanceService *HistoricalPerformanceService,
 ) *PlayerService {
 	return &PlayerService{
@@ -51,7 +51,7 @@ func (s *PlayerService) CreateNewPlayer(ctx context.Context, username, password,
 	}
 
 	// Create initial cash asset
-	_, err = s.assetService.CreateInitialAsset(ctx, bank.Id, initialCapital)
+	_, err = s.assetService.CreateInitialInvestment(ctx, bank.Id, initialCapital)
 	if err != nil {
 		return err
 	}

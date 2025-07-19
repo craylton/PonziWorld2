@@ -1,5 +1,5 @@
 import SidePanel from '../SidePanel';
-import type { Player } from '../../../models/User';
+import type { Player } from '../../../models/Player';
 import { makeAuthenticatedRequest } from '../../../auth';
 
 interface SettingsPanelProps {

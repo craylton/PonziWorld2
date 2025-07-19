@@ -71,11 +71,11 @@ func TestPendingTransactionService_CreateTransactions(t *testing.T) {
 		if transactions[0].Amount != 1000 {
 			t.Errorf("Expected amount 1000, got %d", transactions[0].Amount)
 		}
-		if transactions[0].AssetId != assetType.Id {
-			t.Errorf("Expected AssetId to be %s, got %s", assetType.Id.Hex(), transactions[0].AssetId.Hex())
+		if transactions[0].TargetAssetId != assetType.Id {
+			t.Errorf("Expected TargetAssetId to be %s, got %s", assetType.Id.Hex(), transactions[0].TargetAssetId.Hex())
 		}
-		if transactions[0].BuyerBankId != bank.Id {
-			t.Errorf("Expected BuyerBankId to be %s, got %s", bank.Id.Hex(), transactions[0].BuyerBankId.Hex())
+		if transactions[0].SourceBankId != bank.Id {
+			t.Errorf("Expected SourceBankId to be %s, got %s", bank.Id.Hex(), transactions[0].SourceBankId.Hex())
 		}
 	})
 
@@ -102,11 +102,11 @@ func TestPendingTransactionService_CreateTransactions(t *testing.T) {
 		if transactions[0].Amount != -500 {
 			t.Errorf("Expected amount -500 (internal representation), got %d", transactions[0].Amount)
 		}
-		if transactions[0].AssetId != assetType.Id {
-			t.Errorf("Expected AssetId to be %s, got %s", assetType.Id.Hex(), transactions[0].AssetId.Hex())
+		if transactions[0].TargetAssetId != assetType.Id {
+			t.Errorf("Expected TargetAssetId to be %s, got %s", assetType.Id.Hex(), transactions[0].TargetAssetId.Hex())
 		}
-		if transactions[0].BuyerBankId != bank.Id {
-			t.Errorf("Expected BuyerBankId to be %s, got %s", bank.Id.Hex(), transactions[0].BuyerBankId.Hex())
+		if transactions[0].SourceBankId != bank.Id {
+			t.Errorf("Expected SourceBankId to be %s, got %s", bank.Id.Hex(), transactions[0].SourceBankId.Hex())
 		}
 	})
 
@@ -149,11 +149,11 @@ func TestPendingTransactionService_CreateTransactions(t *testing.T) {
 	t.Run("Non-existent asset", func(t *testing.T) {
 		nonExistentAssetID := primitive.NewObjectID()
 		err := service.CreateBuyTransaction(ctx, bank.Id, nonExistentAssetID, 1000, username)
-		if err != services.ErrAssetNotFound {
+		if err != services.ErrTargetAssetNotFound {
 			t.Errorf("Expected ErrAssetNotFound for non-existent asset, got: %v", err)
 		}
 		err = service.CreateSellTransaction(ctx, bank.Id, nonExistentAssetID, 1000, username)
-		if err != services.ErrAssetNotFound {
+		if err != services.ErrTargetAssetNotFound {
 			t.Errorf("Expected ErrAssetNotFound for non-existent asset in sell transaction, got: %v", err)
 		}
 	})
@@ -338,10 +338,10 @@ func TestPendingTransactionService_MultipleAssets(t *testing.T) {
 
 		// Verify amounts are correct
 		for _, transaction := range transactions {
-			if transaction.AssetId == assetType1.Id && transaction.Amount != 1000 {
+			if transaction.TargetAssetId == assetType1.Id && transaction.Amount != 1000 {
 				t.Errorf("Expected amount 1000 for asset 1, got %d", transaction.Amount)
 			}
-			if transaction.AssetId == assetType2.Id && transaction.Amount != 2000 {
+			if transaction.TargetAssetId == assetType2.Id && transaction.Amount != 2000 {
 				t.Errorf("Expected amount 2000 for asset 2, got %d", transaction.Amount)
 			}
 		}
@@ -370,10 +370,10 @@ func TestPendingTransactionService_MultipleAssets(t *testing.T) {
 		}
 		// Verify negative amounts are correct
 		for _, transaction := range sellTransactions {
-			if transaction.AssetId == assetType1.Id && transaction.Amount != -300 {
+			if transaction.TargetAssetId == assetType1.Id && transaction.Amount != -300 {
 				t.Errorf("Expected amount -300 for sell asset 1, got %d", transaction.Amount)
 			}
-			if transaction.AssetId == assetType2.Id && transaction.Amount != -400 {
+			if transaction.TargetAssetId == assetType2.Id && transaction.Amount != -400 {
 				t.Errorf("Expected amount -400 for sell asset 2, got %d", transaction.Amount)
 			}
 		}
@@ -469,10 +469,10 @@ func TestPendingTransactionService_GetTransactionsByBankID(t *testing.T) {
 		found1000 := false
 		found500 := false
 		for _, tx := range transactions {
-			if tx.Amount == 1000 && tx.AssetId == assetType.Id {
+			if tx.Amount == 1000 && tx.TargetAssetId == assetType.Id {
 				found1000 = true
 			}
-			if tx.Amount == 500 && tx.AssetId == bank2.Id {
+			if tx.Amount == 500 && tx.TargetAssetId == bank2.Id {
 				found500 = true
 			}
 		}

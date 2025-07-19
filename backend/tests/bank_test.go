@@ -60,7 +60,7 @@ func TestBankService_GetAllBanksByUsername(t *testing.T) {
 	// Find the cash asset
 	var cashAsset *models.AvailableAssetResponse
 	for _, asset := range bankResponse.AvailableAssets {
-		if asset.AssetType == "Cash" {
+		if asset.AssetName == "Cash" {
 			cashAsset = &asset
 			break
 		}
@@ -164,7 +164,7 @@ func TestBankService_CreateBankForUsername(t *testing.T) {
 		// Find the cash asset
 		var cashAsset *models.AvailableAssetResponse
 		for _, asset := range originalBank.AvailableAssets {
-			if asset.AssetType == "Cash" {
+			if asset.AssetName == "Cash" {
 				cashAsset = &asset
 				break
 			}
@@ -209,7 +209,7 @@ func TestBankService_CreateBankForUsername(t *testing.T) {
 		// Find the cash asset
 		var cashAsset *models.AvailableAssetResponse
 		for _, asset := range additionalBank.AvailableAssets {
-			if asset.AssetType == "Cash" {
+			if asset.AssetName == "Cash" {
 				cashAsset = &asset
 				break
 			}
@@ -288,7 +288,7 @@ func TestBankService_IsInvestedOrPendingFlag(t *testing.T) {
 
 	assetMap := make(map[string]*models.AvailableAssetResponse)
 	for _, asset := range initialBankResponse.AvailableAssets {
-		assetMap[asset.AssetType] = &asset
+		assetMap[asset.AssetName] = &asset
 	}
 
 	// Cash should be invested (bank starts with cash)
@@ -341,7 +341,7 @@ func TestBankService_IsInvestedOrPendingFlag(t *testing.T) {
 
 	afterPendingAssetMap := make(map[string]*models.AvailableAssetResponse)
 	for _, asset := range afterPendingResponse.AvailableAssets {
-		afterPendingAssetMap[asset.AssetType] = &asset
+		afterPendingAssetMap[asset.AssetName] = &asset
 	}
 
 	// Cash should still be invested
@@ -366,13 +366,13 @@ func TestBankService_IsInvestedOrPendingFlag(t *testing.T) {
 	}
 
 	// Create an actual investment in Bonds by directly adding an asset
-	bondsAsset := &models.Asset{
+	bondsAsset := &models.Investment{
 		Id:          primitive.NewObjectID(),
-		BankId:      bankId,
+		SourceBankId:      bankId,
 		Amount:      500,
-		AssetTypeId: bondsAssetType.Id,
+		TargetAssetId: bondsAssetType.Id,
 	}
-	err = container.RepositoryContainer.Asset.Create(ctx, bondsAsset)
+	err = container.RepositoryContainer.Investment.Create(ctx, bondsAsset)
 	if err != nil {
 		t.Fatalf("Failed to create bonds asset: %v", err)
 	}
@@ -389,7 +389,7 @@ func TestBankService_IsInvestedOrPendingFlag(t *testing.T) {
 
 	afterInvestmentAssetMap := make(map[string]*models.AvailableAssetResponse)
 	for _, asset := range afterInvestmentResponse.AvailableAssets {
-		afterInvestmentAssetMap[asset.AssetType] = &asset
+		afterInvestmentAssetMap[asset.AssetName] = &asset
 	}
 
 	// Cash should still be invested

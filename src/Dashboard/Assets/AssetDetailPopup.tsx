@@ -6,12 +6,12 @@ import { makeAuthenticatedRequest } from '../../auth';
 import { useBankContext } from '../../contexts/useBankContext';
 import { useAssetContext } from '../../contexts/useAssetContext';
 import TransactionPopup from './TransactionPopup';
-import type { AssetDetailsResponse } from '../../models/AssetDetails';
+import type { InvestmentDetailsResponse } from '../../models/AssetDetails';
 
 interface AssetDetailPopupProps {
   isOpen: boolean;
   onClose: () => void;
-  asset: AssetDetailsResponse;
+  asset: InvestmentDetailsResponse;
 }
 
 export default function AssetDetailPopup({
@@ -71,8 +71,8 @@ export default function AssetDetailPopup({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          buyerBankId: bankId,
-          assetId: asset.assetId,
+          sourceBankId: bankId,
+          targetAssetId: asset.targetAssetId,
           amount,
         }),
       });

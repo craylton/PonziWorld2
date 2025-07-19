@@ -10,7 +10,7 @@ import { makeAuthenticatedRequest } from '../auth';
 import { BankProvider } from '../contexts/BankContext';
 import type { Bank } from '../models/Bank';
 import type { HistoricalPerformance } from '../models/HistoricalPerformance';
-import type { Player } from '../models/User';
+import type { Player } from '../models/Player';
 
 interface DashboardProps {
   onLogout: () => void;

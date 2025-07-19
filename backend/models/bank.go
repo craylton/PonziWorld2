@@ -16,3 +16,9 @@ type BankResponse struct {
 	ActualCapital    int64                    `json:"actualCapital"`
 	AvailableAssets  []AvailableAssetResponse `json:"availableAssets"`
 }
+
+type AvailableAssetResponse struct {
+	AssetTypeId         string `json:"assetTypeId"`
+	AssetName           string `json:"assetName"`
+	IsInvestedOrPending bool   `json:"isInvestedOrPending"`
+}

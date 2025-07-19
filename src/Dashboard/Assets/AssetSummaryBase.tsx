@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import type { AssetDetailsResponse } from '../../models/AssetDetails';
+import type { InvestmentDetailsResponse } from '../../models/AssetDetails';
 import './AssetList.css';
 import AssetSummaryChart from './AssetSummaryChart';
 import AssetDetailPopup from './AssetDetailPopup';
 
 interface AssetSummaryBaseProps {
-  asset: AssetDetailsResponse;
+  asset: InvestmentDetailsResponse;
 }
 
 export default function AssetSummaryBase({ asset }: AssetSummaryBaseProps) {

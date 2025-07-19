@@ -21,11 +21,11 @@ type BankRepository interface {
 	FindAllByPlayerID(ctx context.Context, playerID primitive.ObjectID) ([]models.Bank, error)
 }
 
-// AssetRepository defines the interface for asset database operations
-type AssetRepository interface {
-	Create(ctx context.Context, asset *models.Asset) error
-	FindByBankID(ctx context.Context, bankID primitive.ObjectID) ([]models.Asset, error)
-	FindByBankIDAndAssetTypeID(ctx context.Context, bankID, assetTypeID primitive.ObjectID) (*models.Asset, error)
+// InvestmentRepository defines the interface for asset database operations
+type InvestmentRepository interface {
+	Create(ctx context.Context, asset *models.Investment) error
+	FindBySourceBankID(ctx context.Context, sourceBankID primitive.ObjectID) ([]models.Investment, error)
+	FindBySourceIdAndTargetId(ctx context.Context, sourceBankID, targetAssetId primitive.ObjectID) (*models.Investment, error)
 	CalculateActualCapital(ctx context.Context, bankID primitive.ObjectID) (int64, error)
 }
 
@@ -56,10 +56,10 @@ type GameRepository interface {
 
 // PendingTransactionRepository defines the interface for pending transaction database operations
 type PendingTransactionRepository interface {
-	Create(ctx context.Context, transaction *models.PendingTransaction) error
-	FindByBuyerBankID(ctx context.Context, buyerBankID primitive.ObjectID) ([]models.PendingTransaction, error)
-	FindByBuyerBankIDAndAssetID(ctx context.Context, buyerBankID, assetID primitive.ObjectID) ([]models.PendingTransaction, error)
-	SumPendingAmountByBankIDAndAssetID(ctx context.Context, buyerBankID, assetID primitive.ObjectID) (int64, error)
+	Create(ctx context.Context, transaction *models.PendingTransactionResponse) error
+	FindBySourceBankID(ctx context.Context, sourceBankID primitive.ObjectID) ([]models.PendingTransactionResponse, error)
+	FindBySourceBankIDAndTargetAssetID(ctx context.Context, sourceBankID, assetID primitive.ObjectID) ([]models.PendingTransactionResponse, error)
+	SumPendingAmountBySourceBankIdAndTargetAssetId(ctx context.Context, sourceBankID, assetID primitive.ObjectID) (int64, error)
 	UpdateAmount(ctx context.Context, id primitive.ObjectID, newAmount int64) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
 }

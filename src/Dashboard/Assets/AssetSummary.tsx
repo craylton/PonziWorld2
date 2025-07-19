@@ -1,5 +1,5 @@
 import type { AvailableAsset } from '../../models/AvailableAsset';
-import type { AssetDetailsResponse } from '../../models/AssetDetails';
+import type { InvestmentDetailsResponse } from '../../models/AssetDetails';
 import InvestedAssetSummary from './InvestedAssetSummary';
 import UninvestedAssetSummary from './UninvestedAssetSummary';
 import { useState, useEffect, useCallback } from 'react';
@@ -14,27 +14,27 @@ interface AssetSummaryProps {
 export default function AssetSummary({ availableAsset }: AssetSummaryProps) {
     const { bankId } = useBankContext();
     const { registerRefreshCallback, unregisterRefreshCallback } = useAssetContext();
-    const [assetDetails, setAssetDetails] = useState<AssetDetailsResponse | null>(null);
+    const [assetDetails, setAssetDetails] = useState<InvestmentDetailsResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     const fetchAssetDetails = useCallback(async () => {
         setIsLoading(true);
         try {
             const response = await makeAuthenticatedRequest(
-                `/api/asset/${availableAsset.assetTypeId}/${bankId}`
+                `/api/investment/${availableAsset.assetTypeId}/${bankId}`
             );
             if (response.ok) {
-                const data: AssetDetailsResponse = await response.json();
+                const data: InvestmentDetailsResponse = await response.json();
                 setAssetDetails(data);
             } else {
-                console.error('Failed to fetch asset details for asset:', availableAsset.assetType);
+                console.error('Failed to fetch asset details for asset:', availableAsset.assetName);
             }
         } catch (error) {
             console.error('Error fetching asset details:', error);
         } finally {
             setIsLoading(false);
         }
-    }, [availableAsset.assetTypeId, bankId, availableAsset.assetType]);
+    }, [availableAsset.assetTypeId, bankId, availableAsset.assetName]);
 
     useEffect(() => {
         fetchAssetDetails();
@@ -52,7 +52,7 @@ export default function AssetSummary({ availableAsset }: AssetSummaryProps) {
         return (
             <div className="asset-list__item">
                 <div className="asset-list__content">
-                    <div className="asset-list__type">{availableAsset.assetType}</div>
+                    <div className="asset-list__type">{availableAsset.assetName}</div>
                     <div className="asset-list__amount">Loading...</div>
                 </div>
             </div>
