@@ -7,23 +7,23 @@ import (
 )
 
 type PlayerService struct {
-	authService        *AuthService
-	bankService        *BankService
-	assetService       *AssetService
-	performanceService *PerformanceService
+	authService                  *AuthService
+	bankService                  *BankService
+	assetService                 *AssetService
+	historicalPerformanceService *HistoricalPerformanceService
 }
 
 func NewPlayerService(
 	authService *AuthService,
 	bankService *BankService,
 	assetService *AssetService,
-	performanceService *PerformanceService,
+	historicalPerformanceService *HistoricalPerformanceService,
 ) *PlayerService {
 	return &PlayerService{
-		authService:        authService,
-		bankService:        bankService,
-		assetService:       assetService,
-		performanceService: performanceService,
+		authService:                  authService,
+		bankService:                  bankService,
+		assetService:                 assetService,
+		historicalPerformanceService: historicalPerformanceService,
 	}
 }
 
@@ -57,7 +57,7 @@ func (s *PlayerService) CreateNewPlayer(ctx context.Context, username, password,
 	}
 
 	// Create initial performance history
-	err = s.performanceService.CreateInitialPerformanceHistory(ctx, bank.Id, initialCapital)
+	err = s.historicalPerformanceService.CreateInitialHistoricalPerformance(ctx, bank.Id, initialCapital)
 	if err != nil {
 		return err
 	}

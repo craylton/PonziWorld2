@@ -9,8 +9,16 @@ type Asset struct {
 	AssetTypeId primitive.ObjectID `bson:"assetTypeId" json:"assetTypeId"`
 }
 
-type AssetResponse struct {
-	Amount      int64  `json:"amount"`
-	AssetTypeId string `json:"assetTypeId"`
-	AssetType   string `json:"assetType"`
+type AvailableAssetResponse struct {
+	AssetTypeId         string `json:"assetTypeId"`
+	AssetType           string `json:"assetType"`
+	IsInvestedOrPending bool   `json:"isInvestedOrPending"`
+}
+
+type AssetDetailsResponse struct {
+	AssetId        string                          `json:"assetId"`
+	Name           string                          `json:"name"`
+	InvestedAmount int64                           `json:"investedAmount"`
+	PendingAmount  int64                           `json:"pendingAmount"`
+	HistoricalData []HistoricalPerformanceResponse `json:"historicalData"`
 }

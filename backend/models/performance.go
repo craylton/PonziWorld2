@@ -10,7 +10,7 @@ type HistoricalPerformance struct {
 	IsClaimed bool               `bson:"isClaimed" json:"isClaimed"`
 }
 
-type PerformanceHistoryResponse struct {
+type OwnBankHistoricalPerformanceResponse struct {
 	ClaimedHistory []HistoricalPerformanceResponse `json:"claimedHistory"`
 	ActualHistory  []HistoricalPerformanceResponse `json:"actualHistory"`
 }

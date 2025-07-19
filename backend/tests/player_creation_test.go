@@ -26,10 +26,14 @@ func TestPlayerService_CreateNewPlayer(t *testing.T) {
 		}
 
 		// Verify the player was created by trying to get their bank
-		bankResponse, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, testUsername)
+		bankResponses, err := container.ServiceContainer.Bank.GetAllBanksByUsername(ctx, testUsername)
 		if err != nil {
-			t.Fatalf("Failed to get bank for created player: %v", err)
+			t.Fatalf("Failed to get banks for created player: %v", err)
 		}
+		if len(bankResponses) == 0 {
+			t.Fatalf("Expected at least one bank for created player")
+		}
+		bankResponse := bankResponses[0]
 
 		if bankResponse.BankName != "Test Bank Creation" {
 			t.Errorf("Expected bank name 'Test Bank Creation', got %q", bankResponse.BankName)

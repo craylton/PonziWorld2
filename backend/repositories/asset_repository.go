@@ -39,6 +39,15 @@ func (r *assetRepository) FindByBankID(ctx context.Context, bankID primitive.Obj
 	return assets, nil
 }
 
+func (r *assetRepository) FindByBankIDAndAssetTypeID(ctx context.Context, bankID, assetTypeID primitive.ObjectID) (*models.Asset, error) {
+	var asset models.Asset
+	err := r.collection.FindOne(ctx, bson.M{"bankId": bankID, "assetTypeId": assetTypeID}).Decode(&asset)
+	if err != nil {
+		return nil, err
+	}
+	return &asset, nil
+}
+
 func (r *assetRepository) CalculateActualCapital(ctx context.Context, bankID primitive.ObjectID) (int64, error) {
 	assets, err := r.FindByBankID(ctx, bankID)
 	if err != nil {

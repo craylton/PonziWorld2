@@ -6,25 +6,21 @@ import { makeAuthenticatedRequest } from '../../auth';
 import { useBankContext } from '../../contexts/useBankContext';
 import { useAssetContext } from '../../contexts/useAssetContext';
 import TransactionPopup from './TransactionPopup';
-import type { Asset } from './Asset';
+import type { AssetDetailsResponse } from '../../models/AssetDetails';
 
 interface AssetDetailPopupProps {
   isOpen: boolean;
   onClose: () => void;
-  asset: Asset;
-  onTransactionStart: () => void;
-  onTransactionComplete: (success: boolean, message: string) => void;
+  asset: AssetDetailsResponse;
 }
 
 export default function AssetDetailPopup({
   isOpen,
   onClose,
-  asset,
-  onTransactionStart,
-  onTransactionComplete
+  asset
 }: AssetDetailPopupProps) {
   const { bankId } = useBankContext();
-  const { refreshAssets } = useAssetContext();
+  const { refreshAssets, refreshBank, showLoadingPopup } = useAssetContext();
   const [transactionPopupOpen, setTransactionPopupOpen] = useState(false);
   const [transactionType, setTransactionType] = useState<'buy' | 'sell'>('buy');
 
@@ -32,18 +28,18 @@ export default function AssetDetailPopup({
   const getChartData = () => {
     const data = [];
     let currentValue = 100;
-    
+
     for (let i = 0; i < 30; i++) {
       data.push({
         day: i + 1,
         value: Math.round(currentValue)
       });
-      
+
       // Use the same algorithm: multiply by random factor between 0.9 and 1.2
       const factor = 0.9 + Math.random() * 0.3; // 0.9 to 1.2
       currentValue = currentValue * factor;
     }
-    
+
     return data;
   };
 
@@ -61,13 +57,9 @@ export default function AssetDetailPopup({
   };
 
   const handleTransactionConfirm = async (amount: number) => {
-    // Close both popups and notify parent to show loading
+    // Close transaction popup and show global loading popup
     setTransactionPopupOpen(false);
-    // Close the asset detail popup with a slight delay to ensure loading popup appears
-    setTimeout(() => {
-      onClose();
-    }, 10);
-    onTransactionStart();
+    showLoadingPopup('loading', 'Processing transaction...');
 
     try {
       // Determine the endpoint based on transaction type
@@ -80,25 +72,30 @@ export default function AssetDetailPopup({
         },
         body: JSON.stringify({
           buyerBankId: bankId,
-          assetId: asset.assetTypeId,
+          assetId: asset.assetId,
           amount,
         }),
       });
 
       if (response.ok) {
-        onTransactionComplete(true, 'Transaction completed successfully');
-        // Refresh assets in the background
+        showLoadingPopup('success', 'Transaction completed successfully');
+
+        // Refresh bank data first (to update availableAssets list)
+        if (refreshBank) {
+          await refreshBank();
+        }
+        // Then refresh individual asset details
         refreshAssets();
       } else {
         // Error from server
         const error = await response.json();
         console.error(`${transactionType} transaction failed:`, error);
-        onTransactionComplete(false, error.error || 'Transaction failed');
+        showLoadingPopup('error', error.error || 'Transaction failed');
       }
     } catch (error) {
       // Network or other error
       console.error(`Error during ${transactionType} transaction:`, error);
-      onTransactionComplete(false, 'Network error occurred');
+      showLoadingPopup('error', 'Network error occurred');
     }
   };
 
@@ -113,8 +110,8 @@ export default function AssetDetailPopup({
   }, [isOpen]);
 
   if (!isOpen) return null;
-  
-  const hasInvestmentOrPending = asset.amount > 0 || asset.pendingAmount !== 0;
+
+  const hasInvestmentOrPending = asset.investedAmount > 0 || asset.pendingAmount !== 0;
 
   return (
     <div
@@ -126,7 +123,7 @@ export default function AssetDetailPopup({
     >
       <div className="capital-popup">
         <div className="capital-popup__header">
-          <h2 id="popup-title" className="capital-popup__title">{asset.assetType} Details</h2>
+          <h2 id="popup-title" className="capital-popup__title">{asset.name} Details</h2>
           <button
             className="capital-popup__close-button"
             onClick={onClose}
@@ -136,15 +133,15 @@ export default function AssetDetailPopup({
           </button>
         </div>
         <div className="capital-popup__content">
-          {asset.amount > 0 && (
+          {asset.investedAmount > 0 && (
             <div className="capital-popup__value">
-              {formatCurrency(asset.amount)}
+              {formatCurrency(asset.investedAmount)}
             </div>
           )}
           <div className="capital-popup__chart">
             <LineGraph
               data={chartData}
-              title={asset.assetType}
+              title={asset.name}
               formatTooltip={(value) => `${value}%`}
               formatYAxisTick={(value) => `${value}%`}
             />
@@ -179,9 +176,9 @@ export default function AssetDetailPopup({
       <TransactionPopup
         isOpen={transactionPopupOpen}
         onClose={handleTransactionClose}
-        assetType={asset.assetType}
+        assetType={asset.name}
         transactionType={transactionType}
-        currentHoldings={asset.amount + asset.pendingAmount}
+        currentHoldings={asset.investedAmount + asset.pendingAmount}
         onConfirm={handleTransactionConfirm}
       />
     </div>

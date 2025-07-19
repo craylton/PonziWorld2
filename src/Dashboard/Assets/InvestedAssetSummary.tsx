@@ -1,25 +1,24 @@
 import AssetSummaryBase from './AssetSummaryBase';
-import type { Asset } from './Asset';
 import './AssetList.css';
 import { formatCurrency } from '../../utils/currency';
+import type { AssetDetailsResponse } from '../../models/AssetDetails';
 
 interface AssetSummaryProps {
-  asset: Asset;
-  historicalValues: number[];
+  asset: AssetDetailsResponse;
 }
 
-export default function InvestedAssetSummary({ asset, historicalValues }: AssetSummaryProps) {
+export default function InvestedAssetSummary({ asset }: AssetSummaryProps) {
   const hasPendingAmount = asset.pendingAmount !== 0;
   
   return (
     <>
       <div className="asset-list__item">
         <div className="asset-list__content">
-          <div className="asset-list__type">{asset.assetType}</div>
+          <div className="asset-list__type">{asset.name}</div>
           <div className="asset-list__amount">
             {hasPendingAmount ? (
               <>
-                {formatCurrency(asset.amount)} {asset.pendingAmount > 0 ? '+' : '-'} {' '}
+                {formatCurrency(asset.investedAmount)} {asset.pendingAmount > 0 ? '+' : '-'}
                 <span 
                   className={`asset-list__pending ${asset.pendingAmount > 0 ? 'asset-list__pending--positive' : 'asset-list__pending--negative'}`}
                 >
@@ -27,11 +26,11 @@ export default function InvestedAssetSummary({ asset, historicalValues }: AssetS
                 </span>
               </>
             ) : (
-              formatCurrency(asset.amount)
+              formatCurrency(asset.investedAmount)
             )}
           </div>
         </div>
-        <AssetSummaryBase asset={asset} historicalValues={historicalValues} />
+        <AssetSummaryBase asset={asset} />
       </div>
     </>
   );

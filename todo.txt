@@ -1,10 +1,10 @@
 
+Right now:
+Need to rename assets into investments because it's getting very confusing
+
 
 Next up:
-Revisit go contexts
 Make all purchases come out of cash
-Put assets in the history collection
-    Also display that history when you click an asset
 Apply pending transactions on new day
 Combine all popups into a base component
     Capital popup
@@ -17,12 +17,6 @@ Ensure currencies are stored in correct format
     Also need to be huge, both positive and negative
 Redesign header so that claimed and actual capitals are in same graph
 Put some of the main components and so on into copilot instructions
-Make sure /bank caters to multiple banks per player
-    Currently it does a FindOne to get the only bank for this player
-    this will break later on
-    Create a separate /newBank endpoint
-    The dashboard really should list all the player's banks, and then you can look into one to see performance
-Rename performance / performance history into historicalPerformance
 Somehow prevent services from being passed into other services
 
 
@@ -36,6 +30,20 @@ Defensive programming when retrieving data from DB
     even if my app always write the right shape
     for now only need to check username and bank name
     the capital fields will eventually be located somewhere else
+
+Allow player to create additional banks
+    This will mean a redesign of the dashboard where a player can select their bank
+
+Add 'Today'/'Tomorrow' buttons
+    To highlight what happened from yesterday to today
+        new investors
+        any withdrawals
+        any new potential investments
+        legal issues or whatever
+    and what will happen from today to tomorrow
+        how much will you lie
+        what you will buy/sell
+        any upcoming events or whatever
 
 Make a tutorial
     When you first log in, Grandma lends you some money so you can get started

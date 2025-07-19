@@ -13,17 +13,19 @@ func RegisterRoutes(mux *http.ServeMux, container *config.Container) {
 	gameHandler := handlers.NewGameHandler(container)
 	playerHandler := handlers.NewPlayerHandler(container)
 	loginHandler := handlers.NewLoginHandler(container)
-	performanceHistoryHandler := handlers.NewPerformanceHistoryHandler(container)
+	historicalPerformanceHandler := handlers.NewHistoricalPerformanceHandler(container)
 	assetTypeHandler := handlers.NewAssetTypeHandler(container)
+	assetHandler := handlers.NewAssetHandler(container)
 	pendingTransactionHandler := handlers.NewPendingTransactionHandler(container)
 
 	// Register routes
 	mux.HandleFunc("/api/newPlayer", playerHandler.CreateNewPlayer)
-	mux.HandleFunc("/api/bank", middleware.JwtMiddleware(bankHandler.GetBank))
+	mux.HandleFunc("/api/banks", middleware.JwtMiddleware(bankHandler.HandleBanks))
 	mux.HandleFunc("/api/login", loginHandler.LogIn)
 	mux.HandleFunc("/api/currentDay", gameHandler.GetCurrentDay)
 	mux.HandleFunc("/api/player", middleware.JwtMiddleware(playerHandler.GetPlayer))
 	mux.HandleFunc("/api/assetTypes", middleware.JwtMiddleware(assetTypeHandler.GetAllAssetTypes))
+	mux.HandleFunc("/api/asset/{assetId}/{bankId}", middleware.JwtMiddleware(assetHandler.GetAssetDetails))
 	mux.HandleFunc("/api/buy", middleware.JwtMiddleware(pendingTransactionHandler.BuyAsset))
 	mux.HandleFunc("/api/sell", middleware.JwtMiddleware(pendingTransactionHandler.SellAsset))
 	mux.HandleFunc("/api/pendingTransactions/{bankId}", middleware.JwtMiddleware(pendingTransactionHandler.GetPendingTransactions))
@@ -32,7 +34,7 @@ func RegisterRoutes(mux *http.ServeMux, container *config.Container) {
 		middleware.AdminJwtMiddleware(gameHandler.AdvanceToNextDay, container.ServiceContainer.Auth),
 	)
 	mux.HandleFunc(
-		"/api/performanceHistory/ownbank/{bankId}",
-		middleware.JwtMiddleware(performanceHistoryHandler.GetPerformanceHistory),
+		"/api/historicalPerformance/ownbank/{bankId}",
+		middleware.JwtMiddleware(historicalPerformanceHandler.GetHistoricalPerformance),
 	)
 }

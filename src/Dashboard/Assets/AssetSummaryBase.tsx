@@ -1,20 +1,17 @@
 import { useState } from 'react';
-import type { Asset } from './Asset';
+import type { AssetDetailsResponse } from '../../models/AssetDetails';
 import './AssetList.css';
 import AssetSummaryChart from './AssetSummaryChart';
 import AssetDetailPopup from './AssetDetailPopup';
-import LoadingPopup from './LoadingPopup';
 
 interface AssetSummaryBaseProps {
-  asset: Asset;
-  historicalValues: number[];
+  asset: AssetDetailsResponse;
 }
 
-export default function AssetSummaryBase({ asset, historicalValues }: AssetSummaryBaseProps) {
+export default function AssetSummaryBase({ asset }: AssetSummaryBaseProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [loadingPopupOpen, setLoadingPopupOpen] = useState(false);
-  const [loadingStatus, setLoadingStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [loadingMessage, setLoadingMessage] = useState<string>('');
+
+  const historicalValues = asset.historicalData.map(entry => entry.value);
 
   const numValues = historicalValues.length;
   const oneDayChange = numValues >= 2
@@ -35,21 +32,6 @@ export default function AssetSummaryBase({ asset, historicalValues }: AssetSumma
 
   const handleChartClick = () => setIsPopupOpen(true);
   const handleClosePopup = () => setIsPopupOpen(false);
-
-  const handleTransactionStart = () => {
-    setLoadingPopupOpen(true);
-    setLoadingStatus('loading');
-    setLoadingMessage('');
-  };
-
-  const handleTransactionComplete = (success: boolean, message: string) => {
-    setLoadingStatus(success ? 'success' : 'error');
-    setLoadingMessage(message);
-  };
-
-  const handleLoadingClose = () => {
-    setLoadingPopupOpen(false);
-  };
 
   return (
     <>
@@ -78,14 +60,6 @@ export default function AssetSummaryBase({ asset, historicalValues }: AssetSumma
         isOpen={isPopupOpen}
         onClose={handleClosePopup}
         asset={asset}
-        onTransactionStart={handleTransactionStart}
-        onTransactionComplete={handleTransactionComplete}
-      />
-      <LoadingPopup
-        isOpen={loadingPopupOpen}
-        onClose={handleLoadingClose}
-        status={loadingStatus}
-        message={loadingMessage}
       />
     </>
   );

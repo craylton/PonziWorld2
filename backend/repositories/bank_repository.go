@@ -34,11 +34,16 @@ func (r *bankRepository) FindByID(ctx context.Context, id primitive.ObjectID) (*
 	return &bank, nil
 }
 
-func (r *bankRepository) FindByPlayerID(ctx context.Context, playerID primitive.ObjectID) (*models.Bank, error) {
-	var bank models.Bank
-	err := r.collection.FindOne(ctx, bson.M{"playerId": playerID}).Decode(&bank)
+func (r *bankRepository) FindAllByPlayerID(ctx context.Context, playerID primitive.ObjectID) ([]models.Bank, error) {
+	cursor, err := r.collection.Find(ctx, bson.M{"playerId": playerID})
 	if err != nil {
 		return nil, err
 	}
-	return &bank, nil
+	defer cursor.Close(ctx)
+
+	var banks []models.Bank
+	if err = cursor.All(ctx, &banks); err != nil {
+		return nil, err
+	}
+	return banks, nil
 }
