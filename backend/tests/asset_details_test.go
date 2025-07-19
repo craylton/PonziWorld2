@@ -32,10 +32,14 @@ func TestAssetService_GetAssetDetails_ValidScenarios(t *testing.T) {
 	}
 
 	// Get the bank
-	bankResponse, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, testUsername)
+	bankResponses, err := container.ServiceContainer.Bank.GetAllBanksByUsername(ctx, testUsername)
 	if err != nil {
-		t.Fatalf("Failed to get bank: %v", err)
+		t.Fatalf("Failed to get banks: %v", err)
 	}
+	if len(bankResponses) == 0 {
+		t.Fatalf("Expected at least one bank for user")
+	}
+	bankResponse := bankResponses[0]
 
 	bankID, err := primitive.ObjectIDFromHex(bankResponse.Id)
 	if err != nil {
@@ -174,10 +178,14 @@ func TestAssetService_GetAssetDetails_ErrorCases(t *testing.T) {
 	}
 
 	// Get the bank
-	bankResponse, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, testUsername)
+	bankResponses, err := container.ServiceContainer.Bank.GetAllBanksByUsername(ctx, testUsername)
 	if err != nil {
-		t.Fatalf("Failed to get bank: %v", err)
+		t.Fatalf("Failed to get banks: %v", err)
 	}
+	if len(bankResponses) == 0 {
+		t.Fatalf("Expected at least one bank for user")
+	}
+	bankResponse := bankResponses[0]
 
 	bankID, err := primitive.ObjectIDFromHex(bankResponse.Id)
 	if err != nil {
@@ -277,10 +285,14 @@ func TestAssetService_GetAssetDetails_HistoricalDataGeneration(t *testing.T) {
 	}
 
 	// Get the bank
-	bankResponse, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, testUsername)
+	bankResponses, err := container.ServiceContainer.Bank.GetAllBanksByUsername(ctx, testUsername)
 	if err != nil {
-		t.Fatalf("Failed to get bank: %v", err)
+		t.Fatalf("Failed to get banks: %v", err)
 	}
+	if len(bankResponses) == 0 {
+		t.Fatalf("Expected at least one bank for user")
+	}
+	bankResponse := bankResponses[0]
 
 	bankID, err := primitive.ObjectIDFromHex(bankResponse.Id)
 	if err != nil {
@@ -393,15 +405,23 @@ func TestAssetService_GetAssetDetails_BankAsAsset(t *testing.T) {
 	}
 
 	// Get the banks
-	bank1Response, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, investor1Username)
+	bank1Responses, err := container.ServiceContainer.Bank.GetAllBanksByUsername(ctx, investor1Username)
 	if err != nil {
-		t.Fatalf("Failed to get bank 1: %v", err)
+		t.Fatalf("Failed to get banks for investor 1: %v", err)
 	}
+	if len(bank1Responses) == 0 {
+		t.Fatalf("Expected at least one bank for investor 1")
+	}
+	bank1Response := bank1Responses[0]
 
-	bank2Response, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, investor2Username)
+	bank2Responses, err := container.ServiceContainer.Bank.GetAllBanksByUsername(ctx, investor2Username)
 	if err != nil {
-		t.Fatalf("Failed to get bank 2: %v", err)
+		t.Fatalf("Failed to get banks for investor 2: %v", err)
 	}
+	if len(bank2Responses) == 0 {
+		t.Fatalf("Expected at least one bank for investor 2")
+	}
+	bank2Response := bank2Responses[0]
 
 	bank1ID, err := primitive.ObjectIDFromHex(bank1Response.Id)
 	if err != nil {

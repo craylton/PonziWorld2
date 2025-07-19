@@ -11,8 +11,7 @@ interface AssetSummaryBaseProps {
 export default function AssetSummaryBase({ asset }: AssetSummaryBaseProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  // Use historical data values for calculations, or empty array if loading
-  const historicalValues = asset?.historicalData?.map(entry => entry.value) || [];
+  const historicalValues = asset.historicalData.map(entry => entry.value);
 
   const numValues = historicalValues.length;
   const oneDayChange = numValues >= 2

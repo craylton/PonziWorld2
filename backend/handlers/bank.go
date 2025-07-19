@@ -20,8 +20,8 @@ func NewBankHandler(container *config.Container) *BankHandler {
 	}
 }
 
-// GetBank handles GET /api/banks
-func (h *BankHandler) GetBank(w http.ResponseWriter, r *http.Request) {
+// GetBanks handles GET /api/banks
+func (h *BankHandler) GetBanks(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -56,21 +56,21 @@ func (h *BankHandler) GetBank(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(bankResponses)
 }
 
-// HandleBank handles both GET and POST for /api/banks
-func (h *BankHandler) HandleBank(w http.ResponseWriter, r *http.Request) {
+// HandleBanks handles both GET and POST for /api/banks
+func (h *BankHandler) HandleBanks(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		h.GetBank(w, r)
+		h.GetBanks(w, r)
 	case http.MethodPost:
-		h.CreateBank(w, r)
+		h.CreateBanks(w, r)
 	default:
 		w.Header().Set("Allow", "GET, POST")
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
-// CreateBank handles POST /api/banks
-func (h *BankHandler) CreateBank(w http.ResponseWriter, r *http.Request) {
+// CreateBanks handles POST /api/banks
+func (h *BankHandler) CreateBanks(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)

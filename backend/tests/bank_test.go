@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func TestBankService_GetBankByUsername(t *testing.T) {
+func TestBankService_GetAllBanksByUsername(t *testing.T) {
 	// Create test dependencies
 	container, err := CreateTestDependencies("bank")
 	if err != nil {
@@ -30,11 +30,18 @@ func TestBankService_GetBankByUsername(t *testing.T) {
 		t.Fatalf("Failed to create new player: %v", err)
 	}
 
-	// Retrieve bank directly via service
-	bankResponse, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, testUsername)
+	// Retrieve banks directly via service
+	bankResponses, err := container.ServiceContainer.Bank.GetAllBanksByUsername(ctx, testUsername)
 	if err != nil {
-		t.Fatalf("Failed to get bank by username: %v", err)
+		t.Fatalf("Failed to get banks by username: %v", err)
 	}
+
+	// Should have exactly one bank
+	if len(bankResponses) != 1 {
+		t.Fatalf("Expected 1 bank, got %d", len(bankResponses))
+	}
+
+	bankResponse := bankResponses[0]
 
 	// Verify bank data
 	if bankResponse.BankName != testBankName {
@@ -246,12 +253,6 @@ func TestBankService_IsInvestedOrPendingFlag(t *testing.T) {
 		t.Fatalf("Failed to create test player: %v", err)
 	}
 
-	// Get the user's bank
-	bankResponse, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, testUsername)
-	if err != nil {
-		t.Fatalf("Failed to get bank by username: %v", err)
-	}
-
 	// Get asset types for testing
 	assetTypes, err := container.ServiceContainer.AssetType.GetAllAssetTypes(ctx)
 	if err != nil {
@@ -276,10 +277,14 @@ func TestBankService_IsInvestedOrPendingFlag(t *testing.T) {
 	}
 
 	// Test initial state: Cash should be invested (bank starts with cash), others should not
-	initialBankResponse, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, testUsername)
+	initialBankResponses, err := container.ServiceContainer.Bank.GetAllBanksByUsername(ctx, testUsername)
 	if err != nil {
 		t.Fatalf("Failed to get initial bank response: %v", err)
 	}
+	if len(initialBankResponses) == 0 {
+		t.Fatalf("Expected at least one bank for user")
+	}
+	initialBankResponse := initialBankResponses[0]
 
 	assetMap := make(map[string]*models.AvailableAssetResponse)
 	for _, asset := range initialBankResponse.AvailableAssets {
@@ -308,7 +313,7 @@ func TestBankService_IsInvestedOrPendingFlag(t *testing.T) {
 	}
 
 	// Create a pending transaction for Stocks
-	bankId, err := primitive.ObjectIDFromHex(bankResponse.Id)
+	bankId, err := primitive.ObjectIDFromHex(initialBankResponse.Id)
 	if err != nil {
 		t.Fatalf("Failed to convert bank ID to ObjectID: %v", err)
 	}
@@ -325,10 +330,14 @@ func TestBankService_IsInvestedOrPendingFlag(t *testing.T) {
 	}
 
 	// Test after pending transaction: Stocks should now be pending
-	afterPendingResponse, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, testUsername)
+	afterPendingResponses, err := container.ServiceContainer.Bank.GetAllBanksByUsername(ctx, testUsername)
 	if err != nil {
 		t.Fatalf("Failed to get bank response after pending transaction: %v", err)
 	}
+	if len(afterPendingResponses) == 0 {
+		t.Fatalf("Expected at least one bank for user")
+	}
+	afterPendingResponse := afterPendingResponses[0]
 
 	afterPendingAssetMap := make(map[string]*models.AvailableAssetResponse)
 	for _, asset := range afterPendingResponse.AvailableAssets {
@@ -369,10 +378,14 @@ func TestBankService_IsInvestedOrPendingFlag(t *testing.T) {
 	}
 
 	// Test after actual investment: Bonds should now be invested
-	afterInvestmentResponse, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, testUsername)
+	afterInvestmentResponses, err := container.ServiceContainer.Bank.GetAllBanksByUsername(ctx, testUsername)
 	if err != nil {
 		t.Fatalf("Failed to get bank response after investment: %v", err)
 	}
+	if len(afterInvestmentResponses) == 0 {
+		t.Fatalf("Expected at least one bank for user")
+	}
+	afterInvestmentResponse := afterInvestmentResponses[0]
 
 	afterInvestmentAssetMap := make(map[string]*models.AvailableAssetResponse)
 	for _, asset := range afterInvestmentResponse.AvailableAssets {

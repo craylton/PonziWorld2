@@ -30,10 +30,14 @@ func TestHistoricalPerformanceService_GetHistoricalPerformance(t *testing.T) {
 	}
 
 	// Get bank details to get bank ID
-	bankResponse, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, testUsername)
+	bankResponses, err := container.ServiceContainer.Bank.GetAllBanksByUsername(ctx, testUsername)
 	if err != nil {
-		t.Fatalf("Failed to get bank: %v", err)
+		t.Fatalf("Failed to get banks: %v", err)
 	}
+	if len(bankResponses) == 0 {
+		t.Fatalf("Expected at least one bank for user")
+	}
+	bankResponse := bankResponses[0]
 
 	bankID, err := primitive.ObjectIDFromHex(bankResponse.Id)
 	if err != nil {
@@ -152,10 +156,14 @@ func TestHistoricalPerformanceService_GetHistoricalPerformanceDataPersistence(t 
 	}
 
 	// Get bank details to get bank ID
-	bankResponse, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, testUsername)
+	bankResponses, err := container.ServiceContainer.Bank.GetAllBanksByUsername(ctx, testUsername)
 	if err != nil {
-		t.Fatalf("Failed to get bank: %v", err)
+		t.Fatalf("Failed to get banks: %v", err)
 	}
+	if len(bankResponses) == 0 {
+		t.Fatalf("Expected at least one bank for user")
+	}
+	bankResponse := bankResponses[0]
 
 	bankID, err := primitive.ObjectIDFromHex(bankResponse.Id)
 	if err != nil {
@@ -236,10 +244,14 @@ func TestHistoricalPerformanceService_GetHistoricalPerformanceUnauthorized(t *te
 	}
 
 	// Get the owner's bank details to get bank ID
-	ownerBankResponse, err := container.ServiceContainer.Bank.GetBankByUsername(ctx, ownerUsername)
+	ownerBankResponses, err := container.ServiceContainer.Bank.GetAllBanksByUsername(ctx, ownerUsername)
 	if err != nil {
-		t.Fatalf("Failed to get owner bank: %v", err)
+		t.Fatalf("Failed to get owner banks: %v", err)
 	}
+	if len(ownerBankResponses) == 0 {
+		t.Fatalf("Expected at least one bank for owner")
+	}
+	ownerBankResponse := ownerBankResponses[0]
 
 	ownerBankID, err := primitive.ObjectIDFromHex(ownerBankResponse.Id)
 	if err != nil {
