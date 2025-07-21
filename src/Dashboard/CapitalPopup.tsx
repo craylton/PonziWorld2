@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import './CapitalPopup.css';
 import { formatCurrency } from '../utils/currency';
-import type { HistoricalPerformanceEntry } from '../models/HistoricalPerformance';
+import { makeAuthenticatedRequest } from '../auth';
+import type { HistoricalPerformanceEntry, OwnBankHistoricalPerformance } from '../models/HistoricalPerformance';
 import LineGraph from './Assets/LineGraph';
 
 interface CapitalPopupProps {
@@ -9,8 +10,8 @@ interface CapitalPopupProps {
   onClose: () => void;
   title: string;
   value: number;
-  historicalPerformance: HistoricalPerformanceEntry[] | null;
-  isHistoryLoading: boolean;
+  bankId: string;
+  capitalType: 'claimed' | 'actual';
 }
 
 export default function CapitalPopup({
@@ -18,14 +19,44 @@ export default function CapitalPopup({
   onClose,
   title,
   value,
-  historicalPerformance: historicalPerformance,
-  isHistoryLoading
+  bankId,
+  capitalType
 }: CapitalPopupProps) {
+  const [historicalPerformance, setHistoricalPerformance] = useState<HistoricalPerformanceEntry[] | null>(null);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+
+  // Fetch historical performance data when popup opens
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    setIsHistoryLoading(true);
+    setHistoricalPerformance(null);
+
+    const fetchHistoricalData = async () => {
+      try {
+        const response = await makeAuthenticatedRequest(`/api/historicalPerformance/ownbank/${bankId}`);
+        if (response.ok) {
+          const data: OwnBankHistoricalPerformance = await response.json();
+          const performanceData = capitalType === 'claimed' ? data.claimedHistory : data.actualHistory;
+          setHistoricalPerformance(performanceData);
+        }
+      } catch (error) {
+        console.error('Failed to fetch historical performance:', error);
+      } finally {
+        setIsHistoryLoading(false);
+      }
+    };
+
+    fetchHistoricalData();
+  }, [isOpen, bankId, capitalType]);
+
   // Format the chart data based on the performance history
   const getChartData = () => {
     if (!historicalPerformance) return [];
 
-    return historicalPerformance.map(entry => ({
+    return historicalPerformance.map((entry: HistoricalPerformanceEntry) => ({
       day: entry.day,
       value: entry.value
     }));

@@ -3,15 +3,13 @@ import './DashboardHeader.css';
 import CapitalPopup from './CapitalPopup';
 import ChevronIcon from './ChevronIcon';
 import { formatCurrency } from '../utils/currency';
-import type { OwnBankHistoricalPerformance } from '../models/HistoricalPerformance';
 
 interface DashboardHeaderProps {
   currentDay: number;
   bankName: string;
   claimedCapital: number;
   actualCapital: number;
-  historicalPerformance: OwnBankHistoricalPerformance | null;
-  isHistoryLoading: boolean;
+  bankId: string;
 }
 
 type PopupType = 'claimed' | 'actual' | null;
@@ -21,8 +19,7 @@ export default function DashboardHeader({
   bankName,
   claimedCapital,
   actualCapital,
-  historicalPerformance,
-  isHistoryLoading
+  bankId
 }: DashboardHeaderProps) {
   const [activePopup, setActivePopup] = useState<PopupType>(null);
 
@@ -42,14 +39,6 @@ export default function DashboardHeader({
     return activePopup === 'claimed' ? claimedCapital : actualCapital;
   };
 
-  const getPopupPerformanceHistory = () => {
-    if (!historicalPerformance) return [];
-
-    return activePopup === 'claimed'
-      ? historicalPerformance.claimedHistory
-      : historicalPerformance.actualHistory;
-  };
-
   return (
     <>
       <header className="dashboard-header">
@@ -57,10 +46,9 @@ export default function DashboardHeader({
         <div className="dashboard-header__bank">{bankName}</div>
         <div className="dashboard-header__capitals">
           <button
-            className={`dashboard-header__capital dashboard-header__capital--clickable ${isHistoryLoading ? 'dashboard-header__capital--loading' : ''}`}
+            className="dashboard-header__capital dashboard-header__capital--clickable"
             onClick={() => handleCapitalClick('claimed')}
             aria-label="View claimed capital details"
-            disabled={isHistoryLoading}
           >
             <span className="dashboard-header__capital-label">Claimed Capital</span>
             <span className="dashboard-header__capital-value">
@@ -69,10 +57,9 @@ export default function DashboardHeader({
             </span>
           </button>
           <button
-            className={`dashboard-header__capital dashboard-header__capital--clickable ${isHistoryLoading ? 'dashboard-header__capital--loading' : ''}`}
+            className="dashboard-header__capital dashboard-header__capital--clickable"
             onClick={() => handleCapitalClick('actual')}
             aria-label="View actual capital details"
-            disabled={isHistoryLoading}
           >
             <span className="dashboard-header__capital-label">Actual Capital</span>
             <span className="dashboard-header__capital-value">
@@ -88,8 +75,8 @@ export default function DashboardHeader({
         onClose={handleClosePopup}
         title={getPopupTitle()}
         value={getPopupValue()}
-        historicalPerformance={getPopupPerformanceHistory()}
-        isHistoryLoading={isHistoryLoading}
+        bankId={bankId}
+        capitalType={activePopup || 'claimed'}
       />
     </>
   );

@@ -22,7 +22,7 @@ export default function AssetSection({ availableAssets, onRefreshBank }: AssetSe
   return (
     <AssetProvider refreshBank={onRefreshBank}>
       <AssetList
-        title="Your Assets"
+        title="Your Investments"
         isExpandedByDefault={true}
         assets={investedAssets}
       />
