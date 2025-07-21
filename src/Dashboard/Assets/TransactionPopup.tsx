@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import '../CapitalPopup.css';
+import '../CapitalPopupStyles.css';
+import Popup from '../../components/Popup';
 
 interface TransactionPopupProps {
     isOpen: boolean;
@@ -90,82 +91,67 @@ export default function TransactionPopup({
         onClose();
     };
 
-    if (!isOpen) return null;
+    const footer = (
+        <>
+            <button
+                className="popup__button popup__button--secondary"
+                onClick={onClose}
+            >
+                Cancel
+            </button>
+            <button
+                className="popup__button popup__button--confirm"
+                onClick={handleConfirm}
+                disabled={!amount || !!error}
+            >
+                {transactionType === 'buy' ? 'Buy' : 'Sell'}
+            </button>
+        </>
+    );
 
     return (
-        <div
-            className="capital-popup-overlay"
-            onClick={e => e.target === e.currentTarget && onClose()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="transaction-popup-title"
-            style={{ zIndex: 2001 }} // Higher z-index than the asset detail popup
+        <Popup
+            isOpen={isOpen}
+            title={title}
+            onClose={onClose}
+            footer={footer}
+            zIndex={2001}
+            className="transaction-popup"
         >
-            <div className="capital-popup">
-                <div className="capital-popup__header">
-                    <h2 id="transaction-popup-title" className="capital-popup__title">
-                        {title}
-                    </h2>
-                    <button
-                        className="capital-popup__close-button"
-                        onClick={onClose}
-                        aria-label="Close popup"
-                    >
-                        ×
-                    </button>
-                </div>
-                <div className="capital-popup__content">
-                    <div className="transaction-popup__input-group">
-                        <label htmlFor="amount-input" className="transaction-popup__label">
-                            Amount:
-                        </label>
-                        <input
-                            id="amount-input"
-                            type="number"
-                            value={amount}
-                            onChange={handleAmountChange}
-                            placeholder="Enter amount"
-                            className="transaction-popup__input"
-                            min="0"
-                            step="0.01"
-                            autoFocus
-                        />
-                        {error && (
-                            <div className="transaction-popup__error">
-                                {error}
-                            </div>
-                        )}
+            <div className="transaction-popup__input-group">
+                <label htmlFor="amount-input" className="transaction-popup__label">
+                    Amount:
+                </label>
+                <input
+                    id="amount-input"
+                    type="number"
+                    value={amount}
+                    onChange={handleAmountChange}
+                    placeholder="Enter amount"
+                    className="transaction-popup__input"
+                    min="0"
+                    step="0.01"
+                    autoFocus
+                />
+                {error && (
+                    <div className="transaction-popup__error">
+                        {error}
                     </div>
-                    {transactionType === 'sell' && (
-                        <div className="transaction-popup__checkbox-group">
-                            <label className="transaction-popup__checkbox-label">
-                                <input
-                                    type="checkbox"
-                                    checked={sellAll}
-                                    onChange={handleSellAllChange}
-                                    className="transaction-popup__checkbox"
-                                />
-                                Sell all
-                            </label>
-                        </div>
-                    )}
-                </div>
-                <div className="capital-popup__footer">
-                    <button
-                        className="capital-popup__cancel-button"
-                        onClick={onClose}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        className="capital-popup__confirm-button"
-                        onClick={handleConfirm}
-                        disabled={!amount || !!error}
-                    >
-                        {transactionType === 'buy' ? 'Buy' : 'Sell'}
-                    </button>
-                </div>
+                )}
             </div>
-        </div>
+            {transactionType === 'sell' && (
+                <div className="transaction-popup__checkbox-group">
+                    <label className="transaction-popup__checkbox-label">
+                        <input
+                            type="checkbox"
+                            checked={sellAll}
+                            onChange={handleSellAllChange}
+                            className="transaction-popup__checkbox"
+                        />
+                        Sell all
+                    </label>
+                </div>
+            )}
+        </Popup>
     );
 }

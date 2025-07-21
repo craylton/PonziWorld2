@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import './CapitalPopup.css';
+import './CapitalPopupStyles.css';
 import { formatCurrency } from '../utils/currency';
 import { makeAuthenticatedRequest } from '../auth';
 import type { HistoricalPerformanceEntry, OwnBankHistoricalPerformance } from '../models/HistoricalPerformance';
 import LineGraph from './Assets/LineGraph';
+import Popup from '../components/Popup';
 
 interface CapitalPopupProps {
   isOpen: boolean;
@@ -64,66 +65,45 @@ export default function CapitalPopup({
 
   const chartData = getChartData();
 
-  // Prevent background scrolling when open
-  useEffect(() => {
-    if (isOpen) document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = 'unset'; };
-  }, [isOpen]);
-
-  if (!isOpen) return null;
+  const footer = (
+    <button
+      className="popup__button popup__button--primary"
+      onClick={onClose}
+    >
+      Close
+    </button>
+  );
 
   return (
-    <div
-      className="capital-popup-overlay"
-      onClick={e => e.target === e.currentTarget && onClose()}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="popup-title"
+    <Popup
+      isOpen={isOpen}
+      title={title}
+      onClose={onClose}
+      footer={footer}
+      className="capital-popup"
     >
-      <div className="capital-popup">
-        <div className="capital-popup__header">
-          <h2 id="popup-title" className="capital-popup__title">{title}</h2>
-          <button
-            className="capital-popup__close-button"
-            onClick={onClose}
-            aria-label="Close popup"
-          >
-            ×
-          </button>
-        </div>
-        <div className="capital-popup__content">
-          <div className="capital-popup__value">
-            {formatCurrency(value)}
-          </div>
-
-          {isHistoryLoading ? (
-            <div className="capital-popup__loading">
-              <p>Loading chart data...</p>
-            </div>
-          ) : historicalPerformance ? (
-            <div className="capital-popup__chart">
-              <LineGraph
-                data={chartData}
-                title={title}
-                formatTooltip={formatCurrency}
-                formatYAxisTick={formatCurrency}
-              />
-            </div>
-          ) : (
-            <div className="capital-popup__no-data">
-              <p>No chart data available.</p>
-            </div>
-          )}
-        </div>
-        <div className="capital-popup__footer">
-          <button
-            className="capital-popup__close-footer-button"
-            onClick={onClose}
-          >
-            Close
-          </button>
-        </div>
+      <div className="capital-popup__value">
+        {formatCurrency(value)}
       </div>
-    </div>
+
+      {isHistoryLoading ? (
+        <div className="capital-popup__loading">
+          <p>Loading chart data...</p>
+        </div>
+      ) : historicalPerformance ? (
+        <div className="capital-popup__chart">
+          <LineGraph
+            data={chartData}
+            title={title}
+            formatTooltip={formatCurrency}
+            formatYAxisTick={formatCurrency}
+          />
+        </div>
+      ) : (
+        <div className="capital-popup__no-data">
+          <p>No chart data available.</p>
+        </div>
+      )}
+    </Popup>
   );
 }

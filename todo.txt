@@ -2,11 +2,6 @@
 Next up:
 Make all purchases come out of cash
 Apply pending transactions on new day
-Combine all popups into a base component
-    Capital popup
-    Asset detail popup
-    Transaction popup
-    Loading popup
 Ensure currencies are stored in correct format
     Need to be displayed to the user as ints
     Need to be stored as floating points
