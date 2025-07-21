@@ -1,4 +1,3 @@
-import '../CapitalPopupStyles.css';
 import './LoadingPopup.css';
 import Popup from '../../components/Popup';
 

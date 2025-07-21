@@ -175,6 +175,139 @@
   cursor: not-allowed;
 }
 
+/* Shared Popup Content Styles */
+.popup__value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #9499f3;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.popup__chart {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.popup__loading,
+.popup__no-data {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  color: #cecece;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.popup__loading p,
+.popup__no-data p {
+  margin: 0.5rem 0;
+  line-height: 1.5;
+}
+
+.popup__chart-tooltip {
+  background: rgba(0, 0, 0, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.popup__chart-tooltip .label {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.875rem;
+  color: #cecece;
+}
+
+.popup__chart-tooltip .value {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #9499f3;
+}
+
+/* Transaction Form Styles */
+.popup__transaction-holdings {
+  margin-bottom: 1rem;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+  color: #e0e0e0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.popup__input-group {
+  margin-bottom: 1rem;
+}
+
+.popup__label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #e0e0e0;
+  font-weight: 600;
+}
+
+.popup__input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.popup__input:focus {
+  outline: none;
+  border-color: #9c4aa1;
+}
+
+.popup__input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.popup__error {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(255, 0, 0, 0.2);
+  border: 1px solid rgba(255, 0, 0, 0.4);
+  border-radius: 4px;
+  color: #ff6b6b;
+  font-size: 0.8rem;
+}
+
+.popup__checkbox-group {
+  margin-top: 1rem;
+}
+
+.popup__checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #e0e0e0;
+  user-select: none;
+}
+
+.popup__checkbox {
+  margin-right: 0.5rem;
+  width: 1rem;
+  height: 1rem;
+  accent-color: #9c4aa1;
+  cursor: pointer;
+}
+
 /* Mobile Responsive */
 @media (max-width: 900px) {
   .popup-overlay {
@@ -207,5 +340,32 @@
     padding: 0.75rem 1.5rem;
     font-size: 0.95rem;
     min-width: 100px;
+  }
+
+  .popup__value {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .popup__chart {
+    padding: 0.75rem;
+  }
+
+  .popup__loading,
+  .popup__no-data {
+    padding: 1.5rem;
+    min-height: 150px;
+  }
+
+  .popup__chart-tooltip {
+    padding: 0.5rem;
+  }
+
+  .popup__chart-tooltip .label {
+    font-size: 0.8rem;
+  }
+
+  .popup__chart-tooltip .value {
+    font-size: 0.9rem;
   }
 }

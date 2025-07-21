@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import './CapitalPopupStyles.css';
 import { formatCurrency } from '../utils/currency';
 import { makeAuthenticatedRequest } from '../auth';
 import type { HistoricalPerformanceEntry, OwnBankHistoricalPerformance } from '../models/HistoricalPerformance';
@@ -82,16 +81,16 @@ export default function CapitalPopup({
       footer={footer}
       className="capital-popup"
     >
-      <div className="capital-popup__value">
+      <div className="popup__value">
         {formatCurrency(value)}
       </div>
 
       {isHistoryLoading ? (
-        <div className="capital-popup__loading">
+        <div className="popup__loading">
           <p>Loading chart data...</p>
         </div>
       ) : historicalPerformance ? (
-        <div className="capital-popup__chart">
+        <div className="popup__chart">
           <LineGraph
             data={chartData}
             title={title}
@@ -100,7 +99,7 @@ export default function CapitalPopup({
           />
         </div>
       ) : (
-        <div className="capital-popup__no-data">
+        <div className="popup__no-data">
           <p>No chart data available.</p>
         </div>
       )}

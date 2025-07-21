@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from 'react';
-import '../CapitalPopupStyles.css';
 import LineGraph from './LineGraph';
 import { formatCurrency } from '../../utils/currency';
 import { makeAuthenticatedRequest } from '../../auth';
@@ -169,11 +168,11 @@ export default function AssetDetailPopup({
         className="asset-detail-popup"
       >
         {asset.investedAmount > 0 && (
-          <div className="capital-popup__value">
+          <div className="popup__value">
             {formatCurrency(asset.investedAmount)}
           </div>
         )}
-        <div className="capital-popup__chart">
+        <div className="popup__chart">
           {isLoadingChart ? (
             <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
               Loading chart data...

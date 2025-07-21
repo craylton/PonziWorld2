@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import '../CapitalPopupStyles.css';
 import Popup from '../../components/Popup';
 
 interface TransactionPopupProps {
@@ -118,8 +117,8 @@ export default function TransactionPopup({
             zIndex={2001}
             className="transaction-popup"
         >
-            <div className="transaction-popup__input-group">
-                <label htmlFor="amount-input" className="transaction-popup__label">
+            <div className="popup__input-group">
+                <label htmlFor="amount-input" className="popup__label">
                     Amount:
                 </label>
                 <input
@@ -128,25 +127,25 @@ export default function TransactionPopup({
                     value={amount}
                     onChange={handleAmountChange}
                     placeholder="Enter amount"
-                    className="transaction-popup__input"
+                    className="popup__input"
                     min="0"
                     step="0.01"
                     autoFocus
                 />
                 {error && (
-                    <div className="transaction-popup__error">
+                    <div className="popup__error">
                         {error}
                     </div>
                 )}
             </div>
             {transactionType === 'sell' && (
-                <div className="transaction-popup__checkbox-group">
-                    <label className="transaction-popup__checkbox-label">
+                <div className="popup__checkbox-group">
+                    <label className="popup__checkbox-label">
                         <input
                             type="checkbox"
                             checked={sellAll}
                             onChange={handleSellAllChange}
-                            className="transaction-popup__checkbox"
+                            className="popup__checkbox"
                         />
                         Sell all
                     </label>
