@@ -1,24 +1,30 @@
-This project is a monorepo with a Vite+React+TypeScript frontend and a Go backend. The backend exposes a REST API and connects to MongoDB. The frontend fetches data from the backend and displays it.
 
 ## General Development Guidelines
 
-1. You cannot run commands in powershell with `&&` or `||` separators, you must use `;` to separate them instead.
-  - So for example, instead of `npm install && npm run dev`, you should run `npm install; npm run dev`.
-2. The step-by-step instructions for running the project are in the README.
-3. The app is designed for mobile first (less than 900px wide), but should also work on desktop.
+1. This project uses the following technologies:
+   - Frontend: Vite, React, TypeScript, CSS. Backend: Go, MongoDB
+   - The frontend is in the `src` directory and the backend is in the `backend` directory.
+2. The app is designed for mobile first (less than 900px wide), but should also work on desktop.
   - The biggest impact of this is on mobile the sidebars on the dashboard are hidden by default and can be toggled with buttons.
-  - Also there is little need for `:hover` effects since this won't be seen on mobile.
-4. After making frontend changes, make sure to run `npm run lint` to check for linting issues. There should be no warnings or errors.
-5. Style-wise, it's better to have multiple small components rather than one large component.
-  - When a component grows too large, consider breaking it down into smaller components.
-6. After making any code changes, review your own changes thoroughly and amend them if necessary.
-  - When reviewing your own changes you might realise you've missed something or that you can still improve/tidy your code.
-7. After making backend changes, run the backend tests to ensure everything is still working.
+  - Also there is little need for `:hover` effects since these won't be seen on mobile.
+3. After making frontend changes, make sure to run `npm run lint` to check for linting issues. There should be no warnings or errors.
+4. After making backend changes, run the backend tests to ensure everything is still working.
   - You can run the tests with `go test -v ./tests/` in the `backend` directory.
-8. Do not implement a proposed solution that you believe to be suboptimal or not in line with best practice.
-  - Instead, make your suggestion and see what the team thinks.
-  - This is to avoid introducing potential issues or technical debt.
+  - Tip: before navigating to the backend directory, check if you're already there!
+5. Before implementing a new feature, ask yourself if this is the best way to do it.
+  - If you think there might be a better way, discuss it with the team first.
   - If unsure on certain details, ask for clarification or guidance.
+
+## Code Style
+
+1. Style-wise, it's better to have multiple small components rather than one large component.
+  - When a component grows too large, consider breaking it down into smaller components.
+2. This one's important! After making any code changes, review your own changes thoroughly and amend them if necessary.
+  - When reviewing your own changes you might realise you've missed something or that you can still improve/tidy your code.
+3. Aim for really simple code.
+  - If you notice any duplicated code, try to consolidate.
+  - If you notice any unnecessarily complex code, try to simplify it.
+  - If you notice any code which isn't used, remove it.
 
 ## The Application Layout
 
