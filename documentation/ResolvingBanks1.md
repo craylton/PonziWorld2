@@ -89,6 +89,28 @@ In this case the only known yields are stocks and cash
 Looking at the matrix, none of our banks fit that requirement
 this means we need to find another loop that needs to be reduced
 
-Hopefully you get the idea
-I'm not sure how robust this is, and I'm not sure how fun it will be until I try it out
-But I'm pretty sure it at least works
+Let's reduce the A -> B -> C -> A loop next
+if we say a_b = 20 and c_a = 40
+after reducing, the new matrix will look like this:
+
+    A   B   C   D   Sto Cash
+A | 0   0   0   a_d 0   a_cash + 20 |
+B | 0   0   0   0   0   b_cash + 50 |
+C | 20  0   0   0   c_s c_cash + 50 |
+D | 0   d_b 0   0   0   d_cash      |
+
+B is now only invested in known yields (cash + stocks), so we can calculate B's yield is p_b
+And now D is only invested in known yields (cash + B), so D's yield is `p_b * p_d`
+And now A (invested in D and cash) has a yield of `p_b * p_d * p_a`
+so finally, C started with `20 + c_s + c_cash + 50`
+C ends up with `B_final = 20 * p_b * p_d * p_a + c_s * y_s + c_cash + 50`
+And then multiply that by the ponzi factor p_c to get the yield
+
+This solution does have a problem though
+if we look back at the original matrix, B had invested 50 in C
+at the end of the calculations, C has made a positive yield `y_b > 1`
+but B will be feeling a bit sad to see their investemnt of 50 remains at 50
+'what gives? I invested 50, it went up, but I still ended up with 50?'
+
+So ultimately this solution solves the problem of people creating infinite money by reinvesting into each other
+But breaks down when matching up percentage yields to actual profits
