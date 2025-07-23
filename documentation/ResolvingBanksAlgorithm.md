@@ -18,7 +18,8 @@ Let there be **n** banks, indexed by *i=1…n*. Define:
 - **y_s**: stock market yield (e.g. 1.10).
 - **F** ∈ ℝⁿ: fixed daily costs (cash outflow).
 - **p** ∈ ℝⁿ: Ponzi factor (how much banks over-report; typically ≥1).
-- **m** ∈ [0,1]ⁿ: management-fee rate per bank; if a bank makes a profit, it retains _mⱼ_ of that profit, otherwise fees = 0.
+- **m** ∈ [0,1]: management-fee rate applied to all banks; if a bank makes a profit, it retains _m_ of that profit, otherwise fees = 0.
+- **k** ∈ ℝⁿ: initial capital per bank. Variables W, s, c are fractions of each bank's wealth. The solution x gives relative end-of-day wealth; actual wealth = k ⊙ x.
 
 Define the exogenous yield vector:
 ```
@@ -33,13 +34,13 @@ When bank *j* realizes a profit factor on its total book, investors who placed c
 
 - Raw yield of *j*: we solve for *xⱼ* below.
 - Profit of *j*: _Δⱼ = xⱼ − investedⱼ_.
-- Fee retained by *j*:  _feeⱼ = max(Δⱼ,0) · mⱼ_.
-- Net paid out to investors: _Δⱼ · (1−mⱼ)_.
+- Fee retained by *j*:  _feeⱼ = max(Δⱼ,0) · m_.
+- Net paid out to investors: _Δⱼ · (1−m)_.
 
 In linear form we fold fees into the exposure matrix:
 
-- **A**ᵢⱼ = Wᵢⱼ · (1−mⱼ)  
-- **R**ᵢⱼ = Wᵢⱼ · mⱼ      (for tracking fees)
+- **A**ᵢⱼ = Wᵢⱼ · (1−m)  
+- **R**ᵢⱼ = Wᵢⱼ · m      (for tracking fees)
 
 ---
 
@@ -78,77 +79,99 @@ Any loop that amplifies exogenous gains beyond conservation is identified by sin
 3. Final wealth: _x_final = x_solved − t_.
 
 ---
+## 5. Simple Two-Bank Example
 
-## 5. Worked Example: 3-Bank Loop
+**Banks**: A, B (n=2)
 
-**Banks**: A, B, C (n=3)
+| Parameter        | A     | B     |
+|------------------|-------|-------|
+| W→A              | 0     | 0     |
+| W→B              | 0.5   | 0     |
+| s (stocks)       | 0     | 0.5   |
+| c (cash)         | 0.5   | 0.5   |
+| p (Ponzi)        | 1.1   | 1.0   |
+| F (costs)        | 0.05  | 0.10  |
+| m (fee%)         | 0.20  | 0.20  |
+| y_s (stock yield)| 1.20  | 1.20  |
 
-| Parameter | A    | B    | C    |
-|-----------|------|------|------|
-| W→A       | 0    | 0.6  | 0    |
-| W→B       | 0.4  | 0    | 0.5  |
-| W→C       | 0.6  | 0.4  | 0    |
-| s (stocks)| 0    | 0.0  | 0.2  |
-| c (cash)  | 0.0  | 0.4  | 0.3  |
-| p (Ponzi) | 1.0  | 1.0  | 1.0  |
-| m (fee%)  | 0.10 | 0.10 | 0.10 |
-| F (costs) | 0.10 | 0.10 | 0.10 |
-| y_s       |       |      |      |
+### 5.1. Initialization and Inputs
+
+We normalize initial wealth to 1 per bank, then scale later.  Define:
 ```
-s       = [0,    0.0, 0.2]
-c       = [0.0,  0.4, 0.3]
-ex      = s·1.1 + c·1 = [0.00, 0.40, 0.52]
+W = [ [0,   0.5],   # A invests 50% of its capital in B
+      [0,   0  ] ]  # B invests nothing in A or itself
+s = [0, 0.5]
+c = [0.5, 0.5]
+p = [1.1, 1.0]
+m = 0.20
+F = [0.05, 0.10]
+y_s = 1.20
+```
+Exogenous yields for each bank:
+```
+ex = s·y_s + c·1 = [0*1.20 + 0.5*1, 0.5*1.20 + 0.5*1]
+   = [0.50, 1.10]
 ```
 
-**Step 1: Build A**
+### 5.2. Fee-Adjusted Exposure Matrix
+
+Fees reduce the fraction paid out.  Compute A = W * (1−m):
 ```
-Aᵢⱼ = Wᵢⱼ·(1−0.10)
-A = [ [0     0.6×0.9  0    ],
-      [0.4×0.9 0     0.5×0.9],
-      [0.6×0.9 0.4×0.9 0    ] ]
-  ≈ [ [0    0.54 0   ],
-      [0.36 0    0.45],
-      [0.54 0.36 0   ] ]
+A₁₂ = 0.5 * (1−0.20) = 0.5 * 0.8 = 0.40
+All other Aᵢⱼ = 0
+
+A = [ [0, 0.40],
+      [0, 0   ] ]
 ```
 
-**Step 2: Form and Solve (I−A)x = ex−F**
-```
-M = I − A
-b = ex − F = [−0.10,  0.30,  0.42]
-```
-Solve _M x = b_; solution _x ≈ [0.35, 0.84, 0.91]_.
+### 5.3. Forming the Linear System
 
-**Step 3: Check Loop Gain**
+We solve (I − diag(p)·A)·x = diag(p)·ex − F.  Write M and b:
 ```
-Total exogenous gain = sum(ex) − sum(F) = (0.00 + 0.40 + 0.52) − 0.30 = 0.62
-Sum(x) ≈ 2.10
-G_loop = 2.10 − 0.62 = 1.48  (loop amplification)
-Apply taxes _t_ proportional to x, e.g. t = [0.25, 0.59, 0.64].
+M = I − diag(p)·A = [ [1 − 1.1·0,   −1.1·0.40],
+                     [0 − 1.0·0,   1 − 1.0·0 ] ]
+  = [ [1, −0.44],
+      [0,     1 ] ]
+
+b = diag(p)·ex − F = [1.1·0.50 − 0.05,
+                      1.0·1.10 − 0.10]
+  = [0.55 − 0.05, 1.10 − 0.10]
+  = [0.50, 1.00]
 ```
-**Step 4: Final Wealth**
+
+### 5.4. Solving for x
+
+Since M is upper triangular:
+1) Equation for x₂:
 ```
-x_final = x − t ≈ [0.10, 0.25, 0.27]
-```  
-(final positive yields)
+x₂ = b₂ / M₂₂ = 1.00 / 1 = 1.00
+```
+2) Equation for x₁:
+```
+x₁ − 0.44·x₂ = 0.50  ⇒  x₁ = 0.50 + 0.44·1.00 = 0.94
+```
 
-## Example Summary
+So the relative end-of-day wealth vector is:
+```
+x = [0.94, 1.00]
+```
 
-- Initial capital (normalized to 1 per bank): A=1.00, B=1.00, C=1.00
-- Investments:
-  - A → B: 0.60; A → C: 0.00; A stocks: 0.00; A cash: 0.00
-  - B → A: 0.40; B → C: 0.50; B stocks: 0.00; B cash: 0.40
-  - C → A: 0.60; C → B: 0.40; C stocks: 0.20; C cash: 0.30
-- Taxes owed:
-  - A: 0.25
-  - B: 0.59
-  - C: 0.64
-- Final wealth (x_final):
-  - A: 0.10
-  - B: 0.25
-  - C: 0.27
-- Overall yield ((x_final − initial)/initial):
-  - A: 10%
-  - B: 25%
-  - C: 27%
+### 5.5. Fractional Yield and Interpretation
 
-*End of algorithm write-up.*
+Fractional gain = x − 1:
+```
+Gain = [0.94 − 1.00, 1.00 − 1.00] = [−0.06, 0.00]
+      = [−6%, 0%]
+```
+Bank A loses 6%, and B breaks even relative to its starting capital.
+
+### 5.6. Scaling to Actual Capital
+
+If we start with k = [10 000, 100], then actual end-of-day wealth:
+```
+wealth = k ⊙ x = [10 000·0.94, 100·1.00] = [9 400, 100]
+```
+Absolute gain/loss:
+```
+Δwealth = wealth − k = [9 400 − 10 000, 100 − 100] = [−600, 0]
+```

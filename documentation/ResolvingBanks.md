@@ -39,7 +39,7 @@ Let's look at an example scenario:
 After looking through this example, I'm pretty sure there is no solution which satisfies both requirements.
 So perhaps there is some middle ground? A compromise?
 Perhaps I can just lie to the banks and to make it look like all the numbers add up when in reality they don't...although then I'd need to store a value for each pair of banks. So if there are 10000 banks, I'd have to store 100 million fake values per day - not an ideal solution.
-What might be useful is that the amount of 'free money' that banks can conjure up is based on the proportion of money stored in 'known assets' like cash or stocks. So if I enforce that banks can't invest more that, say 80% of their money into other banks, this would limit the impact of this.
+What might be useful is that the amount of 'free money' that banks can conjure up is based on the proportion of money stored in 'known assets' like cash or stocks. So if I enforce that banks can't invest more than that, say 80% of their money into other banks, this would limit the impact of this.
 Another option is to keep track of the amount of free money earnt by each bank (is this possible?), and to simply increase those banks' fixed costs accordingly. This is handy because the players who figure out and intentionally exploit this quirk won't gain any more than people who accidentally join an 'investment loop'. It does mean though that some players could end up with ludicrously high fixed costs without any explanation - I'd have to be careful how I present this to the player.
 
 Another problem - probably more serious - doesn't even involve loops.
@@ -54,3 +54,28 @@ We can make B charge a management fee to A
 So that way A would get say £9 and B gets £1
 Technically it's A's money so they should get most of the profit
 
+-----------------------------------------
+
+Alright, I've had a bigger think about this and have come up with the following.
+Each bank has a list of exogenous assets that they have invested in, call it a.
+Each bank has a list of other banks that it has invested in, call this list b.
+And each bank has a list of other banks that have invested in it, call that c.
+Now, the net worth of each bank before we do our calculations will be a + b - c (as in, add up all the things we are invested in and subtract all the things invested in us)
+And after our calculations, the new net worth of that bank will be the sum of each asset in a multiplied by its yield, plus the sum of each bank in b multiplied by its yield multiplied by (1 - that bank's commission/management fee), minus the sum of each asset in c multiplied by this bank's yield multiplied by this bank's commission.
+Or as an equation, if we're trying to calculate bank A's values:
+(∑e_ai·y_ei)·m_a + ∑W_ai·(1-m_i) - ∑W_ia·y_a·m_a - F_a
+Where W is a matrix of how much each bank has invested in each other.
+So let's look at a simple example
+
+A is invested in B, B is invested in stocks and also holds cash.
+So W = [[0, 100], [0, 0]]
+and e (previously called a) is [[0, 0], [10, 100]] (B has 10 cash and 100 stocks)
+We'll say that bank A has fixed costs of 2, and B has fixed costs of 1. So F = [2, 1]
+Finally, we'll say that A's ponzi factor (how much banks exaggerate their yield) is 1, and B's is 1.1. So p = [1, 1.1]. This means whatever yield B actually achieves, other banks will believe that they actually managed 10% more than that.
+I'll also say that m, the management fee, is 0 if the bank's overall yield was negative, and 0.1 otherwise.
+
+Now if we work through this example, we see that A started with a net worth of A_0 = 100, and ended with A_1 = 100·y_b·(1-m_b) - 2.
+Meanwhile B started with B_0 = 100+10-100 = 10, and ended up with B_1 = 120 - 100·y_b·m_b - 1.
+The overall (ponzi) yield y of each bank is y = [p_a·A_1/A_0, p_b·B_1/B_0]
+
+So I essentially have some simultaneous equations to be solved.
