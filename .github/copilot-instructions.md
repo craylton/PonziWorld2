@@ -14,6 +14,7 @@
 5. Before implementing a new feature, ask yourself if this is the best way to do it.
   - If you think there might be a better way, discuss it with the team first.
   - If unsure on certain details, ask for clarification or guidance.
+6. If you need guidance on how the code is structured, there are a few README files around the place which contain useful information.
 
 ## Code Style
 
