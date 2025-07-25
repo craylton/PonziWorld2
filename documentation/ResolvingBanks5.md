@@ -1,4 +1,3 @@
-
 We have a collection of banks all invested in one another, as well as having investments in exogenous assets too. We define the following variables:
 
 n = the number of banks.
@@ -10,16 +9,22 @@ c = total amount capital managed by each bank. You can calculate c by adding up 
 p = ponzi factor. This is an n*1 vector that represents how much each bank is willing to lie about their performance. So while bank A might only make a 2% gain, they can lie to make it appear that they actually made 5%, for example.
 F = fixed costs. Each bank has their own fixed costs that they must pay each day. this is another n*1 vector.
 
-The big equation is as follows:
-Δ =                 //the total change in holding for the banks
-e(y-1) +            //the total change from exogenous investments
-W(Δ/c + p - m) +    //the total change from bank investments
-Wm -                //the increase in cash due to management fees
-F                   //the fixed costs
+The core update equation is (all vectors are n×1, matrices are sized appropriately):
+Δ = e · (y − 1)                    // exogenous asset gains (n×1)
+    + W · ((Δ ⊘ c) + p − m)        // interbank investment gains (n×1)
+    + W m                          // cash from management fees (n×1)
+    − F                            // fixed costs (n×1)
 
-We can then calculate the new investment arrays e and W via:
-e_1 = ey
-W_1 = W((Δ/c + p - m) + 1)
+Here:
+- Δ, p, m, F, c are n×1 column vectors.
+- e is n×x, y is x×1, so e·(y−1) yields n×1.
+- W is n×n, multiplication produces n×1.
+- ⊘ denotes element-wise division of two n×1 vectors (Δ ⊘ c = [Δ_i / c_i]).
+- W m multiplies W by scalar m, giving an n×1 vector of fee income.
+
+Then the updated investment matrices are:
+e₁ = e ∘ diag(y)                // element-wise scaling of exogenous assets
+W₁ = W · diag((Δ ⊘ c) + p − m + 1)  // adjust interbank weights by realized returns
 
 That's basically the whole algorithm. There are a couple of small tweaks that need to be made however.
 Taxes:
@@ -82,6 +87,7 @@ So we end up with A having 101.8 invested in B, 330 invested in stocks, and 200 
 And B ends up with 212.4 invested in A, and 100 + 100*0.005 = 100.5 in cash.
 
 You can see from this that the total amount of money in the system used to be 400. Now 18 has been paid as fixed costs, 30 was generated from stocks, and also A 'invented' 2 (200 * 0.01) via their ponzi factor. So you'd expect the net worth of the system to now be 450.
+
 However after all this we end up with:
 432.8 - 212.4 + 312.9 - 101.8 = 431.5
 So actually in this case we're missing 18.5, which means we'd need to give a 'tax rebate' to the banks.
