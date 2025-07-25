@@ -55,6 +55,8 @@ These equations form a linear system in the unknowns n₁₁ … n₁ₙ.
    ```
 5. Solving yields a split of the £10 so both banks see the correct profit on £100.
 
+(Pretty sure this AI generated example is wrong but can't be bothered to correct it)
+
 
 ## 4. Three-Bank Loop Example
 

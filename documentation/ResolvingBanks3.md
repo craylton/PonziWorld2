@@ -1,4 +1,4 @@
-# Final Algorithm: Resolving Bank Wealth with Management Fees and Taxes
+# Resolving Bank Wealth with Management Fees and Taxes
 
 This document describes a linear‐algebra-based algorithm to compute each bank’s end-of-day wealth, incorporating:
 

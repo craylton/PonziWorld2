@@ -79,3 +79,13 @@ Meanwhile B started with B_0 = 100+10-100 = 10, and ended up with B_1 = 120 - 10
 The overall (ponzi) yield y of each bank is y = [p_a·A_1/A_0, p_b·B_1/B_0]
 
 So I essentially have some simultaneous equations to be solved.
+
+
+-----------------------------
+
+Again, working through that example revealed more problems. The yield of a bank is actually very difficult to work with. How do we even calculate the yield? Is it the rate of change of net worth? Or the rate of change of capital? In both cases, the 'before' value could be near zero - in which case the yield could be huge, or negative.
+If your net worth was £-1 and you just made £10, that is clearly a good thing but your yield would be -1000% (I think). Which means despite making money, all your investors would lose 10 times more than they invested??
+
+So clearly basing all the calculations on yield isn't going to work. I need a system that keeps track of how much money (absolute values) has been generated from various places, rather than multiplying everything by some factor.
+
+So Introducing what I hope will be the final algorithm, outlined in ResolvingBanks5.md.

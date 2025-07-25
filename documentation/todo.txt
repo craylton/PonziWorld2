@@ -1,4 +1,6 @@
 
+Tidy up the ramblings about resolving banks - combine into one file
+
 Next up:
 Make all purchases come out of cash
 Apply pending transactions on new day
