@@ -1,5 +1,5 @@
-import '../CapitalPopup.css';
 import './LoadingPopup.css';
+import Popup from '../../components/Popup';
 
 interface LoadingPopupProps {
     isOpen: boolean;
@@ -42,54 +42,31 @@ export default function LoadingPopup({
 
     const canClose = status === 'success' || status === 'error';
 
-    const onClickOutside = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (canClose && e.target === e.currentTarget) {
-            onClose();
-        }
-    }
+    const footer = canClose ? (
+        <button
+            className="popup__button popup__button--confirm"
+            onClick={onClose}
+        >
+            OK
+        </button>
+    ) : undefined;
 
     return (
-        <div
-            className="capital-popup-overlay"
-            onClick={onClickOutside}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="loading-popup-title"
+        <Popup
+            isOpen={isOpen}
+            title="Transaction Status"
+            onClose={onClose}
+            footer={footer}
+            canCloseOnOverlayClick={canClose}
+            showCloseButton={canClose}
+            className="loading-popup"
         >
-            <div className="capital-popup loading-popup">
-                <div className="capital-popup__header">
-                    <h2 id="loading-popup-title" className="capital-popup__title">
-                        Transaction Status
-                    </h2>
-                    {canClose && (
-                        <button
-                            className="capital-popup__close-button"
-                            onClick={onClose}
-                            aria-label="Close popup"
-                        >
-                            ×
-                        </button>
-                    )}
-                </div>
-                <div className="capital-popup__content">
-                    <div className={`loading-popup__message ${getStatusClass()}`}>
-                        {status === 'loading' && (
-                            <div className="loading-popup__spinner" aria-label="Loading..." />
-                        )}
-                        <span>{getStatusMessage()}</span>
-                    </div>
-                </div>
-                {canClose && (
-                    <div className="capital-popup__footer">
-                        <button
-                            className="capital-popup__confirm-button"
-                            onClick={onClose}
-                        >
-                            OK
-                        </button>
-                    </div>
+            <div className={`loading-popup__message ${getStatusClass()}`}>
+                {status === 'loading' && (
+                    <div className="loading-popup__spinner" aria-label="Loading..." />
                 )}
+                <span>{getStatusMessage()}</span>
             </div>
-        </div>
+        </Popup>
     );
 }

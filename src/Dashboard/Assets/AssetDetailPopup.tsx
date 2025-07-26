@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
-import '../CapitalPopup.css';
 import LineGraph from './LineGraph';
 import { formatCurrency } from '../../utils/currency';
 import { makeAuthenticatedRequest } from '../../auth';
 import { useBankContext } from '../../contexts/useBankContext';
 import { useAssetContext } from '../../contexts/useAssetContext';
 import TransactionPopup from './TransactionPopup';
+import Popup from '../../components/Popup';
 import type { InvestmentDetailsResponse } from '../../models/AssetDetails';
 import type { HistoricalPerformanceEntry } from '../../models/HistoricalPerformance';
 
@@ -132,105 +132,84 @@ export default function AssetDetailPopup({
     setTransactionPopupOpen(false);
   };
 
-  // Prevent background scrolling when open
-  useEffect(() => {
-    if (isOpen) document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = 'unset'; };
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
   const hasInvestmentOrPending = asset.investedAmount > 0 || asset.pendingAmount !== 0;
 
-  return (
-    <div
-      className="capital-popup-overlay"
-      onClick={e => e.target === e.currentTarget && onClose()}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="popup-title"
+  const footer = hasInvestmentOrPending ? (
+    <>
+      <button
+        className="popup__button popup__button--success"
+        onClick={handleBuy}
+      >
+        Buy
+      </button>
+      <button
+        className="popup__button popup__button--danger"
+        onClick={handleSell}
+      >
+        Sell
+      </button>
+    </>
+  ) : (
+    <button
+      className="popup__button popup__button--success"
+      onClick={handleBuy}
     >
-      <div className="capital-popup">
-        <div className="capital-popup__header">
-          <h2 id="popup-title" className="capital-popup__title">{asset.name} Details</h2>
-          <button
-            className="capital-popup__close-button"
-            onClick={onClose}
-            aria-label="Close popup"
-          >
-            ×
-          </button>
-        </div>
-        <div className="capital-popup__content">
-          {asset.investedAmount > 0 && (
-            <div className="capital-popup__value">
-              {formatCurrency(asset.investedAmount)}
+      Buy
+    </button>
+  );
+
+  return (
+    <>
+      <Popup
+        isOpen={isOpen}
+        title={`${asset.name} Details`}
+        onClose={onClose}
+        footer={footer}
+        className="asset-detail-popup"
+      >
+        {asset.investedAmount > 0 && (
+          <div className="popup__value">
+            {formatCurrency(asset.investedAmount)}
+          </div>
+        )}
+        <div className="popup__chart">
+          {isLoadingChart ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+              Loading chart data...
+            </div>
+          ) : chartError ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#d32f2f' }}>
+              {chartError}
+              <br />
+              <button 
+                onClick={fetchChartData}
+                style={{ 
+                  marginTop: '10px', 
+                  padding: '8px 16px', 
+                  backgroundColor: '#1976d2', 
+                  color: 'white', 
+                  border: 'none', 
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Retry
+              </button>
+            </div>
+          ) : chartData.length > 0 ? (
+            <LineGraph
+              data={chartData}
+              title={asset.name}
+              formatTooltip={(value) => `${value}%`}
+              formatYAxisTick={(value) => `${value}%`}
+            />
+          ) : (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+              No historical data available
             </div>
           )}
-          <div className="capital-popup__chart">
-            {isLoadingChart ? (
-              <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-                Loading chart data...
-              </div>
-            ) : chartError ? (
-              <div style={{ textAlign: 'center', padding: '40px', color: '#d32f2f' }}>
-                {chartError}
-                <br />
-                <button 
-                  onClick={fetchChartData}
-                  style={{ 
-                    marginTop: '10px', 
-                    padding: '8px 16px', 
-                    backgroundColor: '#1976d2', 
-                    color: 'white', 
-                    border: 'none', 
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Retry
-                </button>
-              </div>
-            ) : chartData.length > 0 ? (
-              <LineGraph
-                data={chartData}
-                title={asset.name}
-                formatTooltip={(value) => `${value}%`}
-                formatYAxisTick={(value) => `${value}%`}
-              />
-            ) : (
-              <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-                No historical data available
-              </div>
-            )}
-          </div>
         </div>
-        <div className="capital-popup__footer">
-          {hasInvestmentOrPending ? (
-            <>
-              <button
-                className="capital-popup__buy-button"
-                onClick={handleBuy}
-              >
-                Buy
-              </button>
-              <button
-                className="capital-popup__sell-button"
-                onClick={handleSell}
-              >
-                Sell
-              </button>
-            </>
-          ) : (
-            <button
-              className="capital-popup__buy-button"
-              onClick={handleBuy}
-            >
-              Buy
-            </button>
-          )}
-        </div>
-      </div>
+      </Popup>
       <TransactionPopup
         isOpen={transactionPopupOpen}
         onClose={handleTransactionClose}
@@ -239,6 +218,6 @@ export default function AssetDetailPopup({
         currentHoldings={asset.investedAmount + asset.pendingAmount}
         onConfirm={handleTransactionConfirm}
       />
-    </div>
+    </>
   );
 }

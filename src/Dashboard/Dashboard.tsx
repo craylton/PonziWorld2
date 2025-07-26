@@ -9,7 +9,6 @@ import AssetSection from './Assets/AssetSection';
 import { makeAuthenticatedRequest } from '../auth';
 import { BankProvider } from '../contexts/BankContext';
 import type { Bank } from '../models/Bank';
-import type { OwnBankHistoricalPerformance } from '../models/HistoricalPerformance';
 import type { Player } from '../models/Player';
 
 interface DashboardProps {
@@ -19,12 +18,10 @@ interface DashboardProps {
 export default function Dashboard({ onLogout }: DashboardProps) {
   const [bank, setBank] = useState<Bank | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
-  const [historicalPerformance, setHistoricalPerformance] = useState<OwnBankHistoricalPerformance | null>(null);
   const [currentDay, setCurrentDay] = useState<number | null>(null);
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
   const [isInitialDataLoading, setIsInitialDataLoading] = useState(true);
-  const [isHistoryLoading, setIsHistoryLoading] = useState(true);
 
   const fetchBankData = useCallback(async () => {
     try {
@@ -75,17 +72,8 @@ export default function Dashboard({ onLogout }: DashboardProps) {
 
         // All essential data pieces loaded
         setIsInitialDataLoading(false);
-
-        // Fetch performance history (non-essential, can load separately)
-        const historyResponse = await makeAuthenticatedRequest(`/api/historicalPerformance/ownbank/${firstBank.id}`);
-        if (historyResponse.ok) {
-          const historyData: OwnBankHistoricalPerformance = await historyResponse.json();
-          setHistoricalPerformance(historyData);
-        }
       } catch {
         onLogout();
-      } finally {
-        setIsHistoryLoading(false);
       }
     };
     fetchData();
@@ -102,8 +90,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         bankName={bank.bankName}
         claimedCapital={bank.claimedCapital}
         actualCapital={bank.actualCapital}
-        historicalPerformance={historicalPerformance}
-        isHistoryLoading={isHistoryLoading}
+        bankId={bank.id}
       />
       <div className="dashboard-layout">
         <InvestorsPanel 
