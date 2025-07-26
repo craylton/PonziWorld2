@@ -16,6 +16,7 @@ var (
 	ErrInvalidBankID       = errors.New("invalid bank ID")
 	ErrSelfInvestment      = errors.New("bank cannot invest in itself")
 	ErrUnauthorizedBank    = errors.New("bank is not owned by the current player")
+	ErrCashNotTradable     = errors.New("cash cannot be bought or sold")
 )
 
 type PendingTransactionService struct {
@@ -98,6 +99,12 @@ func (s *PendingTransactionService) createTransaction(
 	}
 	if !assetExists {
 		return ErrTargetAssetNotFound
+	}
+
+	// Check if target asset is cash - cash cannot be bought or sold
+	cashAssetType, err := s.assetTypeRepo.FindByName(ctx, "Cash")
+	if err == nil && cashAssetType.Id == targetAssetId {
+		return ErrCashNotTradable
 	}
 
 	// Validate that bank is not investing in itself

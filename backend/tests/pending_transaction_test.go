@@ -800,3 +800,65 @@ func TestPendingTransactionService_BuyAndSellCombination(t *testing.T) {
 		}
 	})
 }
+
+func TestPendingTransactionService_CashRestriction(t *testing.T) {
+	container, err := CreateTestDependencies("pending_transaction_cash")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(container)
+
+	ctx := context.Background()
+	service := container.ServiceContainer.PendingTransaction
+	timestamp := time.Now().Unix()
+
+	// Create test user and bank
+	username := fmt.Sprintf("testuser_%d", timestamp)
+	password := "testpass"
+	bankName := "Test Bank"
+
+	_, err = CreateRegularUserForTest(container, username, password, bankName)
+	if err != nil {
+		t.Fatalf("Failed to create test user: %v", err)
+	}
+
+	user, err := container.RepositoryContainer.Player.FindByUsername(ctx, username)
+	if err != nil {
+		t.Fatalf("Failed to find test user: %v", err)
+	}
+
+	// Get the banks for the user
+	banks, err := container.RepositoryContainer.Bank.FindAllByPlayerID(ctx, user.Id)
+	if err != nil {
+		t.Fatalf("Failed to find test banks: %v", err)
+	}
+	bank := banks[0]
+
+	// Get the Cash asset type
+	cashAssetType, err := container.RepositoryContainer.AssetType.FindByName(ctx, "Cash")
+	if err != nil {
+		t.Fatalf("Failed to find Cash asset type: %v", err)
+	}
+
+	t.Run("Cannot buy cash", func(t *testing.T) {
+		// Try to create a buy transaction for cash
+		err := service.CreateBuyTransaction(ctx, bank.Id, cashAssetType.Id, 100, username)
+		if err == nil {
+			t.Error("Expected error when trying to buy cash, got nil")
+		}
+		if err != services.ErrCashNotTradable {
+			t.Errorf("Expected ErrCashNotTradable, got %v", err)
+		}
+	})
+
+	t.Run("Cannot sell cash", func(t *testing.T) {
+		// Try to create a sell transaction for cash
+		err := service.CreateSellTransaction(ctx, bank.Id, cashAssetType.Id, 100, username)
+		if err == nil {
+			t.Error("Expected error when trying to sell cash, got nil")
+		}
+		if err != services.ErrCashNotTradable {
+			t.Errorf("Expected ErrCashNotTradable, got %v", err)
+		}
+	})
+}

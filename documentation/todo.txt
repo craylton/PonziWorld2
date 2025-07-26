@@ -1,6 +1,5 @@
 
 RIGHT NOW: Make all purchases come out of cash
-Don't allow buying/selling cash
 When buying an asset, restrict to cash amount
 
 Next up:
