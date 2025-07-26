@@ -26,6 +26,7 @@
   - If you notice any duplicated code, try to consolidate.
   - If you notice any unnecessarily complex code, try to simplify it.
   - If you notice any code which isn't used, remove it.
+4. Generally speaking, comments aren't used unless absolutely necessary.
 
 ## The Application Layout
 

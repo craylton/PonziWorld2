@@ -2,6 +2,7 @@ import type { AvailableAsset } from '../../models/AvailableAsset';
 import type { InvestmentDetailsResponse } from '../../models/AssetDetails';
 import InvestedAssetSummary from './InvestedAssetSummary';
 import UninvestedAssetSummary from './UninvestedAssetSummary';
+import CashAssetSummary from './CashAssetSummary';
 import { useState, useEffect, useCallback } from 'react';
 import { makeAuthenticatedRequest } from '../../auth';
 import { useBankContext } from '../../contexts/useBankContext';
@@ -57,6 +58,10 @@ export default function AssetSummary({ availableAsset }: AssetSummaryProps) {
                 </div>
             </div>
         );
+    }
+
+    if (assetDetails.name === 'Cash') {
+        return <CashAssetSummary asset={assetDetails} />;
     }
 
     return availableAsset.isInvestedOrPending ? (

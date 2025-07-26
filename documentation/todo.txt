@@ -1,6 +1,9 @@
 
+RIGHT NOW: Make all purchases come out of cash
+Don't allow buying/selling cash
+When buying an asset, restrict to cash amount
+
 Next up:
-Make all purchases come out of cash
 Apply pending transactions on new day
 Ensure currencies are stored in correct format
     Need to be displayed to the user as ints
