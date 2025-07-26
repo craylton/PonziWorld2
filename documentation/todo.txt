@@ -1,6 +1,4 @@
 
-Tidy up the ramblings about resolving banks - combine into one file
-
 Next up:
 Make all purchases come out of cash
 Apply pending transactions on new day
@@ -19,8 +17,6 @@ Some logging would be nice
 Defensive programming when retrieving data from DB
     Documents could be the wrong shape
     even if my app always write the right shape
-    for now only need to check username and bank name
-    the capital fields will eventually be located somewhere else
 
 Allow player to create additional banks
     This will mean a redesign of the dashboard where a player can select their bank
