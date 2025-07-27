@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+
 	"ponziworld/backend/models"
 	"ponziworld/backend/repositories"
 
@@ -57,13 +58,26 @@ func (s *PendingTransactionService) CreateBuyTransaction(
 		return err
 	}
 
-	// Check cash balance considering existing pending transactions for this specific asset
-	err = s.validateSufficientCashForTransaction(ctx, sourceBankId, targetAssetId, amount)
+	// Get cash asset type ID
+	cashAssetType, err := s.assetTypeRepo.FindByName(ctx, "Cash")
 	if err != nil {
 		return err
 	}
 
-	return s.createTransaction(ctx, sourceBankId, targetAssetId, amount, username)
+	// Check cash balance considering existing pending transactions
+	err = s.validateSufficientCashForTransaction(ctx, sourceBankId, amount)
+	if err != nil {
+		return err
+	}
+
+	// Create the asset purchase transaction (positive amount)
+	err = s.createTransaction(ctx, sourceBankId, targetAssetId, amount, username)
+	if err != nil {
+		return err
+	}
+
+	// Create the cash transaction (negative amount to represent cash spent)
+	return s.createTransaction(ctx, sourceBankId, cashAssetType.Id, -amount, username)
 }
 
 func (s *PendingTransactionService) CreateSellTransaction(
@@ -77,14 +91,31 @@ func (s *PendingTransactionService) CreateSellTransaction(
 		return ErrInvalidAmount
 	}
 
-	// Convert to negative amount for internal use
-	return s.createTransaction(ctx, sourceBankId, targetAssetId, -amount, username)
+	// First validate transaction requirements (this will prevent selling cash directly)
+	err := s.validateTransactionRequirements(ctx, sourceBankId, targetAssetId, username)
+	if err != nil {
+		return err
+	}
+
+	// Get cash asset type ID
+	cashAssetType, err := s.assetTypeRepo.FindByName(ctx, "Cash")
+	if err != nil {
+		return err
+	}
+
+	// Create the asset sale transaction (negative amount)
+	err = s.createTransaction(ctx, sourceBankId, targetAssetId, -amount, username)
+	if err != nil {
+		return err
+	}
+
+	// Create the cash transaction (positive amount to represent cash received)
+	return s.createTransaction(ctx, sourceBankId, cashAssetType.Id, amount, username)
 }
 
 func (s *PendingTransactionService) validateSufficientCashForTransaction(
 	ctx context.Context,
-	sourceBankId,
-	targetAssetId primitive.ObjectID,
+	sourceBankId primitive.ObjectID,
 	amount int64,
 ) error {
 	if amount <= 0 {
@@ -107,35 +138,23 @@ func (s *PendingTransactionService) validateSufficientCashForTransaction(
 		currentCashBalance = investment.Amount
 	}
 
-	// Get all pending transactions for this bank to calculate cash usage
-	pendingTransactions, err := s.pendingTransactionRepo.FindBySourceBankID(ctx, sourceBankId)
+	// Get all pending cash transactions for this bank
+	pendingCashTransactions, err := s.pendingTransactionRepo.FindBySourceBankIDAndTargetAssetID(ctx, sourceBankId, cashAssetType.Id)
 	if err != nil {
 		return err
 	}
 
-	// Calculate pending cash usage (all pending buy transactions consume cash)
-	var pendingCashUsage int64
-	var existingPendingForThisAsset int64
-	for _, transaction := range pendingTransactions {
-		if transaction.Amount > 0 { // Positive amount = buy transaction = cash usage
-			if transaction.TargetAssetId == targetAssetId {
-				// This is existing pending for the same asset we're buying
-				existingPendingForThisAsset = transaction.Amount
-			} else {
-				// This is cash usage for other assets
-				pendingCashUsage += transaction.Amount
-			}
-		}
+	// Calculate net pending cash changes
+	var pendingCashChange int64
+	for _, transaction := range pendingCashTransactions {
+		pendingCashChange += transaction.Amount
 	}
 
-	// Calculate what the new pending amount would be for this asset
-	newPendingForThisAsset := existingPendingForThisAsset + amount
-
-	// Calculate total cash that would be used
-	totalCashUsage := pendingCashUsage + newPendingForThisAsset
+	// Calculate what the cash balance would be after all pending transactions and this new transaction
+	projectedCashBalance := currentCashBalance + pendingCashChange - amount
 
 	// Check if there's enough cash
-	if currentCashBalance < totalCashUsage {
+	if projectedCashBalance < 0 {
 		return ErrInsufficientFunds
 	}
 
@@ -149,10 +168,37 @@ func (s *PendingTransactionService) createTransaction(
 	amount int64,
 	username string,
 ) error {
-	// Validate basic transaction requirements
-	err := s.validateTransactionRequirements(ctx, sourceBankId, targetAssetId, username)
+	// Validate basic requirements - for internal use, we skip cash restriction
+	// since cash transactions are created automatically by buy/sell operations
+	
+	// Validate buyer bank exists and is owned by the current player
+	sourceBank, err := s.bankRepo.FindByID(ctx, sourceBankId)
+	if err != nil {
+		return ErrInvalidBankID
+	}
+
+	// Validate bank ownership
+	player, err := s.playerRepo.FindByUsername(ctx, username)
+	if err != nil {
+		return ErrPlayerNotFound
+	}
+
+	if sourceBank.PlayerId != player.Id {
+		return ErrUnauthorizedBank
+	}
+
+	// Validate asset exists
+	assetExists, err := s.validateTargetAssetExists(ctx, targetAssetId)
 	if err != nil {
 		return err
+	}
+	if !assetExists {
+		return ErrTargetAssetNotFound
+	}
+
+	// Validate that bank is not investing in itself
+	if sourceBankId == targetAssetId {
+		return ErrSelfInvestment
 	}
 
 	// Check if there's an existing pending transaction for this bank-asset combination
@@ -232,7 +278,7 @@ func (s *PendingTransactionService) GetTransactionsByBuyerBankID(
 	return s.pendingTransactionRepo.FindBySourceBankID(ctx, bankID)
 }
 
-// validateTransactionRequirements performs basic validation for all transactions
+// validateTransactionRequirements performs validation for transactions (prevents direct cash trading)
 func (s *PendingTransactionService) validateTransactionRequirements(
 	ctx context.Context,
 	sourceBankId,
@@ -264,7 +310,7 @@ func (s *PendingTransactionService) validateTransactionRequirements(
 		return ErrTargetAssetNotFound
 	}
 
-	// Check if target asset is cash - cash cannot be bought or sold
+	// Check if target asset is cash - cash cannot be bought or sold directly by users
 	cashAssetType, err := s.assetTypeRepo.FindByName(ctx, "Cash")
 	if err == nil && cashAssetType.Id == targetAssetId {
 		return ErrCashNotTradable

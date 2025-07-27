@@ -60,22 +60,53 @@ func TestPendingTransactionService_CreateTransactions(t *testing.T) {
 			t.Errorf("Expected no error for valid buy transaction, got: %v", err)
 		}
 
-		// Verify transaction was created
+		// Verify transactions were created (should be 2: asset purchase + cash deduction)
 		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id, username)
 		if err != nil {
 			t.Fatalf("Failed to get transactions: %v", err)
 		}
-		if len(transactions) != 1 {
-			t.Errorf("Expected 1 transaction, got %d", len(transactions))
+		if len(transactions) != 2 {
+			t.Errorf("Expected 2 transactions (asset + cash), got %d", len(transactions))
 		}
-		if transactions[0].Amount != 1000 {
-			t.Errorf("Expected amount 1000, got %d", transactions[0].Amount)
+
+		// Get cash asset type for verification
+		cashAssetType, err := container.RepositoryContainer.AssetType.FindByName(ctx, "Cash")
+		if err != nil {
+			t.Fatalf("Failed to get cash asset type: %v", err)
 		}
-		if transactions[0].TargetAssetId != assetType.Id {
-			t.Errorf("Expected TargetAssetId to be %s, got %s", assetType.Id.Hex(), transactions[0].TargetAssetId.Hex())
+
+		// Find the asset transaction and cash transaction
+		var assetTransaction, cashTransaction *models.PendingTransactionResponse
+		for i := range transactions {
+			if transactions[i].TargetAssetId == assetType.Id {
+				assetTransaction = &transactions[i]
+			} else if transactions[i].TargetAssetId == cashAssetType.Id {
+				cashTransaction = &transactions[i]
+			}
 		}
-		if transactions[0].SourceBankId != bank.Id {
-			t.Errorf("Expected SourceBankId to be %s, got %s", bank.Id.Hex(), transactions[0].SourceBankId.Hex())
+
+		// Verify asset transaction
+		if assetTransaction == nil {
+			t.Errorf("Expected to find asset transaction for asset ID %s", assetType.Id.Hex())
+		} else {
+			if assetTransaction.Amount != 1000 {
+				t.Errorf("Expected asset transaction amount 1000, got %d", assetTransaction.Amount)
+			}
+			if assetTransaction.SourceBankId != bank.Id {
+				t.Errorf("Expected asset transaction SourceBankId to be %s, got %s", bank.Id.Hex(), assetTransaction.SourceBankId.Hex())
+			}
+		}
+
+		// Verify cash transaction
+		if cashTransaction == nil {
+			t.Errorf("Expected to find cash transaction")
+		} else {
+			if cashTransaction.Amount != -1000 {
+				t.Errorf("Expected cash transaction amount -1000, got %d", cashTransaction.Amount)
+			}
+			if cashTransaction.SourceBankId != bank.Id {
+				t.Errorf("Expected cash transaction SourceBankId to be %s, got %s", bank.Id.Hex(), cashTransaction.SourceBankId.Hex())
+			}
 		}
 	})
 
@@ -91,22 +122,53 @@ func TestPendingTransactionService_CreateTransactions(t *testing.T) {
 			t.Errorf("Expected no error for valid sell transaction, got: %v", err)
 		}
 
-		// Verify transaction was created with negative amount (internal representation)
+		// Verify transactions were created (should be 2: asset sale + cash addition)
 		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id, username)
 		if err != nil {
 			t.Fatalf("Failed to get transactions: %v", err)
 		}
-		if len(transactions) != 1 {
-			t.Errorf("Expected 1 transaction, got %d", len(transactions))
+		if len(transactions) != 2 {
+			t.Errorf("Expected 2 transactions (asset + cash), got %d", len(transactions))
 		}
-		if transactions[0].Amount != -500 {
-			t.Errorf("Expected amount -500 (internal representation), got %d", transactions[0].Amount)
+
+		// Get cash asset type for verification
+		cashAssetType, err := container.RepositoryContainer.AssetType.FindByName(ctx, "Cash")
+		if err != nil {
+			t.Fatalf("Failed to get cash asset type: %v", err)
 		}
-		if transactions[0].TargetAssetId != assetType.Id {
-			t.Errorf("Expected TargetAssetId to be %s, got %s", assetType.Id.Hex(), transactions[0].TargetAssetId.Hex())
+
+		// Find the asset transaction and cash transaction
+		var assetTransaction, cashTransaction *models.PendingTransactionResponse
+		for i := range transactions {
+			if transactions[i].TargetAssetId == assetType.Id {
+				assetTransaction = &transactions[i]
+			} else if transactions[i].TargetAssetId == cashAssetType.Id {
+				cashTransaction = &transactions[i]
+			}
 		}
-		if transactions[0].SourceBankId != bank.Id {
-			t.Errorf("Expected SourceBankId to be %s, got %s", bank.Id.Hex(), transactions[0].SourceBankId.Hex())
+
+		// Verify asset transaction (should be negative for sale)
+		if assetTransaction == nil {
+			t.Errorf("Expected to find asset transaction for asset ID %s", assetType.Id.Hex())
+		} else {
+			if assetTransaction.Amount != -500 {
+				t.Errorf("Expected asset transaction amount -500, got %d", assetTransaction.Amount)
+			}
+			if assetTransaction.SourceBankId != bank.Id {
+				t.Errorf("Expected asset transaction SourceBankId to be %s, got %s", bank.Id.Hex(), assetTransaction.SourceBankId.Hex())
+			}
+		}
+
+		// Verify cash transaction (should be positive for sale)
+		if cashTransaction == nil {
+			t.Errorf("Expected to find cash transaction")
+		} else {
+			if cashTransaction.Amount != 500 {
+				t.Errorf("Expected cash transaction amount 500, got %d", cashTransaction.Amount)
+			}
+			if cashTransaction.SourceBankId != bank.Id {
+				t.Errorf("Expected cash transaction SourceBankId to be %s, got %s", bank.Id.Hex(), cashTransaction.SourceBankId.Hex())
+			}
 		}
 	})
 
@@ -332,18 +394,46 @@ func TestPendingTransactionService_MultipleAssets(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to get transactions: %v", err)
 		}
-		if len(transactions) != 2 {
-			t.Errorf("Expected 2 transactions for different assets, got %d", len(transactions))
+		// Should have 3 transactions: asset1 (+400), asset2 (+600), cash (-1000 combined)
+		if len(transactions) != 3 {
+			t.Errorf("Expected 3 transactions (2 assets + 1 combined cash), got %d", len(transactions))
 		}
 
-		// Verify amounts are correct
+		// Get cash asset type for verification
+		cashAssetType, err := container.RepositoryContainer.AssetType.FindByName(ctx, "Cash")
+		if err != nil {
+			t.Fatalf("Failed to get cash asset type: %v", err)
+		}
+
+		// Verify amounts and types are correct
+		var asset1Found, asset2Found, cashFound bool
 		for _, transaction := range transactions {
-			if transaction.TargetAssetId == assetType1.Id && transaction.Amount != 400 {
-				t.Errorf("Expected amount 400 for asset 1, got %d", transaction.Amount)
+			if transaction.TargetAssetId == assetType1.Id {
+				if transaction.Amount != 400 {
+					t.Errorf("Expected amount 400 for asset 1, got %d", transaction.Amount)
+				}
+				asset1Found = true
+			} else if transaction.TargetAssetId == assetType2.Id {
+				if transaction.Amount != 600 {
+					t.Errorf("Expected amount 600 for asset 2, got %d", transaction.Amount)
+				}
+				asset2Found = true
+			} else if transaction.TargetAssetId == cashAssetType.Id {
+				if transaction.Amount != -1000 {
+					t.Errorf("Expected combined cash amount -1000, got %d", transaction.Amount)
+				}
+				cashFound = true
 			}
-			if transaction.TargetAssetId == assetType2.Id && transaction.Amount != 600 {
-				t.Errorf("Expected amount 600 for asset 2, got %d", transaction.Amount)
-			}
+		}
+
+		if !asset1Found {
+			t.Error("Expected to find asset 1 transaction")
+		}
+		if !asset2Found {
+			t.Error("Expected to find asset 2 transaction")
+		}
+		if !cashFound {
+			t.Error("Expected to find cash transaction")
 		}
 	})
 	t.Run("Create sell transactions for different assets", func(t *testing.T) {
@@ -352,6 +442,7 @@ func TestPendingTransactionService_MultipleAssets(t *testing.T) {
 		for _, tx := range existing {
 			container.RepositoryContainer.PendingTransaction.Delete(ctx, tx.Id)
 		}
+		
 		// Create sell transactions for two assets
 		err := service.CreateSellTransaction(ctx, bank.Id, assetType1.Id, 300, username)
 		if err != nil {
@@ -361,21 +452,51 @@ func TestPendingTransactionService_MultipleAssets(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create sell transaction for asset 2: %v", err)
 		}
+		
 		sellTransactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id, username)
 		if err != nil {
 			t.Fatalf("Failed to get sell transactions: %v", err)
 		}
-		if len(sellTransactions) != 2 {
-			t.Errorf("Expected 2 sell transactions for different assets, got %d", len(sellTransactions))
+		// Should have 3 transactions: asset1 (-300), asset2 (-400), cash (+700 combined)
+		if len(sellTransactions) != 3 {
+			t.Errorf("Expected 3 transactions (2 assets + 1 combined cash), got %d", len(sellTransactions))
 		}
-		// Verify negative amounts are correct
+
+		// Get cash asset type for verification
+		cashAssetType, err := container.RepositoryContainer.AssetType.FindByName(ctx, "Cash")
+		if err != nil {
+			t.Fatalf("Failed to get cash asset type: %v", err)
+		}
+
+		// Verify amounts and types are correct
+		var asset1Found, asset2Found, cashFound bool
 		for _, transaction := range sellTransactions {
-			if transaction.TargetAssetId == assetType1.Id && transaction.Amount != -300 {
-				t.Errorf("Expected amount -300 for sell asset 1, got %d", transaction.Amount)
+			if transaction.TargetAssetId == assetType1.Id {
+				if transaction.Amount != -300 {
+					t.Errorf("Expected amount -300 for sell asset 1, got %d", transaction.Amount)
+				}
+				asset1Found = true
+			} else if transaction.TargetAssetId == assetType2.Id {
+				if transaction.Amount != -400 {
+					t.Errorf("Expected amount -400 for sell asset 2, got %d", transaction.Amount)
+				}
+				asset2Found = true
+			} else if transaction.TargetAssetId == cashAssetType.Id {
+				if transaction.Amount != 700 {
+					t.Errorf("Expected combined cash amount +700, got %d", transaction.Amount)
+				}
+				cashFound = true
 			}
-			if transaction.TargetAssetId == assetType2.Id && transaction.Amount != -400 {
-				t.Errorf("Expected amount -400 for sell asset 2, got %d", transaction.Amount)
-			}
+		}
+
+		if !asset1Found {
+			t.Error("Expected to find asset 1 sell transaction")
+		}
+		if !asset2Found {
+			t.Error("Expected to find asset 2 sell transaction")
+		}
+		if !cashFound {
+			t.Error("Expected to find cash transaction")
 		}
 	})
 }
@@ -461,19 +582,26 @@ func TestPendingTransactionService_GetTransactionsByBankID(t *testing.T) {
 			t.Errorf("Expected no error for valid bank owner, got: %v", err)
 		}
 
-		if len(transactions) != 2 {
-			t.Errorf("Expected 2 transactions, got %d", len(transactions))
+		// Should have 3 transactions: asset (+600), bank (+400), cash (-1000 combined)
+		if len(transactions) != 3 {
+			t.Errorf("Expected 3 transactions (2 purchases + 1 combined cash), got %d", len(transactions))
+		}
+
+		// Get cash asset type for verification
+		cashAssetType, err := container.RepositoryContainer.AssetType.FindByName(ctx, "Cash")
+		if err != nil {
+			t.Fatalf("Failed to get cash asset type: %v", err)
 		}
 
 		// Verify transaction details
-		found600 := false
-		found400 := false
+		var found600, found400, foundCash bool
 		for _, tx := range transactions {
 			if tx.Amount == 600 && tx.TargetAssetId == assetType.Id {
 				found600 = true
-			}
-			if tx.Amount == 400 && tx.TargetAssetId == bank2.Id {
+			} else if tx.Amount == 400 && tx.TargetAssetId == bank2.Id {
 				found400 = true
+			} else if tx.Amount == -1000 && tx.TargetAssetId == cashAssetType.Id {
+				foundCash = true
 			}
 		}
 
@@ -482,6 +610,9 @@ func TestPendingTransactionService_GetTransactionsByBankID(t *testing.T) {
 		}
 		if !found400 {
 			t.Error("Expected to find transaction with amount 400")
+		}
+		if !foundCash {
+			t.Error("Expected to find cash transaction with amount -1000")
 		}
 	})
 
@@ -587,11 +718,37 @@ func TestPendingTransactionService_CreateBuyTransaction(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to get transactions: %v", err)
 		}
-		if len(transactions) != 1 {
-			t.Errorf("Expected 1 combined transaction, got %d", len(transactions))
+		// Should have 2 transactions: combined asset (+900) and combined cash (-900)
+		if len(transactions) != 2 {
+			t.Errorf("Expected 2 transactions (combined asset + combined cash), got %d", len(transactions))
 		}
-		if transactions[0].Amount != 900 {
-			t.Errorf("Expected combined amount 900, got %d", transactions[0].Amount)
+
+		// Get cash asset type for verification
+		cashAssetType, err := container.RepositoryContainer.AssetType.FindByName(ctx, "Cash")
+		if err != nil {
+			t.Fatalf("Failed to get cash asset type: %v", err)
+		}
+
+		// Find and verify the combined transactions
+		var assetTransaction, cashTransaction *models.PendingTransactionResponse
+		for i := range transactions {
+			if transactions[i].TargetAssetId == assetType.Id {
+				assetTransaction = &transactions[i]
+			} else if transactions[i].TargetAssetId == cashAssetType.Id {
+				cashTransaction = &transactions[i]
+			}
+		}
+
+		if assetTransaction == nil {
+			t.Error("Expected to find combined asset transaction")
+		} else if assetTransaction.Amount != 900 {
+			t.Errorf("Expected combined asset amount 900, got %d", assetTransaction.Amount)
+		}
+
+		if cashTransaction == nil {
+			t.Error("Expected to find combined cash transaction")
+		} else if cashTransaction.Amount != -900 {
+			t.Errorf("Expected combined cash amount -900, got %d", cashTransaction.Amount)
 		}
 	})
 }
@@ -662,11 +819,37 @@ func TestPendingTransactionService_CreateSellTransaction(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to get transactions: %v", err)
 		}
-		if len(transactions) != 1 {
-			t.Errorf("Expected 1 combined transaction, got %d", len(transactions))
+		// Should have 2 transactions: combined asset (-500) and combined cash (+500)
+		if len(transactions) != 2 {
+			t.Errorf("Expected 2 transactions (combined asset + combined cash), got %d", len(transactions))
 		}
-		if transactions[0].Amount != -500 {
-			t.Errorf("Expected combined amount -500, got %d", transactions[0].Amount)
+
+		// Get cash asset type for verification
+		cashAssetType, err := container.RepositoryContainer.AssetType.FindByName(ctx, "Cash")
+		if err != nil {
+			t.Fatalf("Failed to get cash asset type: %v", err)
+		}
+
+		// Find and verify the combined transactions
+		var assetTransaction, cashTransaction *models.PendingTransactionResponse
+		for i := range transactions {
+			if transactions[i].TargetAssetId == assetType.Id {
+				assetTransaction = &transactions[i]
+			} else if transactions[i].TargetAssetId == cashAssetType.Id {
+				cashTransaction = &transactions[i]
+			}
+		}
+
+		if assetTransaction == nil {
+			t.Error("Expected to find combined asset transaction")
+		} else if assetTransaction.Amount != -500 {
+			t.Errorf("Expected combined asset amount -500, got %d", assetTransaction.Amount)
+		}
+
+		if cashTransaction == nil {
+			t.Error("Expected to find combined cash transaction")
+		} else if cashTransaction.Amount != 500 {
+			t.Errorf("Expected combined cash amount +500, got %d", cashTransaction.Amount)
 		}
 	})
 }
@@ -726,16 +909,42 @@ func TestPendingTransactionService_BuyAndSellCombination(t *testing.T) {
 			t.Fatalf("Failed to create sell transaction: %v", err)
 		}
 
-		// Verify final amount
+		// Verify final amounts
 		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id, username)
 		if err != nil {
 			t.Fatalf("Failed to get transactions: %v", err)
 		}
-		if len(transactions) != 1 {
-			t.Errorf("Expected 1 transaction, got %d", len(transactions))
+		// Should have 2 transactions: asset (+700) and cash (-700)
+		if len(transactions) != 2 {
+			t.Errorf("Expected 2 transactions (asset + cash), got %d", len(transactions))
 		}
-		if transactions[0].Amount != 700 {
-			t.Errorf("Expected amount 700 (1000 - 300), got %d", transactions[0].Amount)
+
+		// Get cash asset type for verification
+		cashAssetType, err := container.RepositoryContainer.AssetType.FindByName(ctx, "Cash")
+		if err != nil {
+			t.Fatalf("Failed to get cash asset type: %v", err)
+		}
+
+		// Find and verify the final transactions
+		var assetTransaction, cashTransaction *models.PendingTransactionResponse
+		for i := range transactions {
+			if transactions[i].TargetAssetId == assetType.Id {
+				assetTransaction = &transactions[i]
+			} else if transactions[i].TargetAssetId == cashAssetType.Id {
+				cashTransaction = &transactions[i]
+			}
+		}
+
+		if assetTransaction == nil {
+			t.Error("Expected to find asset transaction")
+		} else if assetTransaction.Amount != 700 {
+			t.Errorf("Expected asset amount 700 (1000 - 300), got %d", assetTransaction.Amount)
+		}
+
+		if cashTransaction == nil {
+			t.Error("Expected to find cash transaction")
+		} else if cashTransaction.Amount != -700 {
+			t.Errorf("Expected cash amount -700, got %d", cashTransaction.Amount)
 		}
 	})
 
@@ -758,16 +967,42 @@ func TestPendingTransactionService_BuyAndSellCombination(t *testing.T) {
 			t.Fatalf("Failed to create buy transaction: %v", err)
 		}
 
-		// Verify final amount
+		// Verify final amounts
 		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id, username)
 		if err != nil {
 			t.Fatalf("Failed to get transactions: %v", err)
 		}
-		if len(transactions) != 1 {
-			t.Errorf("Expected 1 transaction, got %d", len(transactions))
+		// Should have 2 transactions: asset (-300) and cash (+300)
+		if len(transactions) != 2 {
+			t.Errorf("Expected 2 transactions (asset + cash), got %d", len(transactions))
 		}
-		if transactions[0].Amount != -300 {
-			t.Errorf("Expected amount -300 (-500 + 200), got %d", transactions[0].Amount)
+
+		// Get cash asset type for verification
+		cashAssetType, err := container.RepositoryContainer.AssetType.FindByName(ctx, "Cash")
+		if err != nil {
+			t.Fatalf("Failed to get cash asset type: %v", err)
+		}
+
+		// Find and verify the final transactions
+		var assetTransaction, cashTransaction *models.PendingTransactionResponse
+		for i := range transactions {
+			if transactions[i].TargetAssetId == assetType.Id {
+				assetTransaction = &transactions[i]
+			} else if transactions[i].TargetAssetId == cashAssetType.Id {
+				cashTransaction = &transactions[i]
+			}
+		}
+
+		if assetTransaction == nil {
+			t.Error("Expected to find asset transaction")
+		} else if assetTransaction.Amount != -300 {
+			t.Errorf("Expected asset amount -300 (-500 + 200), got %d", assetTransaction.Amount)
+		}
+
+		if cashTransaction == nil {
+			t.Error("Expected to find cash transaction")
+		} else if cashTransaction.Amount != 300 {
+			t.Errorf("Expected cash amount +300, got %d", cashTransaction.Amount)
 		}
 	})
 
@@ -939,6 +1174,165 @@ func TestPendingTransactionService_InsufficientFunds(t *testing.T) {
 		}
 		if err != services.ErrInsufficientFunds {
 			t.Errorf("Expected ErrInsufficientFunds, got %v", err)
+		}
+	})
+}
+
+func TestPendingTransactionService_DualTransactionSystem(t *testing.T) {
+	container, err := CreateTestDependencies("dual_transaction_system")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(container)
+
+	ctx := context.Background()
+	service := container.ServiceContainer.PendingTransaction
+	username := "dualtestuser"
+	password := "password"
+	bankName := "Dual Test Bank"
+
+	// Create test user with initial cash
+	_, err = CreateRegularUserForTest(container, username, password, bankName)
+	if err != nil {
+		t.Fatalf("Failed to create test user: %v", err)
+	}
+
+	// Get the bank for the user
+	player, err := container.RepositoryContainer.Player.FindByUsername(ctx, username)
+	if err != nil {
+		t.Fatalf("Failed to find test player: %v", err)
+	}
+
+	banks, err := container.RepositoryContainer.Bank.FindAllByPlayerID(ctx, player.Id)
+	if err != nil {
+		t.Fatalf("Failed to find test banks: %v", err)
+	}
+	bank := banks[0]
+
+	// Create test asset types
+	assetType1 := &models.AssetType{
+		Id:   primitive.NewObjectID(),
+		Name: "Test Stock A",
+	}
+	err = container.RepositoryContainer.AssetType.Create(ctx, assetType1)
+	if err != nil {
+		t.Fatalf("Failed to create asset type 1: %v", err)
+	}
+
+	assetType2 := &models.AssetType{
+		Id:   primitive.NewObjectID(),
+		Name: "Test Stock B",
+	}
+	err = container.RepositoryContainer.AssetType.Create(ctx, assetType2)
+	if err != nil {
+		t.Fatalf("Failed to create asset type 2: %v", err)
+	}
+
+	// Get cash asset type
+	cashAssetType, err := container.RepositoryContainer.AssetType.FindByName(ctx, "Cash")
+	if err != nil {
+		t.Fatalf("Failed to get cash asset type: %v", err)
+	}
+	
+	t.Run("Multiple transactions combine cash correctly", func(t *testing.T) {
+		// Clear any existing transactions
+		existing, _ := service.GetTransactionsByBuyerBankID(ctx, bank.Id, username)
+		for _, tx := range existing {
+			container.RepositoryContainer.PendingTransaction.Delete(ctx, tx.Id)
+		}
+
+		// Create multiple buy transactions for different assets
+		err := service.CreateBuyTransaction(ctx, bank.Id, assetType1.Id, 200, username)
+		if err != nil {
+			t.Fatalf("Failed to create first buy transaction: %v", err)
+		}
+
+		err = service.CreateBuyTransaction(ctx, bank.Id, assetType2.Id, 300, username)
+		if err != nil {
+			t.Fatalf("Failed to create second buy transaction: %v", err)
+		}
+
+		// Should have 3 transactions: asset1 (+200), asset2 (+300), cash (-500 combined)
+		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id, username)
+		if err != nil {
+			t.Fatalf("Failed to get transactions: %v", err)
+		}
+		if len(transactions) != 3 {
+			t.Errorf("Expected 3 transactions, got %d", len(transactions))
+		}
+
+		// Verify the cash transaction is properly combined
+		var cashTx *models.PendingTransactionResponse
+		for i := range transactions {
+			if transactions[i].TargetAssetId == cashAssetType.Id {
+				cashTx = &transactions[i]
+				break
+			}
+		}
+
+		if cashTx == nil {
+			t.Error("Expected to find combined cash transaction")
+		} else {
+			if cashTx.Amount != -500 {
+				t.Errorf("Expected combined cash transaction amount -500, got %d", cashTx.Amount)
+			}
+		}
+	})
+
+	t.Run("Buy and sell transactions net out correctly", func(t *testing.T) {
+		// Clear any existing transactions
+		existing, _ := service.GetTransactionsByBuyerBankID(ctx, bank.Id, username)
+		for _, tx := range existing {
+			container.RepositoryContainer.PendingTransaction.Delete(ctx, tx.Id)
+		}
+
+		// Buy and then sell the same amount should result in no transactions
+		err := service.CreateBuyTransaction(ctx, bank.Id, assetType1.Id, 400, username)
+		if err != nil {
+			t.Fatalf("Failed to create buy transaction: %v", err)
+		}
+
+		err = service.CreateSellTransaction(ctx, bank.Id, assetType1.Id, 400, username)
+		if err != nil {
+			t.Fatalf("Failed to create sell transaction: %v", err)
+		}
+
+		// Should have no transactions left (they should cancel out)
+		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id, username)
+		if err != nil {
+			t.Fatalf("Failed to get transactions: %v", err)
+		}
+		if len(transactions) != 0 {
+			t.Errorf("Expected 0 transactions (they should cancel out), got %d", len(transactions))
+		}
+	})
+
+	t.Run("Cannot directly buy or sell cash", func(t *testing.T) {
+		// Clear any existing transactions
+		existing, _ := service.GetTransactionsByBuyerBankID(ctx, bank.Id, username)
+		for _, tx := range existing {
+			container.RepositoryContainer.PendingTransaction.Delete(ctx, tx.Id)
+		}
+
+		// Attempting to buy cash should fail
+		err := service.CreateBuyTransaction(ctx, bank.Id, cashAssetType.Id, 100, username)
+		if err == nil {
+			t.Error("Expected error when trying to buy cash, got nil")
+		}
+
+		// Attempting to sell cash should fail
+		err = service.CreateSellTransaction(ctx, bank.Id, cashAssetType.Id, 100, username)
+		if err == nil {
+			t.Error("Expected error when trying to sell cash, got nil")
+		}
+
+		// Should have no transactions created
+		transactions, err := service.GetTransactionsByBuyerBankID(ctx, bank.Id, username)
+		if err != nil {
+			t.Fatalf("Failed to get transactions: %v", err)
+		}
+		if len(transactions) != 0 {
+			t.Errorf("Expected 0 transactions, got %d", len(transactions))
 		}
 	})
 }
