@@ -1,7 +1,4 @@
 
-RIGHT NOW: Make all purchases come out of cash
-When buying an asset, restrict to cash amount
-
 Next up:
 Apply pending transactions on new day
 Ensure currencies are stored in correct format
