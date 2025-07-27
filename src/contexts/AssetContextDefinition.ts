@@ -8,6 +8,9 @@ interface AssetContextType {
   // Global loading popup state
   showLoadingPopup: (status: 'loading' | 'success' | 'error', message?: string) => void;
   hideLoadingPopup: () => void;
+  // Cash balance
+  cashBalance: number;
+  setCashBalance: (balance: number) => void;
 }
 
 export const AssetContext = createContext<AssetContextType | undefined>(undefined);

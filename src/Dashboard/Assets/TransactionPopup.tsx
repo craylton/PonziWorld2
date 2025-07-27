@@ -7,6 +7,7 @@ interface TransactionPopupProps {
     assetType: string;
     transactionType: 'buy' | 'sell';
     currentHoldings?: number;
+    maxBuyAmount?: number;
     onConfirm: (amount: number) => void;
 }
 
@@ -16,6 +17,7 @@ export default function TransactionPopup({
     assetType,
     transactionType,
     currentHoldings = 0,
+    maxBuyAmount = 0,
     onConfirm
 }: TransactionPopupProps) {
     const [amount, setAmount] = useState<string>('');
@@ -42,6 +44,10 @@ export default function TransactionPopup({
 
         if (transactionType === 'sell' && numValue > currentHoldings) {
             return `Cannot sell more than your current holdings (${currentHoldings})`;
+        }
+
+        if (transactionType === 'buy' && numValue > maxBuyAmount) {
+            return `Cannot buy more than your available cash (${maxBuyAmount})`;
         }
 
         return '';

@@ -135,7 +135,14 @@ func (s *BankService) CreateBankForUsername(
 	}
 
 	// Create the bank
-	bank, err := s.CreateBank(ctx, player.Id, bankName, claimedCapital)
+	bank := &models.Bank{
+		Id:             primitive.NewObjectID(),
+		PlayerId:       player.Id,
+		BankName:       bankName,
+		ClaimedCapital: claimedCapital,
+	}
+
+	err = s.bankRepo.Create(ctx, bank)
 	if err != nil {
 		return nil, err
 	}
@@ -164,27 +171,6 @@ func (s *BankService) createInitialCashAsset(ctx context.Context, bankID primiti
 	}
 
 	return s.assetRepo.Create(ctx, asset)
-}
-
-func (s *BankService) CreateBank(
-	ctx context.Context,
-	playerID primitive.ObjectID,
-	bankName string,
-	initialCapital int64,
-) (*models.Bank, error) {
-	bank := &models.Bank{
-		Id:             primitive.NewObjectID(),
-		PlayerId:       playerID,
-		BankName:       bankName,
-		ClaimedCapital: initialCapital,
-	}
-
-	err := s.bankRepo.Create(ctx, bank)
-	if err != nil {
-		return nil, err
-	}
-
-	return bank, nil
 }
 
 func (s *BankService) ValidateBankOwnership(ctx context.Context, username string, bankID primitive.ObjectID) error {

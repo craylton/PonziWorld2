@@ -318,12 +318,12 @@ func TestPendingTransactionService_MultipleAssets(t *testing.T) {
 	}
 
 	t.Run("Create transactions for different assets", func(t *testing.T) {
-		err := service.CreateBuyTransaction(ctx, bank.Id, assetType1.Id, 1000, username)
+		err := service.CreateBuyTransaction(ctx, bank.Id, assetType1.Id, 400, username)
 		if err != nil {
 			t.Fatalf("Failed to create transaction for asset 1: %v", err)
 		}
 
-		err = service.CreateBuyTransaction(ctx, bank.Id, assetType2.Id, 2000, username)
+		err = service.CreateBuyTransaction(ctx, bank.Id, assetType2.Id, 600, username)
 		if err != nil {
 			t.Fatalf("Failed to create transaction for asset 2: %v", err)
 		}
@@ -338,11 +338,11 @@ func TestPendingTransactionService_MultipleAssets(t *testing.T) {
 
 		// Verify amounts are correct
 		for _, transaction := range transactions {
-			if transaction.TargetAssetId == assetType1.Id && transaction.Amount != 1000 {
-				t.Errorf("Expected amount 1000 for asset 1, got %d", transaction.Amount)
+			if transaction.TargetAssetId == assetType1.Id && transaction.Amount != 400 {
+				t.Errorf("Expected amount 400 for asset 1, got %d", transaction.Amount)
 			}
-			if transaction.TargetAssetId == assetType2.Id && transaction.Amount != 2000 {
-				t.Errorf("Expected amount 2000 for asset 2, got %d", transaction.Amount)
+			if transaction.TargetAssetId == assetType2.Id && transaction.Amount != 600 {
+				t.Errorf("Expected amount 600 for asset 2, got %d", transaction.Amount)
 			}
 		}
 	})
@@ -445,12 +445,12 @@ func TestPendingTransactionService_GetTransactionsByBankID(t *testing.T) {
 
 	t.Run("Valid bank owner can access transactions", func(t *testing.T) {
 		// Create some pending transactions
-		err := service.CreateBuyTransaction(ctx, bank.Id, assetType.Id, 1000, username)
+		err := service.CreateBuyTransaction(ctx, bank.Id, assetType.Id, 600, username)
 		if err != nil {
 			t.Fatalf("Failed to create first transaction: %v", err)
 		}
 
-		err = service.CreateBuyTransaction(ctx, bank.Id, bank2.Id, 500, username)
+		err = service.CreateBuyTransaction(ctx, bank.Id, bank2.Id, 400, username)
 		if err != nil {
 			t.Fatalf("Failed to create second transaction: %v", err)
 		}
@@ -466,22 +466,22 @@ func TestPendingTransactionService_GetTransactionsByBankID(t *testing.T) {
 		}
 
 		// Verify transaction details
-		found1000 := false
-		found500 := false
+		found600 := false
+		found400 := false
 		for _, tx := range transactions {
-			if tx.Amount == 1000 && tx.TargetAssetId == assetType.Id {
-				found1000 = true
+			if tx.Amount == 600 && tx.TargetAssetId == assetType.Id {
+				found600 = true
 			}
-			if tx.Amount == 500 && tx.TargetAssetId == bank2.Id {
-				found500 = true
+			if tx.Amount == 400 && tx.TargetAssetId == bank2.Id {
+				found400 = true
 			}
 		}
 
-		if !found1000 {
-			t.Error("Expected to find transaction with amount 1000")
+		if !found600 {
+			t.Error("Expected to find transaction with amount 600")
 		}
-		if !found500 {
-			t.Error("Expected to find transaction with amount 500")
+		if !found400 {
+			t.Error("Expected to find transaction with amount 400")
 		}
 	})
 
@@ -571,13 +571,13 @@ func TestPendingTransactionService_CreateBuyTransaction(t *testing.T) {
 		}
 
 		// Create first buy transaction
-		err := service.CreateBuyTransaction(ctx, bank.Id, assetType.Id, 1000, username)
+		err := service.CreateBuyTransaction(ctx, bank.Id, assetType.Id, 600, username)
 		if err != nil {
 			t.Fatalf("Failed to create first buy transaction: %v", err)
 		}
 
 		// Create second buy transaction
-		err = service.CreateBuyTransaction(ctx, bank.Id, assetType.Id, 500, username)
+		err = service.CreateBuyTransaction(ctx, bank.Id, assetType.Id, 300, username)
 		if err != nil {
 			t.Fatalf("Failed to create second buy transaction: %v", err)
 		}
@@ -590,8 +590,8 @@ func TestPendingTransactionService_CreateBuyTransaction(t *testing.T) {
 		if len(transactions) != 1 {
 			t.Errorf("Expected 1 combined transaction, got %d", len(transactions))
 		}
-		if transactions[0].Amount != 1500 {
-			t.Errorf("Expected combined amount 1500, got %d", transactions[0].Amount)
+		if transactions[0].Amount != 900 {
+			t.Errorf("Expected combined amount 900, got %d", transactions[0].Amount)
 		}
 	})
 }
@@ -859,6 +859,86 @@ func TestPendingTransactionService_CashRestriction(t *testing.T) {
 		}
 		if err != services.ErrCashNotTradable {
 			t.Errorf("Expected ErrCashNotTradable, got %v", err)
+		}
+	})
+}
+
+func TestPendingTransactionService_InsufficientFunds(t *testing.T) {
+	container, err := CreateTestDependencies("pending_transaction_funds")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(container)
+
+	ctx := context.Background()
+	service := container.ServiceContainer.PendingTransaction
+	timestamp := time.Now().Unix()
+
+	// Create test user and bank
+	username := fmt.Sprintf("testuser_%d", timestamp)
+	password := "testpass"
+	bankName := "Test Bank"
+
+	_, err = CreateRegularUserForTest(container, username, password, bankName)
+	if err != nil {
+		t.Fatalf("Failed to create test user: %v", err)
+	}
+
+	user, err := container.RepositoryContainer.Player.FindByUsername(ctx, username)
+	if err != nil {
+		t.Fatalf("Failed to find test user: %v", err)
+	}
+
+	// Get the banks for the user
+	banks, err := container.RepositoryContainer.Bank.FindAllByPlayerID(ctx, user.Id)
+	if err != nil {
+		t.Fatalf("Failed to find test banks: %v", err)
+	}
+	bank := banks[0]
+
+	// Create test asset type
+	assetType := &models.AssetType{
+		Id:   primitive.NewObjectID(),
+		Name: "Test Asset",
+	}
+	err = container.RepositoryContainer.AssetType.Create(ctx, assetType)
+	if err != nil {
+		t.Fatalf("Failed to create test asset type: %v", err)
+	}
+
+	// Get the user's initial cash balance (should be 1000 from CreateRegularUserForTest)
+	_, err = container.RepositoryContainer.AssetType.FindByName(ctx, "Cash")
+	if err != nil {
+		t.Fatalf("Failed to find Cash asset type: %v", err)
+	}
+
+	// Try to buy more than the available cash balance (1000)
+	t.Run("Cannot buy more than available cash", func(t *testing.T) {
+		err := service.CreateBuyTransaction(ctx, bank.Id, assetType.Id, 1500, username)
+		if err == nil {
+			t.Error("Expected error when trying to buy more than available cash, got nil")
+		}
+		if err != services.ErrInsufficientFunds {
+			t.Errorf("Expected ErrInsufficientFunds, got %v", err)
+		}
+	})
+
+	// Should be able to buy exactly the available cash balance
+	t.Run("Can buy exactly available cash amount", func(t *testing.T) {
+		err := service.CreateBuyTransaction(ctx, bank.Id, assetType.Id, 1000, username)
+		if err != nil {
+			t.Errorf("Should be able to buy with exact cash balance, got error: %v", err)
+		}
+	})
+
+	// After using all cash, should not be able to buy more
+	t.Run("Cannot buy after using all cash", func(t *testing.T) {
+		err := service.CreateBuyTransaction(ctx, bank.Id, assetType.Id, 1, username)
+		if err == nil {
+			t.Error("Expected error when trying to buy after using all cash, got nil")
+		}
+		if err != services.ErrInsufficientFunds {
+			t.Errorf("Expected ErrInsufficientFunds, got %v", err)
 		}
 	})
 }

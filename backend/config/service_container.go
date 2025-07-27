@@ -50,6 +50,7 @@ func NewServiceContainer(repositoryContainer *RepositoryContainer) *ServiceConta
 		repositoryContainer.Bank,
 		repositoryContainer.AssetType,
 		repositoryContainer.Player,
+		repositoryContainer.Investment,
 	)
 
 	return &ServiceContainer{

@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import './AssetList.css';
 import { formatCurrency } from '../../utils/currency';
+import { useAssetContext } from '../../contexts/useAssetContext';
 import type { InvestmentDetailsResponse } from '../../models/AssetDetails';
 
 interface CashAssetSummaryProps {
@@ -7,7 +9,14 @@ interface CashAssetSummaryProps {
 }
 
 export default function CashAssetSummary({ asset }: CashAssetSummaryProps) {
+  const { setCashBalance } = useAssetContext();
   const hasPendingAmount = asset.pendingAmount !== 0;
+  
+  // Update cash balance in context whenever the cash asset data changes
+  useEffect(() => {
+    const totalCashBalance = asset.investedAmount + asset.pendingAmount;
+    setCashBalance(totalCashBalance);
+  }, [asset.investedAmount, asset.pendingAmount, setCashBalance]);
   
   return (
     <>
