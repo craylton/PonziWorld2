@@ -21,7 +21,7 @@ export default function AssetDetailPopup({
   asset
 }: AssetDetailPopupProps) {
   const { bankId } = useBankContext();
-  const { refreshAssets, refreshBank, showLoadingPopup } = useAssetContext();
+  const { refreshAssets, refreshBank, showLoadingPopup, cashBalance } = useAssetContext();
   const [transactionPopupOpen, setTransactionPopupOpen] = useState(false);
   const [transactionType, setTransactionType] = useState<'buy' | 'sell'>('buy');
   const [chartData, setChartData] = useState<HistoricalPerformanceEntry[]>([]);
@@ -216,6 +216,7 @@ export default function AssetDetailPopup({
         assetType={asset.name}
         transactionType={transactionType}
         currentHoldings={asset.investedAmount + asset.pendingAmount}
+        maxBuyAmount={cashBalance}
         onConfirm={handleTransactionConfirm}
       />
     </>

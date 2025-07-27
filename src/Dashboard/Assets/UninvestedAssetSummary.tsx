@@ -1,4 +1,4 @@
-import AssetSummaryBase from './AssetSummaryBase';
+import AssetHistoricalPerformanceDisplay from './AssetHistoricalPerformanceDisplay';
 import './AssetList.css';
 import type { InvestmentDetailsResponse } from '../../models/AssetDetails';
 
@@ -13,7 +13,7 @@ export default function UninvestedAssetSummary({ asset }: AssetSummaryProps) {
         <div className="asset-list__content">
           <div className="asset-list__type">{asset.name}</div>
         </div>
-        <AssetSummaryBase asset={asset} />
+        <AssetHistoricalPerformanceDisplay asset={asset} />
       </div>
     </>
   );

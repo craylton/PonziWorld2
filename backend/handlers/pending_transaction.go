@@ -204,6 +204,12 @@ func (h *PendingTransactionHandler) handleTransactionError(w http.ResponseWriter
 	case services.ErrUnauthorizedBank:
 		w.WriteHeader(http.StatusForbidden)
 		json.NewEncoder(w).Encode(map[string]string{"error": "You do not own this bank"})
+	case services.ErrCashNotTradable:
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Cash cannot be bought or sold"})
+	case services.ErrInsufficientFunds:
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Insufficient cash balance for this purchase"})
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create transaction"})

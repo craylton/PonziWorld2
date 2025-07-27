@@ -14,6 +14,9 @@ export default function AssetProvider({ children, refreshBank }: AssetProviderPr
   const [loadingPopupOpen, setLoadingPopupOpen] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [loadingMessage, setLoadingMessage] = useState<string>('');
+  
+  // Cash balance state
+  const [cashBalance, setCashBalance] = useState<number>(0);
 
   const registerRefreshCallback = useCallback((callback: () => void) => {
     refreshCallbacks.current.add(callback);
@@ -51,6 +54,8 @@ export default function AssetProvider({ children, refreshBank }: AssetProviderPr
     refreshBank,
     showLoadingPopup,
     hideLoadingPopup,
+    cashBalance,
+    setCashBalance,
   };
 
   return (

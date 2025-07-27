@@ -39,7 +39,7 @@ func CreateRegularUserForTest(container *config.Container, username, password, b
 	}
 
 	// Create bank for the user
-	_, err = container.ServiceContainer.Bank.CreateBank(ctx, playerID, bankName, 1000)
+	_, err = container.ServiceContainer.Bank.CreateBankForUsername(ctx, username, bankName, 1000)
 	if err != nil {
 		return "", err
 	}

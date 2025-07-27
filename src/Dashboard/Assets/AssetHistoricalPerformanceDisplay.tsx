@@ -4,11 +4,11 @@ import './AssetList.css';
 import AssetSummaryChart from './AssetSummaryChart';
 import AssetDetailPopup from './AssetDetailPopup';
 
-interface AssetSummaryBaseProps {
+interface AssetHistoricalPerformanceDisplayProps {
   asset: InvestmentDetailsResponse;
 }
 
-export default function AssetSummaryBase({ asset }: AssetSummaryBaseProps) {
+export default function AssetHistoricalPerformanceDisplay({ asset }: AssetHistoricalPerformanceDisplayProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   const historicalValues = asset.historicalData.map(entry => entry.value);

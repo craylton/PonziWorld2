@@ -267,3 +267,14 @@
 .asset-list__items::-webkit-scrollbar-thumb:hover {
   background: #e65ac8;
 }
+
+/* Cash asset specific styling */
+.asset-list__item--cash {
+  border: 2px solid #ffd700;
+  background-color: #3d1540;
+  position: relative;
+}
+
+.asset-list__item--cash .asset-list__amount {
+  display: block;
+}

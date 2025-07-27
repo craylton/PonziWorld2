@@ -38,20 +38,14 @@ func (s *PlayerService) CreateNewPlayer(ctx context.Context, username, password,
 	}
 
 	// Create the player
-	player, err := s.authService.CreatePlayer(ctx, username, password)
+	_, err := s.authService.CreatePlayer(ctx, username, password)
 	if err != nil {
 		return err
 	}
 
 	// Create the bank for this player
 	initialCapital := int64(1000)
-	bank, err := s.bankService.CreateBank(ctx, player.Id, bankName, initialCapital)
-	if err != nil {
-		return err
-	}
-
-	// Create initial cash asset
-	_, err = s.assetService.CreateInitialInvestment(ctx, bank.Id, initialCapital)
+	bank, err := s.bankService.CreateBankForUsername(ctx, username, bankName, initialCapital)
 	if err != nil {
 		return err
 	}
