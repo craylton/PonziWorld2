@@ -98,14 +98,14 @@ func (s *GameService) ProcessPendingTransactions(ctx context.Context) error {
 	bankIDs := make(map[primitive.ObjectID]bool)
 	assetIDs := make(map[primitive.ObjectID]bool)
 
-	for _, tx := range pendingTransactions {
-		bankIDs[tx.SourceBankId] = true
-		assetIDs[tx.TargetAssetId] = true
+	for _, transaction := range pendingTransactions {
+		bankIDs[transaction.SourceBankId] = true
+		assetIDs[transaction.TargetAssetId] = true
 	}
 
 	// Process each pending transaction
-	for _, pendingTx := range pendingTransactions {
-		err := s.processSinglePendingTransaction(ctx, &pendingTx, cashAssetType.Id)
+	for _, pendingTransaction := range pendingTransactions {
+		err := s.processSinglePendingTransaction(ctx, &pendingTransaction, cashAssetType.Id)
 		if err != nil {
 			// Log error but continue processing other transactions
 			// In a production system, you might want to handle this differently
@@ -113,7 +113,7 @@ func (s *GameService) ProcessPendingTransactions(ctx context.Context) error {
 		}
 
 		// Remove the processed pending transaction
-		err = s.pendingTransactionRepo.Delete(ctx, pendingTx.Id)
+		err = s.pendingTransactionRepo.Delete(ctx, pendingTransaction.Id)
 		if err != nil {
 			// Log error but continue
 			continue
@@ -126,25 +126,27 @@ func (s *GameService) ProcessPendingTransactions(ctx context.Context) error {
 // processSinglePendingTransaction processes a single pending transaction
 func (s *GameService) processSinglePendingTransaction(
 	ctx context.Context,
-	pendingTx *models.PendingTransactionResponse,
+	pendingTransaction *models.PendingTransactionResponse,
 	cashAssetTypeId primitive.ObjectID,
 ) error {
-	// For cash transactions, skip most validation - allow negative cash
-	isCashTransaction := pendingTx.TargetAssetId == cashAssetTypeId
-
-	if !isCashTransaction {
-		// Only validate non-cash transactions
-		err := s.validateNonCashPendingTransaction(ctx, pendingTx)
+	// Cash is handled slightly differently as we allow negative cash
+	if pendingTransaction.TargetAssetId == cashAssetTypeId {
+		err := s.validateCashPendingTransaction(ctx, pendingTransaction)
+		if err != nil {
+			return err
+		}
+	} else {
+		err := s.validateNonCashPendingTransaction(ctx, pendingTransaction)
 		if err != nil {
 			return err
 		}
 	}
 
-	// Find existing investment
+	// Find existing investment, if any
 	existingInvestment, err := s.investmentRepo.FindBySourceIdAndTargetId(
 		ctx,
-		pendingTx.SourceBankId,
-		pendingTx.TargetAssetId,
+		pendingTransaction.SourceBankId,
+		pendingTransaction.TargetAssetId,
 	)
 	if err != nil && err != mongo.ErrNoDocuments {
 		return err
@@ -152,46 +154,59 @@ func (s *GameService) processSinglePendingTransaction(
 
 	if existingInvestment != nil {
 		// Update existing investment
-		newAmount := existingInvestment.Amount + pendingTx.Amount
+		newAmount := existingInvestment.Amount + pendingTransaction.Amount
 
 		if newAmount == 0 {
 			// Remove investment entirely if amount becomes zero
-			return s.investmentRepo.DeleteBySourceIdAndTargetId(ctx, pendingTx.SourceBankId, pendingTx.TargetAssetId)
+			return s.investmentRepo.DeleteBySourceIdAndTargetId(ctx, pendingTransaction.SourceBankId, pendingTransaction.TargetAssetId)
 		} else {
 			// Update with new amount (allow negative for cash)
-			return s.investmentRepo.UpdateAmount(ctx, pendingTx.SourceBankId, pendingTx.TargetAssetId, newAmount)
+			return s.investmentRepo.UpdateAmount(ctx, pendingTransaction.SourceBankId, pendingTransaction.TargetAssetId, newAmount)
 		}
 	} else {
 		// Create new investment (allow negative amounts for cash)
-		if pendingTx.Amount == 0 {
+		if pendingTransaction.Amount == 0 {
 			// Skip zero-amount transactions
 			return nil
 		}
 
 		investment := &models.Investment{
 			Id:            primitive.NewObjectID(),
-			SourceBankId:  pendingTx.SourceBankId,
-			TargetAssetId: pendingTx.TargetAssetId,
-			Amount:        pendingTx.Amount,
+			SourceBankId:  pendingTransaction.SourceBankId,
+			TargetAssetId: pendingTransaction.TargetAssetId,
+			Amount:        pendingTransaction.Amount,
 		}
 
 		return s.investmentRepo.Create(ctx, investment)
 	}
 }
 
+func (s *GameService) validateCashPendingTransaction(
+	ctx context.Context,
+	pendingTransaction *models.PendingTransactionResponse,
+) error {
+	// Validate that the source bank still exists
+	_, err := s.bankRepo.FindByID(ctx, pendingTransaction.SourceBankId)
+	if err != nil {
+		return errors.New("source bank no longer exists")
+	}
+	return nil
+}
+
+
 // validateNonCashPendingTransaction validates non-cash pending transactions
 func (s *GameService) validateNonCashPendingTransaction(
 	ctx context.Context,
-	pendingTx *models.PendingTransactionResponse,
+	pendingTransaction *models.PendingTransactionResponse,
 ) error {
 	// Validate that the source bank still exists
-	_, err := s.bankRepo.FindByID(ctx, pendingTx.SourceBankId)
+	_, err := s.bankRepo.FindByID(ctx, pendingTransaction.SourceBankId)
 	if err != nil {
 		return errors.New("source bank no longer exists")
 	}
 
 	// Validate that the target asset still exists
-	assetExists, err := s.validateTargetAssetExists(ctx, pendingTx.TargetAssetId)
+	assetExists, err := s.validateTargetAssetExists(ctx, pendingTransaction.TargetAssetId)
 	if err != nil {
 		return err
 	}
@@ -200,8 +215,8 @@ func (s *GameService) validateNonCashPendingTransaction(
 	}
 
 	// For sell transactions (negative amounts), validate that we have enough to sell
-	if pendingTx.Amount < 0 {
-		err := s.validateSufficientAssetForSale(ctx, pendingTx.SourceBankId, pendingTx.TargetAssetId, -pendingTx.Amount)
+	if pendingTransaction.Amount < 0 {
+		err := s.validateSufficientAssetForSale(ctx, pendingTransaction.SourceBankId, pendingTransaction.TargetAssetId, -pendingTransaction.Amount)
 		if err != nil {
 			return err
 		}

@@ -712,14 +712,14 @@ func TestNextDay_WithPendingTransactions(t *testing.T) {
 
 		// Create a manual pending transaction that would result in negative cash
 		// This simulates a scenario where pending transactions were created but conditions changed
-		pendingTx := &models.PendingTransactionResponse{
+		pendingTransaction := &models.PendingTransactionResponse{
 			Id:            primitive.NewObjectID(),
 			SourceBankId:  bankID,
 			TargetAssetId: cashAssetType.Id,
 			Amount:        -2000, // More than the initial 1000 cash
 		}
 		
-		err = container.RepositoryContainer.PendingTransaction.Create(ctx, pendingTx)
+		err = container.RepositoryContainer.PendingTransaction.Create(ctx, pendingTransaction)
 		if err != nil {
 			t.Fatal("Failed to create pending transaction:", err)
 		}
