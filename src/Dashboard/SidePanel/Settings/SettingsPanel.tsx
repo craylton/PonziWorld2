@@ -1,6 +1,7 @@
 import SidePanel from '../SidePanel';
 import type { Player } from '../../../models/Player';
 import { makeAuthenticatedRequest } from '../../../auth';
+import { useLoadingContext } from '../../../contexts/useLoadingContext';
 
 interface SettingsPanelProps {
   visible: boolean;
@@ -9,24 +10,30 @@ interface SettingsPanelProps {
   onClose?: () => void;
 }
 
-const handleAdvanceDay = async () => {
-  try {
-    const response = await makeAuthenticatedRequest('/api/nextDay', {
-      method: 'POST',
-    });
-
-    if (response.ok) {
-      // Do nothing, maybe show a success message one day
-    } else {
-      const errorData = await response.json();
-      alert(`Failed to advance day: ${errorData.error || 'Unknown error'}`);
-    }
-  } catch {
-    alert('Failed to advance day: Network error');
-  }
-};
-
 export default function SettingsPanel({ visible, player, onLogout, onClose }: SettingsPanelProps) {
+  const { showLoadingPopup } = useLoadingContext();
+
+  const handleAdvanceDay = async () => {
+    showLoadingPopup('loading', 'Advancing to next day...');
+
+    try {
+      const response = await makeAuthenticatedRequest('/api/nextDay', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        showLoadingPopup('success', 'Day advanced successfully! Please refresh the page', () => {
+          window.location.reload();
+        });
+      } else {
+        const errorData = await response.json();
+        showLoadingPopup('error', `Failed to advance day: ${errorData.error || 'Unknown error'}.`);
+      }
+    } catch {
+      showLoadingPopup('error', 'Failed to advance day: Network error.');
+    }
+  };
+  
   return (
     <SidePanel side="right" visible={visible} onClose={onClose}>
       <h3>Settings</h3>
