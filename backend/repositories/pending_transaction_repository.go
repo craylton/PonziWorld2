@@ -77,6 +77,21 @@ func (r *PendingTransactionRepositoryImpl) FindBySourceBankIDAndTargetAssetID(
 	return transactions, nil
 }
 
+func (r *PendingTransactionRepositoryImpl) FindAll(ctx context.Context) ([]models.PendingTransactionResponse, error) {
+	cursor, err := r.collection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var transactions []models.PendingTransactionResponse
+	if err = cursor.All(ctx, &transactions); err != nil {
+		return nil, err
+	}
+
+	return transactions, nil
+}
+
 func (r *PendingTransactionRepositoryImpl) SumPendingAmountBySourceBankIdAndTargetAssetId(
 	ctx context.Context,
 	sourceBankID,

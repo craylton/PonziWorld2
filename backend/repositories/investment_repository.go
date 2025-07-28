@@ -64,3 +64,25 @@ func (r *investmentRepository) CalculateActualCapital(ctx context.Context, bankI
 	}
 	return actualCapital, nil
 }
+
+func (r *investmentRepository) UpdateAmount(
+	ctx context.Context,
+	sourceBankID,
+	targetAssetId primitive.ObjectID,
+	newAmount int64,
+) error {
+	filter := bson.M{"sourceBankId": sourceBankID, "targetAssetId": targetAssetId}
+	update := bson.M{"$set": bson.M{"amount": newAmount}}
+	_, err := r.collection.UpdateOne(ctx, filter, update)
+	return err
+}
+
+func (r *investmentRepository) DeleteBySourceIdAndTargetId(
+	ctx context.Context,
+	sourceBankID,
+	targetAssetId primitive.ObjectID,
+) error {
+	filter := bson.M{"sourceBankId": sourceBankID, "targetAssetId": targetAssetId}
+	_, err := r.collection.DeleteOne(ctx, filter)
+	return err
+}
