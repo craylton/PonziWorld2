@@ -9,22 +9,29 @@ c = total amount capital managed by each bank. You can calculate c by adding up 
 p = ponzi factor. This is an n*1 vector that represents how much each bank is willing to lie about their performance. So while bank A might only make a 2% gain, they can lie to make it appear that they actually made 5%, for example.
 F = fixed costs. Each bank has their own fixed costs that they must pay each day. this is another n*1 vector.
 
-The core update equation is (all vectors are n×1, matrices are sized appropriately):
-Δ = e · (y − 1)                    // exogenous asset gains (n×1)
-    + W · ((Δ ⊘ c) + p − m)        // interbank investment gains (n×1)
-    + W m                          // cash from management fees (n×1)
-    − F                            // fixed costs (n×1)
+Define:
+- 1ₙ ∈ ℝⁿ : column vector of ones  
+- 1ₓ ∈ ℝˣ : column vector of ones  
+- c = W·1ₙ + e·1ₓ ∈ ℝⁿ : total capital managed by each bank  
+- s = Wᵀ·1ₙ ∈ ℝⁿ : total funds invested into each bank by others  
+- m ∈ ℝ : management‐fee rate (scalar)  
+- p, F ∈ ℝⁿ : ponzi factors and fixed costs  
 
-Here:
-- Δ, p, m, F, c are n×1 column vectors.
-- e is n×x, y is x×1, so e·(y−1) yields n×1.
-- W is n×n, multiplication produces n×1.
-- ⊘ denotes element-wise division of two n×1 vectors (Δ ⊘ c = [Δ_i / c_i]).
-- W m multiplies W by scalar m, giving an n×1 vector of fee income.
+Compute:  
+Δ_exo = e·(y − 1)           ∈ ℝⁿ  
+g      = (Δ ⊘ c) + p       ∈ ℝⁿ  
+fee    = m·s               ∈ ℝⁿ          (fee income on in-flows)  
+inter  = W·(g − m)         ∈ ℝⁿ          (interbank gains net of fees)  
 
-Then the updated investment matrices are:
-e₁ = e ∘ diag(y)                // element-wise scaling of exogenous assets
-W₁ = W · diag((Δ ⊘ c) + p − m + 1)  // adjust interbank weights by realized returns
+Total net payoff (implicit in Δ):  
+Δ = Δ_exo + inter + fee − F  
+
+⇔  (Iₙ − W·diag(1 ⊘ c))·Δ = Δ_exo + W·(p − m) + m·s − F  
+
+Updated investment matrices:  
+e₁ = e · diag(y)               (scale each exogenous column by its yield)  
+Let α = g − m + 1 ∈ ℝⁿ  
+W₁ = W·diag(α)                (so W₁ᵢⱼ = Wᵢⱼ·αⱼ)  
 
 That's basically the whole algorithm. There are a couple of small tweaks that need to be made however.
 Taxes:
@@ -41,53 +48,115 @@ SIMPLE EXAMPLE
 
 A invests 100 in B, 300 in stocks, and holds no cash. B invests 200 in A, holds 100 in cash. Stocks then go up 10%.
 
-e = [[0, 300], [100, 0]]
-y = [1, 1.1]
-W = [[0, 100], [200, 0]]
-m = 0.005
-p = [0.01, 0]
-F = [10, 8]
-c = [300+100, 100+200] = [400, 300]
+    e = [[0, 300], [100, 0]]
+    y = [1, 1.1]
+    W = [[0, 100], [200, 0]]
+    m = 0.005
+    p = [0.01, 0]
+    F = [10, 8]
+    c = [300+100, 100+200] = [400, 300]
 
-Δ_a =
-0 * 0 + 300 * 0.1 +
-0(Δ_a/400 + 0.01 - 0.005) + 100(Δ_b/300 + 0 - 0.005) +
-(0 + 200) * 0.005 -
-10
+Finding Δ:
 
-Δ_a = 0 + 30 + 0 + (Δ_b/3 - 1/2) + 1 - 10
+    Δ_a =
+    0 * 0 + 300 * 0.1 +
+    0(Δ_a/400 + 0.01 - 0.005) + 100(Δ_b/300 + 0 - 0.005) +
+    (0 + 200) * 0.005 -
+    10
+
+    Δ_a = 0 + 30 + 0 + (Δ_b/3 - 1/2) + 1 - 10
     = 41/2 + Δ_b/3
 
-Δ_b = 
-100 * 0 + 0 * 0.1 +
-200(Δ_a/400 + 0.01 - 0.005) + 0(Δ_b/300 + 0 - 0.005) +
-(100 + 0) * 0.005 -
-8
+    Δ_b = 
+    100 * 0 + 0 * 0.1 +
+    200(Δ_a/400 + 0.01 - 0.005) + 0(Δ_b/300 + 0 - 0.005) +
+    (100 + 0) * 0.005 -
+    8
 
-Δ_b = 0 + 0 + (Δ_a/2 + 1) + 0 + 1/2 - 8
-    = Δ_a/2 - 9/2
+    Δ_b = 0 + 0 + (Δ_a/2 + 1) + 0 + 1/2 - 8
+        = Δ_a/2 - 13/2
 
-Δ_a = 41/2 + Δ_b/3
-Δ_b = Δ_a/2 - 9/2
+    Δ_a = 41/2 + Δ_b/3
+    Δ_b = Δ_a/2 - 13/2
 
 Solving these simultaneous equations gives:
 
-Δ_a = 22.8
-Δ_b = 6.9
+    Δ_a = 22
+    Δ_b = 4.5
 
 From this we can calculate the new investment sizes:
 
-e_1 = [[0, 330], [100, 0]]
-W_1 = W((Δ/c + p - m) + 1)
-W_1 = [[0((22.8/400 + 0.01 - 0.005) + 1), 100((6.9/300 + 0 - 0.005) + 1)],
-    [200((22.8/400 + 0.01 - 0.005) + 1)], [0((6.9/300 + 0 - 0.005) + 1)]]
-    = [[0, 101.8], [212.4, 0]]
+    e_1 = [[0, 330], [100, 0]]
+    W_1 = W((Δ/c + p - m) + 1)
+    W_1 = [[0((22/400 + 0.01 - 0.005) + 1), 100((4.5/300 + 0 - 0.005) + 1)],
+        [200((22/400 + 0.01 - 0.005) + 1), 0((4.5/300 + 0 - 0.005) + 1)]]
+        = [[0, 101], [212, 0]]
 
-So we end up with A having 101.8 invested in B, 330 invested in stocks, and 200 * 0.005 = 1 in cash (from the management fee).
-And B ends up with 212.4 invested in A, and 100 + 100*0.005 = 100.5 in cash.
+**Expected vs. Actual System Net Worth**
 
-You can see from this that the total amount of money in the system used to be 400. Now 18 has been paid as fixed costs, 30 was generated from stocks, and also A 'invented' 2 (200 * 0.01) via their ponzi factor. So you'd expect the net worth of the system to now be 450.
+1. Gross system assets:
+   - Starting total: 400
+   - Stock gain: +30
+   - Ponzi gain (A): +2  
+   → **Gross total = 432**
 
-However after all this we end up with:
-432.8 - 212.4 + 312.9 - 101.8 = 431.5
-So actually in this case we're missing 18.5, which means we'd need to give a 'tax rebate' to the banks.
+2. Fixed costs paid:
+   - A pays: 10
+   - B pays: 8  
+   → **Total fixed costs = 18**
+
+3. Expected net total:
+   432 − 18 = **414**
+
+4. Compare exogenous plus interbank balances: 422 − 212 + 304.5 − 101 = 413.5.
+
+**Result:** there is a 0.5 shortfall relative to the expected 414, so the system would owe a 0.5 ‘tax rebate’ to the banks.
+
+-----------------------------------------------
+
+## Example Using Bank Yield Instead of Δ
+
+We define each bank's yield:
+
+    y_A = (c_1_A / 400) * p_A
+    y_B = (c_1_B / 300) * p_B
+
+where c_1 = e·y_exo + W·(y_bank - m) + W·m - F, and y_bank = [y_A, y_B].
+
+Compute each term:
+
+- e·y_exo for A: 0×1 + 300×1.1 = 330
+- mgmt fee W·m for A: (0 + 100)×0.005 = 0.5
+- F_A = 10
+
+- e·y_exo for B: 100×1 + 0×1.1 = 100
+- mgmt fee W·m for B: (200 + 0)×0.005 = 1
+- F_B = 8
+
+Then the W·(y_bank - m) terms:
+
+- For A: 100×(y_B - 0.005)
+- For B: 200×(y_A - 0.005)
+
+So we get:
+
+    c_1_A = 330 + 100*(y_B - 0.005) + 1 - 10
+              = 321 + 100*(y_B-0.005)
+
+    c_1_B = 100 + 200*(y_A - 0.005) + 0.5 - 8
+              = 92.5 + 200*(y_A - 0.005)
+
+Yield equations:
+
+    y_A = ((321 + 100*(y_B-0.005)) / 400) * 1.01
+    y_B = ((92.5 + 200*(y_A - 0.005)) / 300) * 1
+
+Solving:
+
+    y_A = 1.06566
+    y_B = 1.01544
+
+Then the updated investment matrices are:
+
+    e₁ = [[0, 330], [100, 0]]
+    W₁ ≈ [[0, 101.54], [213.13, 0]]
