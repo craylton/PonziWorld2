@@ -27,6 +27,8 @@ type InvestmentRepository interface {
 	FindBySourceBankID(ctx context.Context, sourceBankID primitive.ObjectID) ([]models.Investment, error)
 	FindBySourceIdAndTargetId(ctx context.Context, sourceBankID, targetAssetId primitive.ObjectID) (*models.Investment, error)
 	CalculateActualCapital(ctx context.Context, bankID primitive.ObjectID) (int64, error)
+	UpdateAmount(ctx context.Context, sourceBankID, targetAssetId primitive.ObjectID, newAmount int64) error
+	DeleteBySourceIdAndTargetId(ctx context.Context, sourceBankID, targetAssetId primitive.ObjectID) error
 }
 
 // AssetTypeRepository defines the interface for asset type database operations
@@ -59,6 +61,7 @@ type PendingTransactionRepository interface {
 	Create(ctx context.Context, transaction *models.PendingTransactionResponse) error
 	FindBySourceBankID(ctx context.Context, sourceBankID primitive.ObjectID) ([]models.PendingTransactionResponse, error)
 	FindBySourceBankIDAndTargetAssetID(ctx context.Context, sourceBankID, assetID primitive.ObjectID) ([]models.PendingTransactionResponse, error)
+	FindAll(ctx context.Context) ([]models.PendingTransactionResponse, error)
 	SumPendingAmountBySourceBankIdAndTargetAssetId(ctx context.Context, sourceBankID, assetID primitive.ObjectID) (int64, error)
 	UpdateAmount(ctx context.Context, id primitive.ObjectID, newAmount int64) error
 	Delete(ctx context.Context, id primitive.ObjectID) error

@@ -1,6 +1,5 @@
 import React, { useCallback, useState } from 'react';
 import { AssetContext } from './AssetContextDefinition';
-import LoadingPopup from '../Dashboard/Assets/LoadingPopup';
 
 interface AssetProviderProps {
   children: React.ReactNode;
@@ -9,12 +8,7 @@ interface AssetProviderProps {
 
 export default function AssetProvider({ children, refreshBank }: AssetProviderProps) {
   const refreshCallbacks = React.useRef<Set<() => void>>(new Set());
-  
-  // Global loading popup state
-  const [loadingPopupOpen, setLoadingPopupOpen] = useState(false);
-  const [loadingStatus, setLoadingStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [loadingMessage, setLoadingMessage] = useState<string>('');
-  
+
   // Cash balance state
   const [cashBalance, setCashBalance] = useState<number>(0);
 
@@ -37,23 +31,11 @@ export default function AssetProvider({ children, refreshBank }: AssetProviderPr
     });
   }, []);
 
-  const showLoadingPopup = useCallback((status: 'loading' | 'success' | 'error', message?: string) => {
-    setLoadingStatus(status);
-    setLoadingMessage(message || '');
-    setLoadingPopupOpen(true);
-  }, []);
-
-  const hideLoadingPopup = useCallback(() => {
-    setLoadingPopupOpen(false);
-  }, []);
-
   const value = {
     refreshAssets,
     registerRefreshCallback,
     unregisterRefreshCallback,
     refreshBank,
-    showLoadingPopup,
-    hideLoadingPopup,
     cashBalance,
     setCashBalance,
   };
@@ -61,12 +43,6 @@ export default function AssetProvider({ children, refreshBank }: AssetProviderPr
   return (
     <AssetContext.Provider value={value}>
       {children}
-      <LoadingPopup
-        isOpen={loadingPopupOpen}
-        onClose={hideLoadingPopup}
-        status={loadingStatus}
-        message={loadingMessage}
-      />
     </AssetContext.Provider>
   );
 }

@@ -113,8 +113,8 @@ func TestPendingTransactionService_CreateTransactions(t *testing.T) {
 	t.Run("Valid sell transaction creation", func(t *testing.T) {
 		// Clear previous transactions
 		existingTransactions, _ := service.GetTransactionsByBuyerBankID(ctx, bank.Id, username)
-		for _, tx := range existingTransactions {
-			container.RepositoryContainer.PendingTransaction.Delete(ctx, tx.Id)
+		for _, transaction := range existingTransactions {
+			container.RepositoryContainer.PendingTransaction.Delete(ctx, transaction.Id)
 		}
 
 		err := service.CreateSellTransaction(ctx, bank.Id, assetType.Id, 500, username)
@@ -439,8 +439,8 @@ func TestPendingTransactionService_MultipleAssets(t *testing.T) {
 	t.Run("Create sell transactions for different assets", func(t *testing.T) {
 		// Clear previous transactions
 		existing, _ := service.GetTransactionsByBuyerBankID(ctx, bank.Id, username)
-		for _, tx := range existing {
-			container.RepositoryContainer.PendingTransaction.Delete(ctx, tx.Id)
+		for _, transaction := range existing {
+			container.RepositoryContainer.PendingTransaction.Delete(ctx, transaction.Id)
 		}
 		
 		// Create sell transactions for two assets
@@ -595,12 +595,12 @@ func TestPendingTransactionService_GetTransactionsByBankID(t *testing.T) {
 
 		// Verify transaction details
 		var found600, found400, foundCash bool
-		for _, tx := range transactions {
-			if tx.Amount == 600 && tx.TargetAssetId == assetType.Id {
+		for _, transaction := range transactions {
+			if transaction.Amount == 600 && transaction.TargetAssetId == assetType.Id {
 				found600 = true
-			} else if tx.Amount == 400 && tx.TargetAssetId == bank2.Id {
+			} else if transaction.Amount == 400 && transaction.TargetAssetId == bank2.Id {
 				found400 = true
-			} else if tx.Amount == -1000 && tx.TargetAssetId == cashAssetType.Id {
+			} else if transaction.Amount == -1000 && transaction.TargetAssetId == cashAssetType.Id {
 				foundCash = true
 			}
 		}
@@ -697,8 +697,8 @@ func TestPendingTransactionService_CreateBuyTransaction(t *testing.T) {
 	t.Run("Multiple buy transactions combine", func(t *testing.T) {
 		// Clear any existing transactions
 		existingTransactions, _ := service.GetTransactionsByBuyerBankID(ctx, bank.Id, username)
-		for _, tx := range existingTransactions {
-			container.RepositoryContainer.PendingTransaction.Delete(ctx, tx.Id)
+		for _, transaction := range existingTransactions {
+			container.RepositoryContainer.PendingTransaction.Delete(ctx, transaction.Id)
 		}
 
 		// Create first buy transaction
@@ -798,8 +798,8 @@ func TestPendingTransactionService_CreateSellTransaction(t *testing.T) {
 	t.Run("Multiple sell transactions combine", func(t *testing.T) {
 		// Clear any existing transactions
 		existingTransactions, _ := service.GetTransactionsByBuyerBankID(ctx, bank.Id, username)
-		for _, tx := range existingTransactions {
-			container.RepositoryContainer.PendingTransaction.Delete(ctx, tx.Id)
+		for _, transaction := range existingTransactions {
+			container.RepositoryContainer.PendingTransaction.Delete(ctx, transaction.Id)
 		}
 
 		// Create first sell transaction
@@ -951,8 +951,8 @@ func TestPendingTransactionService_BuyAndSellCombination(t *testing.T) {
 	t.Run("Sell then buy reduces sell amount", func(t *testing.T) {
 		// Clear previous transactions
 		existingTransactions, _ := service.GetTransactionsByBuyerBankID(ctx, bank.Id, username)
-		for _, tx := range existingTransactions {
-			container.RepositoryContainer.PendingTransaction.Delete(ctx, tx.Id)
+		for _, transaction := range existingTransactions {
+			container.RepositoryContainer.PendingTransaction.Delete(ctx, transaction.Id)
 		}
 
 		// Create sell transaction first
@@ -1009,8 +1009,8 @@ func TestPendingTransactionService_BuyAndSellCombination(t *testing.T) {
 	t.Run("Equal buy and sell cancel out", func(t *testing.T) {
 		// Clear previous transactions
 		existingTransactions, _ := service.GetTransactionsByBuyerBankID(ctx, bank.Id, username)
-		for _, tx := range existingTransactions {
-			container.RepositoryContainer.PendingTransaction.Delete(ctx, tx.Id)
+		for _, transaction := range existingTransactions {
+			container.RepositoryContainer.PendingTransaction.Delete(ctx, transaction.Id)
 		}
 
 		// Create buy transaction
@@ -1237,8 +1237,8 @@ func TestPendingTransactionService_DualTransactionSystem(t *testing.T) {
 	t.Run("Multiple transactions combine cash correctly", func(t *testing.T) {
 		// Clear any existing transactions
 		existing, _ := service.GetTransactionsByBuyerBankID(ctx, bank.Id, username)
-		for _, tx := range existing {
-			container.RepositoryContainer.PendingTransaction.Delete(ctx, tx.Id)
+		for _, transaction := range existing {
+			container.RepositoryContainer.PendingTransaction.Delete(ctx, transaction.Id)
 		}
 
 		// Create multiple buy transactions for different assets
@@ -1262,19 +1262,19 @@ func TestPendingTransactionService_DualTransactionSystem(t *testing.T) {
 		}
 
 		// Verify the cash transaction is properly combined
-		var cashTx *models.PendingTransactionResponse
+		var cashTransaction *models.PendingTransactionResponse
 		for i := range transactions {
 			if transactions[i].TargetAssetId == cashAssetType.Id {
-				cashTx = &transactions[i]
+				cashTransaction = &transactions[i]
 				break
 			}
 		}
 
-		if cashTx == nil {
+		if cashTransaction == nil {
 			t.Error("Expected to find combined cash transaction")
 		} else {
-			if cashTx.Amount != -500 {
-				t.Errorf("Expected combined cash transaction amount -500, got %d", cashTx.Amount)
+			if cashTransaction.Amount != -500 {
+				t.Errorf("Expected combined cash transaction amount -500, got %d", cashTransaction.Amount)
 			}
 		}
 	})
@@ -1282,8 +1282,8 @@ func TestPendingTransactionService_DualTransactionSystem(t *testing.T) {
 	t.Run("Buy and sell transactions net out correctly", func(t *testing.T) {
 		// Clear any existing transactions
 		existing, _ := service.GetTransactionsByBuyerBankID(ctx, bank.Id, username)
-		for _, tx := range existing {
-			container.RepositoryContainer.PendingTransaction.Delete(ctx, tx.Id)
+		for _, transaction := range existing {
+			container.RepositoryContainer.PendingTransaction.Delete(ctx, transaction.Id)
 		}
 
 		// Buy and then sell the same amount should result in no transactions
@@ -1310,8 +1310,8 @@ func TestPendingTransactionService_DualTransactionSystem(t *testing.T) {
 	t.Run("Cannot directly buy or sell cash", func(t *testing.T) {
 		// Clear any existing transactions
 		existing, _ := service.GetTransactionsByBuyerBankID(ctx, bank.Id, username)
-		for _, tx := range existing {
-			container.RepositoryContainer.PendingTransaction.Delete(ctx, tx.Id)
+		for _, transaction := range existing {
+			container.RepositoryContainer.PendingTransaction.Delete(ctx, transaction.Id)
 		}
 
 		// Attempting to buy cash should fail

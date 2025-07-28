@@ -8,6 +8,7 @@ import SettingsPanel from './SidePanel/Settings/SettingsPanel';
 import AssetSection from './Assets/AssetSection';
 import { makeAuthenticatedRequest } from '../auth';
 import { BankProvider } from '../contexts/BankContext';
+import LoadingProvider from '../contexts/LoadingContext';
 import type { Bank } from '../models/Bank';
 import type { Player } from '../models/Player';
 
@@ -84,43 +85,45 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   }
 
   return (
-    <div className="dashboard-root">
-      <DashboardHeader
-        currentDay={currentDay}
-        bankName={bank.bankName}
-        claimedCapital={bank.claimedCapital}
-        actualCapital={bank.actualCapital}
-        bankId={bank.id}
-      />
-      <div className="dashboard-layout">
-        <InvestorsPanel 
-          visible={isLeftPanelOpen} 
-          onClose={() => setIsLeftPanelOpen(false)}
+    <LoadingProvider>
+      <div className="dashboard-root">
+        <DashboardHeader
+          currentDay={currentDay}
+          bankName={bank.bankName}
+          claimedCapital={bank.claimedCapital}
+          actualCapital={bank.actualCapital}
+          bankId={bank.id}
         />
-        <main className="dashboard-main">
-          <InvestorsButton
-            isLeftPanelOpen={isLeftPanelOpen}
-            onClick={() => setIsLeftPanelOpen(!isLeftPanelOpen)}
+        <div className="dashboard-layout">
+          <InvestorsPanel
+            visible={isLeftPanelOpen}
+            onClose={() => setIsLeftPanelOpen(false)}
           />
-          <BankProvider bankId={bank.id}>
-            <AssetSection 
-              availableAssets={bank.availableAssets} 
-              onRefreshBank={async () => { await fetchBankData(); }}
+          <main className="dashboard-main">
+            <InvestorsButton
+              isLeftPanelOpen={isLeftPanelOpen}
+              onClick={() => setIsLeftPanelOpen(!isLeftPanelOpen)}
             />
-          </BankProvider>
+            <BankProvider bankId={bank.id}>
+              <AssetSection
+                availableAssets={bank.availableAssets}
+                onRefreshBank={async () => { await fetchBankData(); }}
+              />
+            </BankProvider>
 
-          <SettingsButton
-            isRightPanelOpen={isRightPanelOpen}
-            onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}
+            <SettingsButton
+              isRightPanelOpen={isRightPanelOpen}
+              onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}
+            />
+          </main>
+          <SettingsPanel
+            visible={isRightPanelOpen}
+            player={player}
+            onLogout={onLogout}
+            onClose={() => setIsRightPanelOpen(false)}
           />
-        </main>
-        <SettingsPanel
-          visible={isRightPanelOpen}
-          player={player}
-          onLogout={onLogout}
-          onClose={() => setIsRightPanelOpen(false)}
-        />
+        </div>
       </div>
-    </div>
+    </LoadingProvider>
   );
 }

@@ -1,6 +1,5 @@
 
 Next up:
-Apply pending transactions on new day
 Ensure currencies are stored in correct format
     Need to be displayed to the user as ints
     Need to be stored as floating points
@@ -8,6 +7,7 @@ Ensure currencies are stored in correct format
 Redesign header so that claimed and actual capitals are in same graph
 Somehow prevent services from being passed into other services
 Add a Net Worth thing in the header
+allow investing in other banks
 Show actual investors in the investors panel
 
 

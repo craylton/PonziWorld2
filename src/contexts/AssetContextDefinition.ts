@@ -5,9 +5,6 @@ interface AssetContextType {
   registerRefreshCallback: (callback: () => void) => void;
   unregisterRefreshCallback: (callback: () => void) => void;
   refreshBank?: () => Promise<void>;
-  // Global loading popup state
-  showLoadingPopup: (status: 'loading' | 'success' | 'error', message?: string) => void;
-  hideLoadingPopup: () => void;
   // Cash balance
   cashBalance: number;
   setCashBalance: (balance: number) => void;

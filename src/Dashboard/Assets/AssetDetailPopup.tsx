@@ -4,6 +4,7 @@ import { formatCurrency } from '../../utils/currency';
 import { makeAuthenticatedRequest } from '../../auth';
 import { useBankContext } from '../../contexts/useBankContext';
 import { useAssetContext } from '../../contexts/useAssetContext';
+import { useLoadingContext } from '../../contexts/useLoadingContext';
 import TransactionPopup from './TransactionPopup';
 import Popup from '../../components/Popup';
 import type { InvestmentDetailsResponse } from '../../models/AssetDetails';
@@ -21,7 +22,8 @@ export default function AssetDetailPopup({
   asset
 }: AssetDetailPopupProps) {
   const { bankId } = useBankContext();
-  const { refreshAssets, refreshBank, showLoadingPopup, cashBalance } = useAssetContext();
+  const { refreshAssets, refreshBank, cashBalance } = useAssetContext();
+  const { showLoadingPopup } = useLoadingContext();
   const [transactionPopupOpen, setTransactionPopupOpen] = useState(false);
   const [transactionType, setTransactionType] = useState<'buy' | 'sell'>('buy');
   const [chartData, setChartData] = useState<HistoricalPerformanceEntry[]>([]);
@@ -31,10 +33,10 @@ export default function AssetDetailPopup({
   // Fetch real historical performance data
   const fetchChartData = useCallback(async () => {
     if (!bankId || !asset.targetAssetId) return;
-    
+
     setIsLoadingChart(true);
     setChartError(null);
-    
+
     try {
       const response = await makeAuthenticatedRequest(
         `/api/historicalPerformance/asset/${asset.targetAssetId}/${bankId}`,
@@ -181,14 +183,14 @@ export default function AssetDetailPopup({
             <div style={{ textAlign: 'center', padding: '40px', color: '#d32f2f' }}>
               {chartError}
               <br />
-              <button 
+              <button
                 onClick={fetchChartData}
-                style={{ 
-                  marginTop: '10px', 
-                  padding: '8px 16px', 
-                  backgroundColor: '#1976d2', 
-                  color: 'white', 
-                  border: 'none', 
+                style={{
+                  marginTop: '10px',
+                  padding: '8px 16px',
+                  backgroundColor: '#1976d2',
+                  color: 'white',
+                  border: 'none',
                   borderRadius: '4px',
                   cursor: 'pointer'
                 }}

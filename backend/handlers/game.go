@@ -52,7 +52,7 @@ func (h *GameHandler) AdvanceToNextDay(w http.ResponseWriter, r *http.Request) {
 	// Use the request context for proper cancellation handling
 	ctx := r.Context()
 
-	newDay, err := h.gameService.NextDay(ctx)
+	newDay, err := h.gameService.AdvanceToNextDay(ctx)
 	if err != nil {
 		http.Error(w, "Failed to increment day", http.StatusInternalServerError)
 		return
