@@ -25,7 +25,7 @@ func TestGameService_NextDay(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("should create initial day 0 and increment to day 1", func(t *testing.T) {
-		day, err := container.ServiceContainer.Game.NextDay(ctx)
+		day, err := container.ServiceContainer.Game.AdvanceToNextDay(ctx)
 		if err != nil {
 			t.Fatalf("Failed to advance to next day: %v", err)
 		}
@@ -36,7 +36,7 @@ func TestGameService_NextDay(t *testing.T) {
 	})
 
 	t.Run("should increment existing day", func(t *testing.T) {
-		day, err := container.ServiceContainer.Game.NextDay(ctx)
+		day, err := container.ServiceContainer.Game.AdvanceToNextDay(ctx)
 		if err != nil {
 			t.Fatalf("Failed to advance to next day: %v", err)
 		}
@@ -112,7 +112,7 @@ func TestGameService_CurrentDay(t *testing.T) {
 		// Advance the game to day 5 by calling NextDay service directly
 		var finalDay int
 		for i := range 5 {
-			day, err := container.ServiceContainer.Game.NextDay(ctx)
+			day, err := container.ServiceContainer.Game.AdvanceToNextDay(ctx)
 			if err != nil {
 				t.Fatalf("Failed to advance to day %d: %v", i+1, err)
 			}
@@ -645,7 +645,7 @@ func TestNextDay_WithPendingTransactions(t *testing.T) {
 		}
 
 		// Advance to next day (this should process pending transactions)
-		day, err := container.ServiceContainer.Game.NextDay(ctx)
+		day, err := container.ServiceContainer.Game.AdvanceToNextDay(ctx)
 		if err != nil {
 			t.Fatal("Failed to advance to next day:", err)
 		}
