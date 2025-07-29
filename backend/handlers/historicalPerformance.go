@@ -7,16 +7,19 @@ import (
 	"ponziworld/backend/requestcontext"
 	"ponziworld/backend/services"
 
+	"github.com/rs/zerolog"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type HistoricalPerformanceHandler struct {
 	historicalPerformanceService *services.HistoricalPerformanceService
+	logger                       zerolog.Logger
 }
 
 func NewHistoricalPerformanceHandler(container *config.Container) *HistoricalPerformanceHandler {
 	return &HistoricalPerformanceHandler{
 		historicalPerformanceService: container.ServiceContainer.HistoricalPerformance,
+		logger:                       container.Logger,
 	}
 }
 
@@ -35,6 +38,7 @@ func (h *HistoricalPerformanceHandler) GetHistoricalPerformance(w http.ResponseW
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Authentication required"})
+		h.logger.Error().Msg("Username not found in context")
 		return
 	}
 
@@ -50,6 +54,7 @@ func (h *HistoricalPerformanceHandler) GetHistoricalPerformance(w http.ResponseW
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid bank ID"})
+		h.logger.Error().Err(err).Str("bankIdStr", bankIdStr).Msg("Invalid bank ID format")
 		return
 	}
 
@@ -73,6 +78,7 @@ func (h *HistoricalPerformanceHandler) GetHistoricalPerformance(w http.ResponseW
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
+		h.logger.Error().Err(err).Str("username", username).Str("bankId", bankId.Hex()).Msg("Failed to get historical performance")
 		return
 	}
 
@@ -94,6 +100,7 @@ func (h *HistoricalPerformanceHandler) GetAssetHistoricalPerformance(w http.Resp
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Authentication required"})
+		h.logger.Error().Msg("Username not found in context for GetAssetHistoricalPerformance")
 		return
 	}
 
@@ -109,6 +116,7 @@ func (h *HistoricalPerformanceHandler) GetAssetHistoricalPerformance(w http.Resp
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid target asset ID"})
+		h.logger.Error().Err(err).Str("targetAssetIdStr", targetAssetIdStr).Msg("Invalid target asset ID format")
 		return
 	}
 
@@ -124,6 +132,7 @@ func (h *HistoricalPerformanceHandler) GetAssetHistoricalPerformance(w http.Resp
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid source bank ID"})
+		h.logger.Error().Err(err).Str("sourceBankIdStr", sourceBankIdStr).Msg("Invalid source bank ID format")
 		return
 	}
 
@@ -153,6 +162,7 @@ func (h *HistoricalPerformanceHandler) GetAssetHistoricalPerformance(w http.Resp
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
+		h.logger.Error().Err(err).Str("username", username).Str("targetAssetId", targetAssetId.Hex()).Str("sourceBankId", sourceBankId.Hex()).Msg("Failed to get asset historical performance")
 		return
 	}
 

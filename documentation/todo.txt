@@ -9,6 +9,7 @@ Somehow prevent services from being passed into other services
 Add a Net Worth thing in the header
 allow investing in other banks
 Show actual investors in the investors panel
+Split into frontend repo and backend repo
 
 
 FUTURE THINGS:

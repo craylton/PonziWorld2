@@ -2,22 +2,26 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"ponziworld/backend/config"
 	"ponziworld/backend/services"
+
+	"github.com/rs/zerolog"
 )
 
 // AssetTypeHandler handles asset type-related requests
+
 type AssetTypeHandler struct {
 	assetTypeService *services.AssetTypeService
+	logger           zerolog.Logger
 }
 
 // NewAssetTypeHandler creates a new AssetTypeHandler
 func NewAssetTypeHandler(container *config.Container) *AssetTypeHandler {
 	return &AssetTypeHandler{
 		assetTypeService: container.ServiceContainer.AssetType,
+		logger:           container.Logger,
 	}
 }
 
@@ -26,6 +30,7 @@ func (h *AssetTypeHandler) GetAllAssetTypes(w http.ResponseWriter, r *http.Reque
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		h.logger.Error().Msg("Invalid method for GetAllAssetTypes")
 		return
 	}
 
@@ -35,9 +40,9 @@ func (h *AssetTypeHandler) GetAllAssetTypes(w http.ResponseWriter, r *http.Reque
 
 	assetTypes, err := h.assetTypeService.GetAllAssetTypes(ctx)
 	if err != nil {
-		log.Printf("Error getting asset types: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to retrieve asset types"})
+		h.logger.Error().Err(err).Msg("Failed to retrieve asset types")
 		return
 	}
 

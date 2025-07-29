@@ -7,17 +7,21 @@ import (
 	"ponziworld/backend/auth"
 	"ponziworld/backend/config"
 	"ponziworld/backend/services"
+
+	"github.com/rs/zerolog"
 )
 
 // LoginHandler handles login-related requests
 type LoginHandler struct {
 	authService *services.AuthService
+	logger      zerolog.Logger
 }
 
 // NewLoginHandler creates a new LoginHandler
 func NewLoginHandler(container *config.Container) *LoginHandler {
 	return &LoginHandler{
 		authService: container.ServiceContainer.Auth,
+		logger:      container.Logger,
 	}
 }
 
@@ -38,6 +42,7 @@ func (h *LoginHandler) LogIn(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
+		h.logger.Error().Err(err).Msg("Failed to decode login request body")
 		return
 	}
 	if req.Username == "" || req.Password == "" {
@@ -59,6 +64,7 @@ func (h *LoginHandler) LogIn(w http.ResponseWriter, r *http.Request) {
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
+		h.logger.Error().Err(err).Str("username", req.Username).Msg("Database error during login")
 		return
 	}
 
@@ -67,6 +73,7 @@ func (h *LoginHandler) LogIn(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to generate token"})
+		h.logger.Error().Err(err).Str("username", req.Username).Msg("Failed to generate JWT token")
 		return
 	}
 

@@ -39,6 +39,7 @@ func (h *BankHandler) GetBanks(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Authentication required"})
+		h.logger.Error().Msg("Username not found in context for GetBanks")
 		return
 	}
 
@@ -88,6 +89,7 @@ func (h *BankHandler) CreateBanks(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Authentication required"})
+		h.logger.Error().Msg("Username not found in context for CreateBanks")
 		return
 	}
 
@@ -100,6 +102,7 @@ func (h *BankHandler) CreateBanks(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
+		h.logger.Error().Err(err).Msg("Failed to decode create bank request body")
 		return
 	}
 
@@ -107,12 +110,14 @@ func (h *BankHandler) CreateBanks(w http.ResponseWriter, r *http.Request) {
 	if request.BankName == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Bank name is required"})
+		h.logger.Error().Str("username", username).Msg("Bank name is required")
 		return
 	}
 
 	if request.ClaimedCapital <= 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Claimed capital must be greater than 0"})
+		h.logger.Error().Str("username", username).Int64("claimedCapital", request.ClaimedCapital).Msg("Claimed capital must be greater than 0")
 		return
 	}
 

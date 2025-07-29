@@ -2,25 +2,27 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"ponziworld/backend/config"
 	"ponziworld/backend/models"
 	"ponziworld/backend/requestcontext"
 	"ponziworld/backend/services"
 
+	"github.com/rs/zerolog"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type PendingTransactionHandler struct {
 	pendingTransactionService *services.PendingTransactionService
 	bankService               *services.BankService
+	logger                    zerolog.Logger
 }
 
 func NewPendingTransactionHandler(container *config.Container) *PendingTransactionHandler {
 	return &PendingTransactionHandler{
 		pendingTransactionService: container.ServiceContainer.PendingTransaction,
 		bankService:               container.ServiceContainer.Bank,
+		logger:                    container.Logger,
 	}
 }
 
@@ -55,6 +57,7 @@ func (h *PendingTransactionHandler) GetPendingTransactions(w http.ResponseWriter
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Authentication required"})
+		h.logger.Error().Msg("Username not found in context for GetPendingTransactions")
 		return
 	}
 
@@ -70,13 +73,14 @@ func (h *PendingTransactionHandler) GetPendingTransactions(w http.ResponseWriter
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid bank ID format"})
+		h.logger.Error().Err(err).Str("bankIdStr", bankIdStr).Msg("Invalid bank ID format")
 		return
 	}
 
 	// Get pending transactions for the bank
 	transactions, err := h.pendingTransactionService.GetTransactionsByBuyerBankID(ctx, bankId, username)
 	if err != nil {
-		log.Printf("Error fetching pending transactions: %v", err)
+		h.logger.Error().Err(err).Str("username", username).Str("bankId", bankId.Hex()).Msg("Error fetching pending transactions")
 
 		switch err {
 		case services.ErrInvalidBankID:
@@ -122,6 +126,7 @@ func (h *PendingTransactionHandler) handleTransaction(
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Authentication required"})
+		h.logger.Error().Msg("Username not found in context for handleTransaction")
 		return
 	}
 
@@ -130,6 +135,7 @@ func (h *PendingTransactionHandler) handleTransaction(
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
+		h.logger.Error().Err(err).Msg("Failed to decode transaction request body")
 		return
 	}
 
@@ -138,6 +144,7 @@ func (h *PendingTransactionHandler) handleTransaction(
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid source bank ID format"})
+		h.logger.Error().Err(err).Str("sourceBankId", req.SourceBankId).Msg("Invalid source bank ID format")
 		return
 	}
 
@@ -146,6 +153,7 @@ func (h *PendingTransactionHandler) handleTransaction(
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid target asset ID format"})
+		h.logger.Error().Err(err).Str("targetAssetId", req.TargetAssetId).Msg("Invalid target asset ID format")
 		return
 	}
 
@@ -158,7 +166,7 @@ func (h *PendingTransactionHandler) handleTransaction(
 			username,
 		)
 		if err != nil {
-			log.Printf("Error creating buy transaction: %v", err)
+			h.logger.Error().Err(err).Str("username", username).Str("sourceBankId", sourceBankObjectID.Hex()).Str("targetAssetId", targetAssetObjectID.Hex()).Msg("Error creating buy transaction")
 			h.handleTransactionError(w, err)
 			return
 		}
@@ -176,7 +184,7 @@ func (h *PendingTransactionHandler) handleTransaction(
 			username,
 		)
 		if err != nil {
-			log.Printf("Error creating sell transaction: %v", err)
+			h.logger.Error().Err(err).Str("username", username).Str("sourceBankId", sourceBankObjectID.Hex()).Str("targetAssetId", targetAssetObjectID.Hex()).Msg("Error creating sell transaction")
 			h.handleTransactionError(w, err)
 			return
 		}
