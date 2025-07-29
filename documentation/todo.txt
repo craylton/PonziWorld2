@@ -13,8 +13,6 @@ Show actual investors in the investors panel
 
 FUTURE THINGS:
 
-Some logging would be nice
-
 Defensive programming when retrieving data from DB
     Documents could be the wrong shape
     even if my app always write the right shape

@@ -2,21 +2,24 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"ponziworld/backend/config"
 	"ponziworld/backend/requestcontext"
 	"ponziworld/backend/services"
+
+	"github.com/rs/zerolog"
 )
 
 type BankHandler struct {
 	bankService *services.BankService
+	logger      zerolog.Logger
 }
 
 func NewBankHandler(container *config.Container) *BankHandler {
 	return &BankHandler{
 		bankService: container.ServiceContainer.Bank,
+		logger:      container.Logger,
 	}
 }
 
@@ -42,7 +45,7 @@ func (h *BankHandler) GetBanks(w http.ResponseWriter, r *http.Request) {
 	// Get all banks by username
 	bankResponses, err := h.bankService.GetAllBanksByUsername(ctx, username)
 	if err != nil {
-		log.Printf("Error getting banks for username %s: %v", username, err)
+		h.logger.Error().Err(err).Str("username", username).Msg("Error getting banks")
 		if err == services.ErrPlayerNotFound {
 			w.WriteHeader(http.StatusNotFound)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Player not found"})
@@ -116,7 +119,7 @@ func (h *BankHandler) CreateBanks(w http.ResponseWriter, r *http.Request) {
 	// Create bank
 	bank, err := h.bankService.CreateBankForUsername(ctx, username, request.BankName, request.ClaimedCapital)
 	if err != nil {
-		log.Printf("Error creating bank for username %s: %v", username, err)
+		h.logger.Error().Err(err).Str("username", username).Str("bankName", request.BankName).Msg("Error creating bank")
 		if err == services.ErrPlayerNotFound {
 			w.WriteHeader(http.StatusNotFound)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Player not found"})

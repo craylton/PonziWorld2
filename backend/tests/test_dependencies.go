@@ -7,6 +7,7 @@ import (
 
 	"ponziworld/backend/config"
 	"ponziworld/backend/database"
+	"ponziworld/backend/logging"
 )
 
 // CreateTestDependencies creates handler dependencies for testing
@@ -20,7 +21,10 @@ func CreateTestDependencies(testName string) (*config.Container, error) {
 		return nil, fmt.Errorf("failed to connect to MongoDB: %w", err)
 	}
 
-	container := config.NewContainer(client, testDatabaseName)
+	// Create a logger for testing
+	logger := logging.NewLogger()
+
+	container := config.NewContainer(client, testDatabaseName, logger)
 
 	if err := database.EnsureAllIndexes(container.DatabaseConfig); err != nil {
 		return nil, fmt.Errorf("failed to ensure database indexes: %w", err)
