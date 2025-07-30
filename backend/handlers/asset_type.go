@@ -11,7 +11,6 @@ import (
 )
 
 // AssetTypeHandler handles asset type-related requests
-
 type AssetTypeHandler struct {
 	assetTypeService *services.AssetTypeService
 	logger           zerolog.Logger

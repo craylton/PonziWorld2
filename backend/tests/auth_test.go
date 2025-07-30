@@ -62,7 +62,7 @@ func TestJwtMiddleware(t *testing.T) {
 		username, _ := requestcontext.UsernameFromContext(r.Context())
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{"username": username})
-   })
+	})
 
 	t.Run("Valid token", func(t *testing.T) {
 		// Generate a valid token

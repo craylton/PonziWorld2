@@ -6,6 +6,7 @@ import (
 	"ponziworld/backend/models"
 	"ponziworld/backend/repositories"
 
+	"github.com/rs/zerolog"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -17,6 +18,7 @@ type GameService struct {
 	bankRepo               repositories.BankRepository
 	assetTypeRepo          repositories.AssetTypeRepository
 	playerRepo             repositories.PlayerRepository
+	Logger                 zerolog.Logger
 }
 
 func NewGameService(
@@ -26,6 +28,7 @@ func NewGameService(
 	bankRepo repositories.BankRepository,
 	assetTypeRepo repositories.AssetTypeRepository,
 	playerRepo repositories.PlayerRepository,
+	logger zerolog.Logger,
 ) *GameService {
 	return &GameService{
 		gameRepo:               gameRepo,
@@ -34,6 +37,7 @@ func NewGameService(
 		bankRepo:               bankRepo,
 		assetTypeRepo:          assetTypeRepo,
 		playerRepo:             playerRepo,
+		Logger:                 logger,
 	}
 }
 
@@ -111,21 +115,21 @@ func (s *GameService) ProcessPendingTransactions(ctx context.Context) error {
 		// Validate the pending transaction
 		err := s.validatePendingTransaction(ctx, &pendingTransaction, cashAssetType.Id)
 		if err != nil {
-			// Todo: log error
+			s.Logger.Error().Err(err).Msg("Failed to validate pending transaction")
 			continue
 		}
 
 		// Process the pending transaction
 		err = s.processSinglePendingTransaction(ctx, &pendingTransaction)
 		if err != nil {
-			// Todo: log error
+			s.Logger.Error().Err(err).Msg("Failed to process pending transaction")
 			continue
 		}
 
 		// Remove the processed pending transaction
 		err = s.pendingTransactionRepo.Delete(ctx, pendingTransaction.Id)
 		if err != nil {
-			// Todo: log error
+			s.Logger.Error().Err(err).Msg("Failed to delete pending transaction")
 			continue
 		}
 	}

@@ -23,7 +23,7 @@ func NewContainer(
 	}
 
 	repositoryContainer := NewRepositoryContainer(dbConfig.GetDatabase())
-	serviceContainer := NewServiceContainer(repositoryContainer)
+	serviceContainer := NewServiceContainer(repositoryContainer, logger)
 
 	return &Container{
 		DatabaseConfig:      dbConfig,
