@@ -1,10 +1,8 @@
 package main
 
 import (
-	"context"
 	"net/http"
 	"os"
-	"time"
 
 	"ponziworld/backend/config"
 	"ponziworld/backend/database"
@@ -14,7 +12,6 @@ import (
 )
 
 func main() {
-	// Initialize the logger first
 	logger := logging.NewLogger()
 
 	client, err := database.InitializeDatabaseConnection()
@@ -27,16 +24,9 @@ func main() {
 	container := config.NewContainer(client, databaseName, logger)
 	defer container.Close() // Ensure proper cleanup on exit
 
-	if err := database.EnsureAllIndexes(container.DatabaseConfig); err != nil {
-		logger.Fatal().Err(err).Msg("Failed to ensure database indexes")
-	}
-
-	// Initialize asset types on startup
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	if err := container.ServiceContainer.AssetType.EnsureAssetTypesExist(ctx); err != nil {
-		logger.Fatal().Err(err).Msg("Failed to initialize asset types")
+	err = database.EnsureDatabaseStructure(container.DatabaseConfig, container.ServiceContainer.AssetType)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Failed to ensure database structure")
 	}
 
 	mux := http.NewServeMux()

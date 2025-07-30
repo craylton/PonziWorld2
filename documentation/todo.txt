@@ -10,6 +10,7 @@ Add a Net Worth thing in the header
 allow investing in other banks
 Show actual investors in the investors panel
 Split into frontend repo and backend repo
+generate performance per asset type on new day
 
 
 FUTURE THINGS:
