@@ -2,21 +2,24 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"ponziworld/backend/config"
 	"ponziworld/backend/requestcontext"
 	"ponziworld/backend/services"
+
+	"github.com/rs/zerolog"
 )
 
 type BankHandler struct {
 	bankService *services.BankService
+	logger      zerolog.Logger
 }
 
 func NewBankHandler(container *config.Container) *BankHandler {
 	return &BankHandler{
 		bankService: container.ServiceContainer.Bank,
+		logger:      container.Logger,
 	}
 }
 
@@ -25,6 +28,7 @@ func (h *BankHandler) GetBanks(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		h.logger.Error().Msg("Invalid method for GetBanks")
 		return
 	}
 
@@ -36,20 +40,23 @@ func (h *BankHandler) GetBanks(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Authentication required"})
+		h.logger.Error().Msg("Username not found in context for GetBanks")
 		return
 	}
 
 	// Get all banks by username
 	bankResponses, err := h.bankService.GetAllBanksByUsername(ctx, username)
 	if err != nil {
-		log.Printf("Error getting banks for username %s: %v", username, err)
+		h.logger.Error().Err(err).Str("username", username).Msg("Error getting banks")
 		if err == services.ErrPlayerNotFound {
 			w.WriteHeader(http.StatusNotFound)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Player not found"})
+			h.logger.Error().Msg("Player not found for GetBanks")
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
+		h.logger.Error().Msg("Database error for GetBanks")
 		return
 	}
 
@@ -66,6 +73,7 @@ func (h *BankHandler) HandleBanks(w http.ResponseWriter, r *http.Request) {
 	default:
 		w.Header().Set("Allow", "GET, POST")
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		h.logger.Error().Msg("Invalid method for HandleBanks")
 	}
 }
 
@@ -74,6 +82,7 @@ func (h *BankHandler) CreateBanks(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		h.logger.Error().Msg("Invalid method for CreateBanks")
 		return
 	}
 
@@ -85,6 +94,7 @@ func (h *BankHandler) CreateBanks(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Authentication required"})
+		h.logger.Error().Msg("Username not found in context for CreateBanks")
 		return
 	}
 
@@ -97,6 +107,7 @@ func (h *BankHandler) CreateBanks(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
+		h.logger.Error().Err(err).Msg("Failed to decode create bank request body")
 		return
 	}
 
@@ -104,26 +115,30 @@ func (h *BankHandler) CreateBanks(w http.ResponseWriter, r *http.Request) {
 	if request.BankName == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Bank name is required"})
+		h.logger.Error().Str("username", username).Msg("Bank name is required")
 		return
 	}
 
 	if request.ClaimedCapital <= 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Claimed capital must be greater than 0"})
+		h.logger.Error().Str("username", username).Int64("claimedCapital", request.ClaimedCapital).Msg("Claimed capital must be greater than 0")
 		return
 	}
 
 	// Create bank
 	bank, err := h.bankService.CreateBankForUsername(ctx, username, request.BankName, request.ClaimedCapital)
 	if err != nil {
-		log.Printf("Error creating bank for username %s: %v", username, err)
+		h.logger.Error().Err(err).Str("username", username).Str("bankName", request.BankName).Msg("Error creating bank")
 		if err == services.ErrPlayerNotFound {
 			w.WriteHeader(http.StatusNotFound)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Player not found"})
+			h.logger.Error().Msg("Player not found for CreateBanks")
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
+		h.logger.Error().Msg("Database error for CreateBanks")
 		return
 	}
 

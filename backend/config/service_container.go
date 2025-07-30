@@ -2,6 +2,8 @@ package config
 
 import (
 	"ponziworld/backend/services"
+
+	"github.com/rs/zerolog"
 )
 
 type ServiceContainer struct {
@@ -15,7 +17,7 @@ type ServiceContainer struct {
 	PendingTransaction    *services.PendingTransactionService
 }
 
-func NewServiceContainer(repositoryContainer *RepositoryContainer) *ServiceContainer {
+func NewServiceContainer(repositoryContainer *RepositoryContainer, logger zerolog.Logger) *ServiceContainer {
 	authService := services.NewAuthService(repositoryContainer.Player)
 	bankService := services.NewBankService(
 		repositoryContainer.Player,
@@ -31,6 +33,7 @@ func NewServiceContainer(repositoryContainer *RepositoryContainer) *ServiceConta
 		repositoryContainer.Bank,
 		repositoryContainer.AssetType,
 		repositoryContainer.Player,
+		logger,
 	)
 	historicalPerformanceService := services.NewHistoricalPerformanceService(
 		bankService,

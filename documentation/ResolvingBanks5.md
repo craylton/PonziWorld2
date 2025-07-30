@@ -118,45 +118,45 @@ From this we can calculate the new investment sizes:
 
 We define each bank's yield:
 
-    y_A = (c_1_A / 400) * p_A
-    y_B = (c_1_B / 300) * p_B
+    y_A = c_1_A / 400
+    y_B = c_1_B / 300
 
-where c_1 = e·y_exo + W·(y_bank - m) + W·m - F, and y_bank = [y_A, y_B].
+where c_1 = e·y_exo + W·(y_bank + p - m) - F, and y_bank = [y_A, y_B].
 
 Compute each term:
 
 - e·y_exo for A: 0×1 + 300×1.1 = 330
-- mgmt fee W·m for A: (0 + 100)×0.005 = 0.5
 - F_A = 10
 
 - e·y_exo for B: 100×1 + 0×1.1 = 100
-- mgmt fee W·m for B: (200 + 0)×0.005 = 1
 - F_B = 8
 
 Then the W·(y_bank - m) terms:
 
-- For A: 100×(y_B - 0.005)
-- For B: 200×(y_A - 0.005)
+- For A: 100·(y_B - 0.005)
+- For B: 200·(y_A + 0.01 - 0.005)
 
 So we get:
 
-    c_1_A = 330 + 100*(y_B - 0.005) + 1 - 10
-              = 321 + 100*(y_B-0.005)
+    c_1_A = 330 + 100*(y_B - 0.005) - 10
+          = 320 + 100*(y_B - 0.005)
 
-    c_1_B = 100 + 200*(y_A - 0.005) + 0.5 - 8
-              = 92.5 + 200*(y_A - 0.005)
+    c_1_B = 100 + 200*(y_A + 0.01 - 0.005) - 8
+          = 92 + 200*(y_A + 0.005)
 
 Yield equations:
 
-    y_A = ((321 + 100*(y_B-0.005)) / 400) * 1.01
-    y_B = ((92.5 + 200*(y_A - 0.005)) / 300) * 1
+    y_A = (320 + 100*(y_B - 0.005)) / 400
+    y_B = (92 + 200*(y_A + 0.005)) / 300
 
 Solving:
 
-    y_A = 1.06566
-    y_B = 1.01544
+    y_A = 1.0515
+    y_B = 1.011
 
-Then the updated investment matrices are:
+Then after subtracting the fixed costs from cash, the updated investment matrices are:
 
-    e₁ = [[0, 330], [100, 0]]
-    W₁ ≈ [[0, 101.54], [213.13, 0]]
+    e₁ = [[-10, 330], [92, 0]]
+    W₁ ≈ [[0, 100.6], [211.3, 0]]
+
+So A's net worth has gone from 200 to 209.3. B's net worth went from 200 to 202.7. So overall 12 has been added to the system. Which is exactly what we expect, since 10 + 8 was paid in fixed costs and 30 was gained from stocks: 30-18 = 12.

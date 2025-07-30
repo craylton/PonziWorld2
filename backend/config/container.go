@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/rs/zerolog"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -8,11 +9,13 @@ type Container struct {
 	DatabaseConfig      *DatabaseConfig
 	ServiceContainer    *ServiceContainer
 	RepositoryContainer *RepositoryContainer
+	Logger              zerolog.Logger
 }
 
 func NewContainer(
 	client *mongo.Client,
 	databaseName string,
+	logger zerolog.Logger,
 ) *Container {
 	dbConfig := &DatabaseConfig{
 		DatabaseName: databaseName,
@@ -20,12 +23,13 @@ func NewContainer(
 	}
 
 	repositoryContainer := NewRepositoryContainer(dbConfig.GetDatabase())
-	serviceContainer := NewServiceContainer(repositoryContainer)
+	serviceContainer := NewServiceContainer(repositoryContainer, logger)
 
 	return &Container{
 		DatabaseConfig:      dbConfig,
 		ServiceContainer:    serviceContainer,
 		RepositoryContainer: repositoryContainer,
+		Logger:              logger,
 	}
 }
 

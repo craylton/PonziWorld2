@@ -8,16 +8,19 @@ import (
 	"ponziworld/backend/requestcontext"
 	"ponziworld/backend/services"
 
+	"github.com/rs/zerolog"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type InvestmentHandler struct {
 	investmentService *services.InvestmentService
+	logger            zerolog.Logger
 }
 
 func NewInvestmentHandler(container *config.Container) *InvestmentHandler {
 	return &InvestmentHandler{
 		investmentService: container.ServiceContainer.Investment,
+		logger:            container.Logger,
 	}
 }
 
@@ -26,13 +29,16 @@ func (h *InvestmentHandler) GetInvestmentDetails(w http.ResponseWriter, r *http.
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		h.logger.Error().Msg("Invalid method for GetInvestmentDetails")
 		return
 	}
 
 	// Get username from context
 	username, ok := requestcontext.UsernameFromContext(r.Context())
 	if !ok {
-		http.Error(w, "username not found in context", http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Authentication required"})
+		h.logger.Error().Msg("Username not found in context")
 		return
 	}
 
@@ -43,14 +49,18 @@ func (h *InvestmentHandler) GetInvestmentDetails(w http.ResponseWriter, r *http.
 	// Validate and convert targetAssetId
 	targetAssetId, err := primitive.ObjectIDFromHex(targetAssetIdStr)
 	if err != nil {
-		http.Error(w, "invalid asset ID", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid asset ID format"})
+		h.logger.Error().Err(err).Msg("Failed to convert targetAssetId")
 		return
 	}
 
 	// Validate and convert sourceBankId
 	sourceBankId, err := primitive.ObjectIDFromHex(sourceBankIdStr)
 	if err != nil {
-		http.Error(w, "invalid bank ID", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid bank ID format"})
+		h.logger.Error().Err(err).Msg("Failed to convert sourceBankId")
 		return
 	}
 
@@ -59,14 +69,19 @@ func (h *InvestmentHandler) GetInvestmentDetails(w http.ResponseWriter, r *http.
 	if err != nil {
 		switch err {
 		case services.ErrUnauthorized:
-			http.Error(w, "unauthorized access", http.StatusUnauthorized)
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized access"})
 		case services.ErrTargetAssetNotFound:
-			http.Error(w, "target asset not found", http.StatusNotFound)
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Target asset not found"})
 		case services.ErrBankNotFound:
-			http.Error(w, "bank not found", http.StatusNotFound)
+			w.WriteHeader(http.StatusNotFound)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Bank not found"})
 		default:
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Internal server error"})
 		}
+		h.logger.Error().Err(err).Msg("Failed to get investment details")
 		return
 	}
 

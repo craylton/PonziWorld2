@@ -1,40 +1,32 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"log"
 	"net/http"
 	"os"
-	"time"
 
 	"ponziworld/backend/config"
 	"ponziworld/backend/database"
+	"ponziworld/backend/logging"
 	"ponziworld/backend/middleware"
 	"ponziworld/backend/routes"
 )
 
 func main() {
+	logger := logging.NewLogger()
+
 	client, err := database.InitializeDatabaseConnection()
 	if err != nil {
-		log.Fatalf("Failed to connect to MongoDB: %v", err)
+		logger.Fatal().Err(err).Msg("Failed to connect to MongoDB")
 	}
 
 	databaseName := "ponziworld"
 
-	container := config.NewContainer(client, databaseName)
+	container := config.NewContainer(client, databaseName, logger)
 	defer container.Close() // Ensure proper cleanup on exit
 
-	if err := database.EnsureAllIndexes(container.DatabaseConfig); err != nil {
-		log.Fatalf("Failed to ensure database indexes: %v", err)
-	}
-
-	// Initialize asset types on startup
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	if err := container.ServiceContainer.AssetType.EnsureAssetTypesExist(ctx); err != nil {
-		log.Fatalf("Failed to initialize asset types: %v", err)
+	err = database.EnsureDatabaseStructure(container.DatabaseConfig, container.ServiceContainer.AssetType)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("Failed to ensure database structure")
 	}
 
 	mux := http.NewServeMux()
@@ -44,6 +36,10 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
-	fmt.Printf("Backend listening on :%s\n", port)
-	log.Fatal(http.ListenAndServe(":"+port, middleware.CorsMiddleware(mux)))
+	
+	logger.Info().Str("port", port).Msg("Backend listening")
+	
+	if err := http.ListenAndServe(":"+port, middleware.CorsMiddleware(mux)); err != nil {
+		logger.Fatal().Err(err).Msg("Server failed to start")
+	}
 }

@@ -50,13 +50,19 @@ func TestJwtAuth(t *testing.T) {
 }
 
 func TestJwtMiddleware(t *testing.T) {
-   // Create a test handler that the middleware will protect
-   testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	   // Extract username from context
-	   username, _ := requestcontext.UsernameFromContext(r.Context())
-	   w.Header().Set("Content-Type", "application/json")
-	   json.NewEncoder(w).Encode(map[string]string{"username": username})
-   })
+	// Create a test container with mock services
+	container, err := CreateTestDependencies("jwt_middleware")
+	if err != nil {
+		t.Fatalf("Failed to create test dependencies: %v", err)
+	}
+	defer CleanupTestDependencies(container)
+
+	// Create a test handler that the middleware will protect
+	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		username, _ := requestcontext.UsernameFromContext(r.Context())
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"username": username})
+	})
 
 	t.Run("Valid token", func(t *testing.T) {
 		// Generate a valid token
@@ -69,7 +75,7 @@ func TestJwtMiddleware(t *testing.T) {
 		req.Header.Set("Authorization", "Bearer "+token)
 		rec := httptest.NewRecorder()
 
-		middleware.JwtMiddleware(testHandler)(rec, req)
+		middleware.JwtMiddleware(testHandler, container.Logger)(rec, req)
 
 		if rec.Code != http.StatusOK {
 			t.Errorf("Expected status 200, got %d", rec.Code)
@@ -86,7 +92,7 @@ func TestJwtMiddleware(t *testing.T) {
 		req := httptest.NewRequest("GET", "/test", nil)
 		rec := httptest.NewRecorder()
 
-		middleware.JwtMiddleware(testHandler)(rec, req)
+		middleware.JwtMiddleware(testHandler, container.Logger)(rec, req)
 
 		if rec.Code != http.StatusUnauthorized {
 			t.Errorf("Expected status 401, got %d", rec.Code)
@@ -98,7 +104,7 @@ func TestJwtMiddleware(t *testing.T) {
 		req.Header.Set("Authorization", "Invalid token-format")
 		rec := httptest.NewRecorder()
 
-		middleware.JwtMiddleware(testHandler)(rec, req)
+		middleware.JwtMiddleware(testHandler, container.Logger)(rec, req)
 
 		if rec.Code != http.StatusUnauthorized {
 			t.Errorf("Expected status 401, got %d", rec.Code)
@@ -110,7 +116,7 @@ func TestJwtMiddleware(t *testing.T) {
 		req.Header.Set("Authorization", "Bearer invalid.token.here")
 		rec := httptest.NewRecorder()
 
-		middleware.JwtMiddleware(testHandler)(rec, req)
+		middleware.JwtMiddleware(testHandler, container.Logger)(rec, req)
 
 		if rec.Code != http.StatusUnauthorized {
 			t.Errorf("Expected status 401, got %d", rec.Code)
@@ -122,7 +128,7 @@ func TestJwtMiddleware(t *testing.T) {
 		req.Header.Set("Authorization", "Bearer ")
 		rec := httptest.NewRecorder()
 
-		middleware.JwtMiddleware(testHandler)(rec, req)
+		middleware.JwtMiddleware(testHandler, container.Logger)(rec, req)
 
 		if rec.Code != http.StatusUnauthorized {
 			t.Errorf("Expected status 401, got %d", rec.Code)

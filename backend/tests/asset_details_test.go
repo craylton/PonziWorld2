@@ -86,7 +86,7 @@ func TestAssetService_GetAssetDetails_ValidScenarios(t *testing.T) {
 		if len(assetDetails.HistoricalData) == 0 {
 			t.Errorf("Expected historical data, got empty array")
 		}
-		
+
 		// Verify historical data has 8 days
 		if len(assetDetails.HistoricalData) != 8 {
 			t.Errorf("Expected 8 days of historical data, got %d", len(assetDetails.HistoricalData))
@@ -110,7 +110,7 @@ func TestAssetService_GetAssetDetails_ValidScenarios(t *testing.T) {
 		if len(assetDetails.HistoricalData) != 8 {
 			t.Errorf("Expected 8 days of historical data, got %d", len(assetDetails.HistoricalData))
 		}
-		
+
 		// Verify historical data contains default values
 		for _, data := range assetDetails.HistoricalData {
 			if data.Value != 1000 { // DefaultPerformanceValue
@@ -119,7 +119,7 @@ func TestAssetService_GetAssetDetails_ValidScenarios(t *testing.T) {
 		}
 	})
 
-	//todo: This should neverr happen - revisit this and figure out what to do with it
+	//todo: This should never happen - revisit this and figure out what to do with it
 	t.Run("Asset with multiple pending transactions", func(t *testing.T) {
 		// Create multiple pending buy transactions
 		err = container.ServiceContainer.PendingTransaction.CreateBuyTransaction(ctx, bankID, *bondsAssetType, 200, testUsername)
@@ -341,7 +341,7 @@ func TestAssetService_GetAssetDetails_HistoricalDataGeneration(t *testing.T) {
 		// Verify days are in ascending order
 		for i := 1; i < len(assetDetails.HistoricalData); i++ {
 			if assetDetails.HistoricalData[i].Day <= assetDetails.HistoricalData[i-1].Day {
-				t.Errorf("Historical data days not in ascending order: %d <= %d", 
+				t.Errorf("Historical data days not in ascending order: %d <= %d",
 					assetDetails.HistoricalData[i].Day, assetDetails.HistoricalData[i-1].Day)
 			}
 		}
@@ -361,17 +361,17 @@ func TestAssetService_GetAssetDetails_HistoricalDataGeneration(t *testing.T) {
 
 		// Verify both calls return the same historical data
 		if len(assetDetails1.HistoricalData) != len(assetDetails2.HistoricalData) {
-			t.Errorf("Historical data length mismatch: %d vs %d", 
+			t.Errorf("Historical data length mismatch: %d vs %d",
 				len(assetDetails1.HistoricalData), len(assetDetails2.HistoricalData))
 		}
 
 		for i := 0; i < len(assetDetails1.HistoricalData); i++ {
 			if assetDetails1.HistoricalData[i].Day != assetDetails2.HistoricalData[i].Day {
-				t.Errorf("Historical data day mismatch at index %d: %d vs %d", 
+				t.Errorf("Historical data day mismatch at index %d: %d vs %d",
 					i, assetDetails1.HistoricalData[i].Day, assetDetails2.HistoricalData[i].Day)
 			}
 			if assetDetails1.HistoricalData[i].Value != assetDetails2.HistoricalData[i].Value {
-				t.Errorf("Historical data value mismatch at index %d: %d vs %d", 
+				t.Errorf("Historical data value mismatch at index %d: %d vs %d",
 					i, assetDetails1.HistoricalData[i].Value, assetDetails2.HistoricalData[i].Value)
 			}
 		}
@@ -388,7 +388,7 @@ func TestAssetService_GetAssetDetails_BankAsAsset(t *testing.T) {
 
 	ctx := context.Background()
 	timestamp := time.Now().Unix()
-	
+
 	// Create two players and their banks
 	investor1Username := fmt.Sprintf("investor1_%d", timestamp)
 	investor2Username := fmt.Sprintf("investor2_%d", timestamp)
@@ -475,7 +475,7 @@ func TestAssetService_GetAssetDetails_BankAsAsset(t *testing.T) {
 		if len(assetDetails.HistoricalData) != 8 {
 			t.Errorf("Expected 8 days of historical data, got %d", len(assetDetails.HistoricalData))
 		}
-		
+
 		// Verify historical data contains bank 2's performance data
 		// Historical data should have default values for bank 2
 		for i, data := range assetDetails.HistoricalData {

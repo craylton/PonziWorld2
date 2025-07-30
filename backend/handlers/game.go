@@ -6,23 +6,29 @@ import (
 
 	"ponziworld/backend/config"
 	"ponziworld/backend/services"
+
+	"github.com/rs/zerolog"
 )
 
 // BankHandler handles bank-related requests
 type GameHandler struct {
 	gameService *services.GameService
+	logger      zerolog.Logger
 }
 
 // NewBankHandler creates a new BankHandler
 func NewGameHandler(container *config.Container) *GameHandler {
 	return &GameHandler{
 		gameService: container.ServiceContainer.Game,
+		logger:      container.Logger,
 	}
 }
 
 func (h *GameHandler) GetCurrentDay(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		h.logger.Error().Msg("Invalid method for GetCurrentDay")
 		return
 	}
 
@@ -33,7 +39,9 @@ func (h *GameHandler) GetCurrentDay(w http.ResponseWriter, r *http.Request) {
 
 	currentDay, err := h.gameService.GetCurrentDay(ctx)
 	if err != nil {
-		http.Error(w, "Failed to get current day", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to get current day"})
+		h.logger.Error().Err(err).Msg("Failed to get current day")
 		return
 	}
 
@@ -43,7 +51,9 @@ func (h *GameHandler) GetCurrentDay(w http.ResponseWriter, r *http.Request) {
 
 func (h *GameHandler) AdvanceToNextDay(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
+		w.Header().Set("Allow", http.MethodPost)
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		h.logger.Error().Msg("Invalid method for AdvanceToNextDay")
 		return
 	}
 
@@ -54,7 +64,9 @@ func (h *GameHandler) AdvanceToNextDay(w http.ResponseWriter, r *http.Request) {
 
 	newDay, err := h.gameService.AdvanceToNextDay(ctx)
 	if err != nil {
-		http.Error(w, "Failed to increment day", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to increment day"})
+		h.logger.Error().Err(err).Msg("Failed to increment day")
 		return
 	}
 

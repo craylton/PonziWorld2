@@ -8,17 +8,21 @@ import (
 	"ponziworld/backend/config"
 	"ponziworld/backend/requestcontext"
 	"ponziworld/backend/services"
+
+	"github.com/rs/zerolog"
 )
 
 type PlayerHandler struct {
 	authService   *services.AuthService
 	playerService *services.PlayerService
+	logger        zerolog.Logger
 }
 
 func NewPlayerHandler(container *config.Container) *PlayerHandler {
 	return &PlayerHandler{
 		authService:   container.ServiceContainer.Auth,
 		playerService: container.ServiceContainer.Player,
+		logger:        container.Logger,
 	}
 }
 
@@ -27,6 +31,7 @@ func (h *PlayerHandler) CreateNewPlayer(w http.ResponseWriter, r *http.Request) 
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		h.logger.Error().Msg("Invalid method for CreateNewPlayer")
 		return
 	}
 
@@ -40,6 +45,7 @@ func (h *PlayerHandler) CreateNewPlayer(w http.ResponseWriter, r *http.Request) 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request body"})
+		h.logger.Error().Err(err).Msg("Failed to decode request body for CreateNewPlayer")
 		return
 	}
 
@@ -50,6 +56,7 @@ func (h *PlayerHandler) CreateNewPlayer(w http.ResponseWriter, r *http.Request) 
 	if req.Username == "" || req.Password == "" || req.BankName == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Username, password, and bank name required"})
+		h.logger.Error().Msg("Username, password, or bank name is empty")
 		return
 	}
 
@@ -61,10 +68,12 @@ func (h *PlayerHandler) CreateNewPlayer(w http.ResponseWriter, r *http.Request) 
 		if err == services.ErrUsernameExists {
 			w.WriteHeader(http.StatusBadRequest)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Username already exists"})
+			h.logger.Error().Err(err).Str("username", req.Username).Msg("Username already exists")
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create player"})
+		h.logger.Error().Err(err).Msg("Failed to create player")
 		return
 	}
 
@@ -76,6 +85,7 @@ func (h *PlayerHandler) GetPlayer(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		h.logger.Error().Msg("Invalid method for GetPlayer")
 		return
 	}
 
@@ -87,6 +97,7 @@ func (h *PlayerHandler) GetPlayer(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Username not found in token"})
+		h.logger.Error().Msg("Username not found in context")
 		return
 	}
 
@@ -94,6 +105,7 @@ func (h *PlayerHandler) GetPlayer(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to fetch player data"})
+		h.logger.Error().Err(err).Msg("Failed to fetch player data")
 		return
 	}
 

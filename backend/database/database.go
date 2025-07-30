@@ -4,6 +4,8 @@ import (
 	"context"
 	"log"
 	"os"
+	"ponziworld/backend/config"
+	"ponziworld/backend/services"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -30,4 +32,19 @@ func InitializeDatabaseConnection() (*mongo.Client, error) {
 		return nil, err
 	}
 	return client, nil
+}
+
+func EnsureDatabaseStructure(dbConfig *config.DatabaseConfig, assetTypeService *services.AssetTypeService) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := EnsureAllIndexes(dbConfig); err != nil {
+		return err
+	}
+
+	if err := assetTypeService.EnsureAssetTypesExist(ctx); err != nil {
+		return err
+	}
+
+	return nil
 }
