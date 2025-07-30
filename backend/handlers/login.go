@@ -30,6 +30,7 @@ func (h *LoginHandler) LogIn(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		h.logger.Error().Msg("Invalid method for LogIn")
 		return
 	}
 
@@ -48,6 +49,7 @@ func (h *LoginHandler) LogIn(w http.ResponseWriter, r *http.Request) {
 	if req.Username == "" || req.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Username and password required"})
+		h.logger.Error().Msg("Username or password is empty in login request")
 		return
 	}
 
@@ -60,6 +62,7 @@ func (h *LoginHandler) LogIn(w http.ResponseWriter, r *http.Request) {
 		if err == services.ErrInvalidCredentials {
 			w.WriteHeader(http.StatusUnauthorized)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Invalid username or password"})
+			h.logger.Error().Msg("Invalid credentials for login")
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)

@@ -8,15 +8,18 @@ import (
 	"ponziworld/backend/auth"
 	"ponziworld/backend/requestcontext"
 	"ponziworld/backend/services"
+
+	"github.com/rs/zerolog"
 )
 
 // validateJwt extracts and validates JWT token from request, returns username
-func validateJwt(w http.ResponseWriter, r *http.Request) (string, bool) {
+func validateJwt(w http.ResponseWriter, r *http.Request, logger zerolog.Logger) (string, bool) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Authorization header required"})
+		logger.Error().Msg("Authorization header required")
 		return "", false
 	}
 
@@ -25,6 +28,7 @@ func validateJwt(w http.ResponseWriter, r *http.Request) (string, bool) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Bearer token required"})
+		logger.Error().Msg("Bearer token required")
 		return "", false
 	}
 
@@ -33,6 +37,7 @@ func validateJwt(w http.ResponseWriter, r *http.Request) (string, bool) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid token"})
+		logger.Error().Err(err).Msg("Failed to validate token")
 		return "", false
 	}
 
@@ -40,9 +45,9 @@ func validateJwt(w http.ResponseWriter, r *http.Request) (string, bool) {
 }
 
 // JwtMiddleware validates JWT for protected routes
-func JwtMiddleware(next http.HandlerFunc) http.HandlerFunc {
+func JwtMiddleware(next http.HandlerFunc, logger zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		username, ok := validateJwt(w, r)
+		username, ok := validateJwt(w, r, logger)
 		if !ok {
 			return
 		}
@@ -54,9 +59,9 @@ func JwtMiddleware(next http.HandlerFunc) http.HandlerFunc {
 }
 
 // AdminJwtMiddleware validates that the user is an admin
-func AdminJwtMiddleware(next http.HandlerFunc, authService *services.AuthService) http.HandlerFunc {
+func AdminJwtMiddleware(next http.HandlerFunc, authService *services.AuthService, logger zerolog.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		username, ok := validateJwt(w, r)
+		username, ok := validateJwt(w, r, logger)
 		if !ok {
 			return
 		}
@@ -69,6 +74,7 @@ func AdminJwtMiddleware(next http.HandlerFunc, authService *services.AuthService
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusInternalServerError)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Failed to verify admin status"})
+			logger.Error().Err(err).Msg("Failed to verify admin status")
 			return
 		}
 
@@ -76,6 +82,7 @@ func AdminJwtMiddleware(next http.HandlerFunc, authService *services.AuthService
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusForbidden)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Admin access required"})
+			logger.Error().Msg("Admin access required")
 			return
 		}
 

@@ -28,6 +28,7 @@ func (h *BankHandler) GetBanks(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		h.logger.Error().Msg("Invalid method for GetBanks")
 		return
 	}
 
@@ -50,10 +51,12 @@ func (h *BankHandler) GetBanks(w http.ResponseWriter, r *http.Request) {
 		if err == services.ErrPlayerNotFound {
 			w.WriteHeader(http.StatusNotFound)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Player not found"})
+			h.logger.Error().Msg("Player not found for GetBanks")
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
+		h.logger.Error().Msg("Database error for GetBanks")
 		return
 	}
 
@@ -70,6 +73,7 @@ func (h *BankHandler) HandleBanks(w http.ResponseWriter, r *http.Request) {
 	default:
 		w.Header().Set("Allow", "GET, POST")
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		h.logger.Error().Msg("Invalid method for HandleBanks")
 	}
 }
 
@@ -78,6 +82,7 @@ func (h *BankHandler) CreateBanks(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		h.logger.Error().Msg("Invalid method for CreateBanks")
 		return
 	}
 
@@ -128,10 +133,12 @@ func (h *BankHandler) CreateBanks(w http.ResponseWriter, r *http.Request) {
 		if err == services.ErrPlayerNotFound {
 			w.WriteHeader(http.StatusNotFound)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Player not found"})
+			h.logger.Error().Msg("Player not found for CreateBanks")
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Database error"})
+		h.logger.Error().Msg("Database error for CreateBanks")
 		return
 	}
 

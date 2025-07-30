@@ -28,6 +28,7 @@ func (h *HistoricalPerformanceHandler) GetHistoricalPerformance(w http.ResponseW
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		h.logger.Error().Msg("Invalid method for GetHistoricalPerformance")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -47,6 +48,7 @@ func (h *HistoricalPerformanceHandler) GetHistoricalPerformance(w http.ResponseW
 	if bankIdStr == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Bank ID required"})
+		h.logger.Error().Msg("Bank ID not provided in request")
 		return
 	}
 
@@ -64,16 +66,19 @@ func (h *HistoricalPerformanceHandler) GetHistoricalPerformance(w http.ResponseW
 		if err == services.ErrPlayerNotFound {
 			w.WriteHeader(http.StatusNotFound)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Player not found"})
+			h.logger.Error().Msg("Player not found for GetHistoricalPerformance")
 			return
 		}
 		if err == services.ErrBankNotFound {
 			w.WriteHeader(http.StatusNotFound)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Bank not found"})
+			h.logger.Error().Msg("Bank not found for GetHistoricalPerformance")
 			return
 		}
 		if err == services.ErrUnauthorized {
 			w.WriteHeader(http.StatusUnauthorized)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized: You can only view your own bank's performance history"})
+			h.logger.Error().Msg("Unauthorized access for GetHistoricalPerformance")
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
@@ -90,6 +95,7 @@ func (h *HistoricalPerformanceHandler) GetAssetHistoricalPerformance(w http.Resp
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		h.logger.Error().Msg("Invalid method for GetAssetHistoricalPerformance")
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -109,6 +115,7 @@ func (h *HistoricalPerformanceHandler) GetAssetHistoricalPerformance(w http.Resp
 	if targetAssetIdStr == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Target asset ID required"})
+		h.logger.Error().Msg("Target asset ID not provided in request")
 		return
 	}
 
@@ -125,6 +132,7 @@ func (h *HistoricalPerformanceHandler) GetAssetHistoricalPerformance(w http.Resp
 	if sourceBankIdStr == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Source bank ID required"})
+		h.logger.Error().Msg("Source bank ID not provided in request")
 		return
 	}
 
@@ -148,16 +156,19 @@ func (h *HistoricalPerformanceHandler) GetAssetHistoricalPerformance(w http.Resp
 		if err == services.ErrPlayerNotFound {
 			w.WriteHeader(http.StatusNotFound)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Player not found"})
+			h.logger.Error().Msg("Player not found for GetAssetHistoricalPerformance")
 			return
 		}
 		if err == services.ErrBankNotFound {
 			w.WriteHeader(http.StatusNotFound)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Bank not found"})
+			h.logger.Error().Msg("Bank not found for GetAssetHistoricalPerformance")
 			return
 		}
 		if err == services.ErrUnauthorized {
 			w.WriteHeader(http.StatusUnauthorized)
 			json.NewEncoder(w).Encode(map[string]string{"error": "Unauthorized: You can only view performance history for your own banks"})
+			h.logger.Error().Msg("Unauthorized access for GetAssetHistoricalPerformance")
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)

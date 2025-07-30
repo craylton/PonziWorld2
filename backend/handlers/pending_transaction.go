@@ -46,6 +46,7 @@ func (h *PendingTransactionHandler) GetPendingTransactions(w http.ResponseWriter
 	if r.Method != http.MethodGet {
 		w.Header().Set("Allow", http.MethodGet)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		h.logger.Error().Msg("Invalid method for GetPendingTransactions")
 		return
 	}
 
@@ -66,6 +67,7 @@ func (h *PendingTransactionHandler) GetPendingTransactions(w http.ResponseWriter
 	if bankIdStr == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Bank ID required"})
+		h.logger.Error().Msg("Bank ID not provided in request for GetPendingTransactions")
 		return
 	}
 
@@ -115,6 +117,7 @@ func (h *PendingTransactionHandler) handleTransaction(
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		h.logger.Error().Msg("Invalid method for handleTransaction")
 		return
 	}
 
