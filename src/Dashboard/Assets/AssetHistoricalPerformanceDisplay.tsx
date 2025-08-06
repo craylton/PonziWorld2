@@ -14,14 +14,14 @@ export default function AssetHistoricalPerformanceDisplay({ asset }: AssetHistor
   const historicalValues = asset.historicalData.map(entry => entry.value);
 
   const numValues = historicalValues.length;
+  
+  // historicalValues are already percentages
   const oneDayChange = numValues >= 2
-    ? ((historicalValues[numValues - 1] - historicalValues[numValues - 2])
-      / historicalValues[numValues - 2]) * 100
+    ? historicalValues[numValues - 1] - historicalValues[numValues - 2]
     : 0;
 
   const sevenDayChange = numValues >= 8
-    ? ((historicalValues[numValues - 1] - historicalValues[numValues - 8])
-      / historicalValues[numValues - 8]) * 100
+    ? historicalValues[numValues - 1] - historicalValues[numValues - 8]
     : 0;
 
   const getPercentageClass = (change: number) => {
