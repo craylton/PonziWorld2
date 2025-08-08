@@ -4,7 +4,7 @@ import Popup from '../../components/Popup';
 interface TransactionPopupProps {
     isOpen: boolean;
     onClose: () => void;
-    assetType: string;
+    assetName: string;
     transactionType: 'buy' | 'sell';
     currentHoldings?: number;
     maxBuyAmount?: number;
@@ -14,7 +14,7 @@ interface TransactionPopupProps {
 export default function TransactionPopup({
     isOpen,
     onClose,
-    assetType,
+    assetName,
     transactionType,
     currentHoldings = 0,
     maxBuyAmount = 0,
@@ -24,7 +24,7 @@ export default function TransactionPopup({
     const [error, setError] = useState<string>('');
     const [sellAll, setSellAll] = useState<boolean>(false);
 
-    const title = transactionType === 'buy' ? `Buy ${assetType}` : `Sell ${assetType}`;
+    const title = transactionType === 'buy' ? `Buy ${assetName}` : `Sell ${assetName}`;
 
     // Reset form when popup opens/closes
     useEffect(() => {

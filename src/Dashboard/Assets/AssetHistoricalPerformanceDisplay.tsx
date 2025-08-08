@@ -5,13 +5,13 @@ import AssetSummaryChart from './AssetSummaryChart';
 import AssetDetailPopup from './AssetDetailPopup';
 
 interface AssetHistoricalPerformanceDisplayProps {
-  asset: InvestmentDetailsResponse;
+  investment: InvestmentDetailsResponse;
 }
 
-export default function AssetHistoricalPerformanceDisplay({ asset }: AssetHistoricalPerformanceDisplayProps) {
+export default function AssetHistoricalPerformanceDisplay({ investment }: AssetHistoricalPerformanceDisplayProps) {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  const historicalValues = asset.historicalData.map(entry => entry.value);
+  const historicalValues = investment.historicalData.map(entry => entry.value);
 
   const numValues = historicalValues.length;
   
@@ -59,7 +59,7 @@ export default function AssetHistoricalPerformanceDisplay({ asset }: AssetHistor
       <AssetDetailPopup
         isOpen={isPopupOpen}
         onClose={handleClosePopup}
-        asset={asset}
+        investment={investment}
       />
     </>
   );

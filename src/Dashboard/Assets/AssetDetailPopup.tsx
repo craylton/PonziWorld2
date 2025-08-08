@@ -13,13 +13,13 @@ import type { HistoricalPerformanceEntry } from '../../models/HistoricalPerforma
 interface AssetDetailPopupProps {
   isOpen: boolean;
   onClose: () => void;
-  asset: InvestmentDetailsResponse;
+  investment: InvestmentDetailsResponse;
 }
 
 export default function AssetDetailPopup({
   isOpen,
   onClose,
-  asset
+  investment
 }: AssetDetailPopupProps) {
   const { bankId } = useBankContext();
   const { refreshAssets, refreshBank, cashBalance } = useAssetContext();
@@ -32,14 +32,14 @@ export default function AssetDetailPopup({
 
   // Fetch real historical performance data
   const fetchChartData = useCallback(async () => {
-    if (!bankId || !asset.targetAssetId) return;
+    if (!bankId || !investment.targetAssetId) return;
 
     setIsLoadingChart(true);
     setChartError(null);
 
     try {
       const response = await makeAuthenticatedRequest(
-        `/api/historicalPerformance/asset/${asset.targetAssetId}/${bankId}`,
+        `/api/historicalPerformance/asset/${investment.targetAssetId}/${bankId}`,
         {
           method: 'GET',
         }
@@ -64,17 +64,17 @@ export default function AssetDetailPopup({
     } finally {
       setIsLoadingChart(false);
     }
-  }, [bankId, asset.targetAssetId]);
+  }, [bankId, investment.targetAssetId]);
 
   // Fetch data when popup opens or key identifiers change
   useEffect(() => {
-    if (isOpen && bankId && asset.targetAssetId) {
+    if (isOpen && bankId && investment.targetAssetId) {
       // Only fetch if we don't already have data for this asset
       setChartData([]);
       setChartError(null);
       fetchChartData();
     }
-  }, [isOpen, bankId, asset.targetAssetId, fetchChartData]);
+  }, [isOpen, bankId, investment.targetAssetId, fetchChartData]);
 
   // Functions for Buy/Sell actions
   const handleBuy = () => {
@@ -103,7 +103,7 @@ export default function AssetDetailPopup({
         },
         body: JSON.stringify({
           sourceBankId: bankId,
-          targetAssetId: asset.targetAssetId,
+          targetAssetId: investment.targetAssetId,
           amount,
         }),
       });
@@ -134,7 +134,7 @@ export default function AssetDetailPopup({
     setTransactionPopupOpen(false);
   };
 
-  const hasInvestmentOrPending = asset.investedAmount > 0 || asset.pendingAmount !== 0;
+  const hasInvestmentOrPending = investment.investedAmount > 0 || investment.pendingAmount !== 0;
 
   const footer = hasInvestmentOrPending ? (
     <>
@@ -164,14 +164,14 @@ export default function AssetDetailPopup({
     <>
       <Popup
         isOpen={isOpen}
-        title={`${asset.name} Details`}
+        title={`${investment.targetAssetName} Details`}
         onClose={onClose}
         footer={footer}
         className="asset-detail-popup"
       >
-        {asset.investedAmount > 0 && (
+        {investment.investedAmount > 0 && (
           <div className="popup__value">
-            {formatCurrency(asset.investedAmount)}
+            {formatCurrency(investment.investedAmount)}
           </div>
         )}
         <div className="popup__chart">
@@ -201,7 +201,7 @@ export default function AssetDetailPopup({
           ) : chartData.length > 0 ? (
             <LineGraph
               data={chartData}
-              title={asset.name}
+              title={investment.targetAssetName}
               formatTooltip={(value) => `${value}%`}
               formatYAxisTick={(value) => `${value}%`}
             />
@@ -215,9 +215,9 @@ export default function AssetDetailPopup({
       <TransactionPopup
         isOpen={transactionPopupOpen}
         onClose={handleTransactionClose}
-        assetType={asset.name}
+        assetName={investment.targetAssetName}
         transactionType={transactionType}
-        currentHoldings={asset.investedAmount + asset.pendingAmount}
+        currentHoldings={investment.investedAmount + investment.pendingAmount}
         maxBuyAmount={cashBalance}
         onConfirm={handleTransactionConfirm}
       />

@@ -3,17 +3,17 @@ import './AssetList.css';
 import type { InvestmentDetailsResponse } from '../../models/AssetDetails';
 
 interface AssetSummaryProps {
-  asset: InvestmentDetailsResponse;
+  investment: InvestmentDetailsResponse;
 }
 
-export default function UninvestedAssetSummary({ asset }: AssetSummaryProps) {
+export default function UninvestedAssetSummary({ investment }: AssetSummaryProps) {
   return (
     <>
       <div className="asset-list__item">
         <div className="asset-list__content">
-          <div className="asset-list__type">{asset.name}</div>
+          <div className="asset-list__type">{investment.targetAssetName}</div>
         </div>
-        <AssetHistoricalPerformanceDisplay asset={asset} />
+        <AssetHistoricalPerformanceDisplay investment={investment} />
       </div>
     </>
   );
