@@ -15,18 +15,18 @@ interface AssetSummaryProps {
 export default function AssetSummary({ availableAsset }: AssetSummaryProps) {
     const { bankId } = useBankContext();
     const { registerRefreshCallback, unregisterRefreshCallback } = useAssetContext();
-    const [assetDetails, setAssetDetails] = useState<InvestmentDetailsResponse | null>(null);
+    const [investmentDetails, setInvestmentDetails] = useState<InvestmentDetailsResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     const fetchAssetDetails = useCallback(async () => {
         setIsLoading(true);
         try {
             const response = await makeAuthenticatedRequest(
-                `/api/investment/${availableAsset.assetTypeId}/${bankId}`
+                `/api/investment/${availableAsset.assetId}/${bankId}`
             );
             if (response.ok) {
                 const data: InvestmentDetailsResponse = await response.json();
-                setAssetDetails(data);
+                setInvestmentDetails(data);
             } else {
                 console.error('Failed to fetch asset details for asset:', availableAsset.assetName);
             }
@@ -35,7 +35,7 @@ export default function AssetSummary({ availableAsset }: AssetSummaryProps) {
         } finally {
             setIsLoading(false);
         }
-    }, [availableAsset.assetTypeId, bankId, availableAsset.assetName]);
+    }, [availableAsset.assetId, bankId, availableAsset.assetName]);
 
     useEffect(() => {
         fetchAssetDetails();
@@ -49,7 +49,7 @@ export default function AssetSummary({ availableAsset }: AssetSummaryProps) {
         };
     }, [registerRefreshCallback, unregisterRefreshCallback, fetchAssetDetails]);
 
-    if (isLoading || !assetDetails) {
+    if (isLoading || !investmentDetails) {
         return (
             <div className="asset-list__item">
                 <div className="asset-list__content">
@@ -60,13 +60,13 @@ export default function AssetSummary({ availableAsset }: AssetSummaryProps) {
         );
     }
 
-    if (assetDetails.name === 'Cash') {
-        return <CashAssetSummary asset={assetDetails} />;
+    if (investmentDetails.targetAssetName === 'Cash') {
+        return <CashAssetSummary investment={investmentDetails} />;
     }
 
     return availableAsset.isInvestedOrPending ? (
-        <InvestedAssetSummary asset={assetDetails!} />
+        <InvestedAssetSummary investment={investmentDetails!} />
     ) : (
-        <UninvestedAssetSummary asset={assetDetails!} />
+        <UninvestedAssetSummary investment={investmentDetails!} />
     );
 }
