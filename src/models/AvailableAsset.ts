@@ -1,5 +1,5 @@
 export interface AvailableAsset {
-    assetTypeId: string;
+    assetId: string;
     assetName: string;
     isInvestedOrPending: boolean;
 }

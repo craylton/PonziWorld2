@@ -22,7 +22,7 @@ export default function AssetSummary({ availableAsset }: AssetSummaryProps) {
         setIsLoading(true);
         try {
             const response = await makeAuthenticatedRequest(
-                `/api/investment/${availableAsset.assetTypeId}/${bankId}`
+                `/api/investment/${availableAsset.assetId}/${bankId}`
             );
             if (response.ok) {
                 const data: InvestmentDetailsResponse = await response.json();
@@ -35,7 +35,7 @@ export default function AssetSummary({ availableAsset }: AssetSummaryProps) {
         } finally {
             setIsLoading(false);
         }
-    }, [availableAsset.assetTypeId, bankId, availableAsset.assetName]);
+    }, [availableAsset.assetId, bankId, availableAsset.assetName]);
 
     useEffect(() => {
         fetchAssetDetails();
