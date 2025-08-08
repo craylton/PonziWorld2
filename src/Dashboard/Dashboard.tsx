@@ -98,6 +98,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
           <InvestorsPanel
             visible={isLeftPanelOpen}
             onClose={() => setIsLeftPanelOpen(false)}
+            investors={bank.investors}
           />
           <main className="dashboard-main">
             <InvestorsButton

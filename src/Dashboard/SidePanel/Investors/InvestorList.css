@@ -55,6 +55,14 @@
   gap: 0.5rem;
 }
 
+.investor-list__empty {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+  padding: 2rem 1rem;
+  font-size: 0.9rem;
+}
+
 .investor-list__item {
   background-color: #3d1540;
   border: 1px solid #4a1a4f;
