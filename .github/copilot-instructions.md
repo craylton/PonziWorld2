@@ -10,6 +10,7 @@
 3. Before implementing a new feature, ask yourself if this is the best way to do it.
   - If you think there might be a better way, discuss it with the team first.
   - If unsure on certain details, ask for clarification or guidance.
+  - You do have a tendency to make mistakes. Be critical of your own work.
 4. If you need guidance on how the code is structured, there are a few README files around the place which contain useful information.
 
 ## Code Style
@@ -22,7 +23,8 @@
   - If you notice any duplicated code, try to consolidate.
   - If you notice any unnecessarily complex code, try to simplify it.
   - If you notice any code which isn't used, remove it.
-4. Do not write any comments unless absolutely necessary.
+4. You can write comments as you write the code, however after writing code, go back and remove any unnecessary comments.
+5. Do not use abbreviations. For example use `transaction` instead of `tx`.
 
 ## Tests
 
