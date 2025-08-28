@@ -26,12 +26,13 @@
 4. You can write comments as you write the code, however after writing code, go back and remove any unnecessary comments.
 5. Do not use abbreviations. For example use `transaction` instead of `tx`.
 
-## Tests
+## Testing
 
 1. After making frontend changes, make sure to run `npm run lint` to check for linting issues. There should be no warnings or errors. There are no unit tests in the frontend.
 2. After making backend changes, run the service tests to ensure everything is still working.
-  - You can run the tests with `go test ./tests/` in the `PonziWorld2-service` directory.
-3. Each 'service' should have its own set of tests to cover its functionality. Each public function in a service should have its own test file.
+  - You can run all tests (integration + unit) with `go test ./...` in the `PonziWorld2-service` directory.
+  - You can run the integration tests with `go test ./tests/...` in the `PonziWorld2-service` directory.
+3. Each 'service' should have its own set of integration tests to cover its functionality. Each public function in a service should have its own test file.
 
 ## The Application Layout
 
