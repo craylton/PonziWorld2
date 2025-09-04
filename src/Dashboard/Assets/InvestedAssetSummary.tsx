@@ -1,6 +1,7 @@
 import AssetHistoricalPerformanceDisplay from './AssetHistoricalPerformanceDisplay';
 import './AssetList.css';
-import { formatCurrency } from '../../utils/currency';
+import { formatCurrencyFromString } from '../../utils/currency';
+import { parseMoney } from '../../utils/money';
 import type { InvestmentDetailsResponse } from '../../models/AssetDetails';
 
 interface AssetSummaryProps {
@@ -8,7 +9,8 @@ interface AssetSummaryProps {
 }
 
 export default function InvestedAssetSummary({ investment }: AssetSummaryProps) {
-  const hasPendingAmount = investment.pendingAmount !== 0;
+  const pendingAmount = parseMoney(investment.pendingAmount);
+  const hasPendingAmount = !pendingAmount.isZero();
   
   return (
     <>
@@ -18,15 +20,15 @@ export default function InvestedAssetSummary({ investment }: AssetSummaryProps) 
           <div className="asset-list__amount">
             {hasPendingAmount ? (
               <>
-                {formatCurrency(investment.investedAmount)} {investment.pendingAmount > 0 ? '+' : '-'}
+                {formatCurrencyFromString(investment.investedAmount)} {pendingAmount.isPositive() ? '+' : '-'}
                 <span 
-                  className={`asset-list__pending ${investment.pendingAmount > 0 ? 'asset-list__pending--positive' : 'asset-list__pending--negative'}`}
+                  className={`asset-list__pending ${pendingAmount.isPositive() ? 'asset-list__pending--positive' : 'asset-list__pending--negative'}`}
                 >
-                  {formatCurrency(Math.abs(investment.pendingAmount))}
+                  {formatCurrencyFromString(pendingAmount.abs().toString())}
                 </span>
               </>
             ) : (
-              formatCurrency(investment.investedAmount)
+              formatCurrencyFromString(investment.investedAmount)
             )}
           </div>
         </div>

@@ -2,13 +2,13 @@ import { useState } from 'react';
 import './DashboardHeader.css';
 import CapitalPopup from './CapitalPopup';
 import ChevronIcon from './ChevronIcon';
-import { formatCurrency } from '../utils/currency';
+import { formatCurrencyFromString } from '../utils/currency';
 
 interface DashboardHeaderProps {
   currentDay: number;
   bankName: string;
-  claimedCapital: number;
-  actualCapital: number;
+  claimedCapital: string; // Now string for arbitrary precision
+  actualCapital: string;  // Now string for arbitrary precision
   bankId: string;
 }
 
@@ -52,7 +52,7 @@ export default function DashboardHeader({
           >
             <span className="dashboard-header__capital-label">Claimed Capital</span>
             <span className="dashboard-header__capital-value">
-              {formatCurrency(claimedCapital)}
+              {formatCurrencyFromString(claimedCapital)}
               <ChevronIcon />
             </span>
           </button>
@@ -63,7 +63,7 @@ export default function DashboardHeader({
           >
             <span className="dashboard-header__capital-label">Actual Capital</span>
             <span className="dashboard-header__capital-value">
-              {formatCurrency(actualCapital)}
+              {formatCurrencyFromString(actualCapital)}
               <ChevronIcon />
             </span>
           </button>

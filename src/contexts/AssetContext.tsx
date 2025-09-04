@@ -9,8 +9,8 @@ interface AssetProviderProps {
 export default function AssetProvider({ children, refreshBank }: AssetProviderProps) {
   const refreshCallbacks = React.useRef<Set<() => void>>(new Set());
 
-  // Cash balance state
-  const [cashBalance, setCashBalance] = useState<number>(0);
+  // Cash balance state - now string for arbitrary precision
+  const [cashBalance, setCashBalance] = useState<string>('0');
 
   const registerRefreshCallback = useCallback((callback: () => void) => {
     refreshCallbacks.current.add(callback);

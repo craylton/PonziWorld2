@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formatCurrency } from '../utils/currency';
+import { formatCurrency, formatCurrencyFromString } from '../utils/currency';
 import { makeAuthenticatedRequest } from '../auth';
 import type { HistoricalPerformanceEntry, OwnBankHistoricalPerformance } from '../models/HistoricalPerformance';
 import LineGraph from './Assets/LineGraph';
@@ -9,7 +9,7 @@ interface CapitalPopupProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  value: number;
+  value: string; // Now string for arbitrary precision
   bankId: string;
   capitalType: 'claimed' | 'actual';
 }
@@ -82,7 +82,7 @@ export default function CapitalPopup({
       className="capital-popup"
     >
       <div className="popup__value">
-        {formatCurrency(value)}
+        {formatCurrencyFromString(value)}
       </div>
 
       {isHistoryLoading ? (

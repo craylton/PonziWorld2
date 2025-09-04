@@ -1,5 +1,5 @@
 export interface Investor {
   id: string;
   name: string;
-  amountInvested: number;
+  amountInvested: string; // Now string for arbitrary precision
 }

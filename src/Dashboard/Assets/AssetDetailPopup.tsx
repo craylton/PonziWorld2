@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import LineGraph from './LineGraph';
-import { formatCurrency } from '../../utils/currency';
+import { formatCurrencyFromString } from '../../utils/currency';
+import { parseMoney, addMoney, isMoneyPositive, isMoneyZero } from '../../utils/money';
 import { makeAuthenticatedRequest } from '../../auth';
 import { useBankContext } from '../../contexts/useBankContext';
 import { useAssetContext } from '../../contexts/useAssetContext';
@@ -87,7 +88,7 @@ export default function AssetDetailPopup({
     setTransactionPopupOpen(true);
   };
 
-  const handleTransactionConfirm = async (amount: number) => {
+  const handleTransactionConfirm = async (amount: string) => {
     // Close transaction popup and show global loading popup
     setTransactionPopupOpen(false);
     showLoadingPopup('loading', 'Processing transaction...');
@@ -134,7 +135,9 @@ export default function AssetDetailPopup({
     setTransactionPopupOpen(false);
   };
 
-  const hasInvestmentOrPending = investment.investedAmount > 0 || investment.pendingAmount !== 0;
+  const investedAmount = parseMoney(investment.investedAmount);
+  const pendingAmount = parseMoney(investment.pendingAmount);
+  const hasInvestmentOrPending = isMoneyPositive(investedAmount) || !isMoneyZero(pendingAmount);
 
   const footer = hasInvestmentOrPending ? (
     <>
@@ -169,9 +172,9 @@ export default function AssetDetailPopup({
         footer={footer}
         className="asset-detail-popup"
       >
-        {investment.investedAmount > 0 && (
+        {isMoneyPositive(investedAmount) && (
           <div className="popup__value">
-            {formatCurrency(investment.investedAmount)}
+            {formatCurrencyFromString(investment.investedAmount)}
           </div>
         )}
         <div className="popup__chart">
@@ -217,7 +220,7 @@ export default function AssetDetailPopup({
         onClose={handleTransactionClose}
         assetName={investment.targetAssetName}
         transactionType={transactionType}
-        currentHoldings={investment.investedAmount + investment.pendingAmount}
+        currentHoldings={addMoney(parseMoney(investment.investedAmount), parseMoney(investment.pendingAmount)).toString()}
         maxBuyAmount={cashBalance}
         onConfirm={handleTransactionConfirm}
       />

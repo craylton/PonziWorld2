@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import './AssetList.css';
-import { formatCurrency } from '../../utils/currency';
+import { formatCurrencyFromString } from '../../utils/currency';
+import { addMoney, parseMoney } from '../../utils/money';
 import { useAssetContext } from '../../contexts/useAssetContext';
 import type { InvestmentDetailsResponse } from '../../models/AssetDetails';
 
@@ -10,13 +11,15 @@ interface CashAssetSummaryProps {
 
 export default function CashAssetSummary({ investment }: CashAssetSummaryProps) {
   const { setCashBalance } = useAssetContext();
-  const hasPendingAmount = investment.pendingAmount !== 0;
+  const investedAmount = parseMoney(investment.investedAmount);
+  const pendingAmount = parseMoney(investment.pendingAmount);
+  const hasPendingAmount = !pendingAmount.isZero();
   
   // Update cash balance in context whenever the cash asset data changes
   useEffect(() => {
-    const totalCashBalance = investment.investedAmount + investment.pendingAmount;
-    setCashBalance(totalCashBalance);
-  }, [investment.investedAmount, investment.pendingAmount, setCashBalance]);
+    const totalCashBalance = addMoney(investedAmount, pendingAmount);
+    setCashBalance(totalCashBalance.toString());
+  }, [investment.investedAmount, investment.pendingAmount, setCashBalance, investedAmount, pendingAmount]);
   
   return (
     <>
@@ -26,15 +29,15 @@ export default function CashAssetSummary({ investment }: CashAssetSummaryProps) 
           <div className="asset-list__amount">
             {hasPendingAmount ? (
               <>
-                {formatCurrency(investment.investedAmount)} {investment.pendingAmount > 0 ? '+' : '-'}
+                {formatCurrencyFromString(investment.investedAmount)} {pendingAmount.isPositive() ? '+' : '-'}
                 <span 
-                  className={`asset-list__pending ${investment.pendingAmount > 0 ? 'asset-list__pending--positive' : 'asset-list__pending--negative'}`}
+                  className={`asset-list__pending ${pendingAmount.isPositive() ? 'asset-list__pending--positive' : 'asset-list__pending--negative'}`}
                 >
-                  {formatCurrency(Math.abs(investment.pendingAmount))}
+                  {formatCurrencyFromString(pendingAmount.abs().toString())}
                 </span>
               </>
             ) : (
-              formatCurrency(investment.investedAmount)
+              formatCurrencyFromString(investment.investedAmount)
             )}
           </div>
         </div>

@@ -4,8 +4,8 @@ import type { Investor } from "../Dashboard/SidePanel/Investors/Investor";
 export interface Bank {
     id: string;
     bankName: string;
-    claimedCapital: number;
-    actualCapital: number;
+    claimedCapital: string; // Now string for arbitrary precision
+    actualCapital: string;  // Now string for arbitrary precision
     availableAssets: AvailableAsset[];
     investors: Investor[];
 }

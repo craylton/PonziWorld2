@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { parseMoney, compareMoney, isValidMoney } from '../../utils/money';
 import Popup from '../../components/Popup';
 
 interface TransactionPopupProps {
@@ -6,9 +7,9 @@ interface TransactionPopupProps {
     onClose: () => void;
     assetName: string;
     transactionType: 'buy' | 'sell';
-    currentHoldings?: number;
-    maxBuyAmount?: number;
-    onConfirm: (amount: number) => void;
+    currentHoldings?: string; // Now string for arbitrary precision
+    maxBuyAmount?: string;   // Now string for arbitrary precision
+    onConfirm: (amount: string) => void; // Now string for arbitrary precision
 }
 
 export default function TransactionPopup({
@@ -16,8 +17,8 @@ export default function TransactionPopup({
     onClose,
     assetName,
     transactionType,
-    currentHoldings = 0,
-    maxBuyAmount = 0,
+    currentHoldings = '0',  // Now string default
+    maxBuyAmount = '0',     // Now string default
     onConfirm
 }: TransactionPopupProps) {
     const [amount, setAmount] = useState<string>('');
@@ -36,17 +37,21 @@ export default function TransactionPopup({
     }, [isOpen]);
 
     const validateAmount = (value: string): string => {
-        const numValue = parseFloat(value);
+        if (!isValidMoney(value)) {
+            return 'Amount must be a valid number';
+        }
 
-        if (isNaN(numValue) || numValue <= 0) {
+        const amount = parseMoney(value);
+        
+        if (amount.lte(0)) {
             return 'Amount must be a positive number';
         }
 
-        if (transactionType === 'sell' && numValue > currentHoldings) {
+        if (transactionType === 'sell' && compareMoney(amount, parseMoney(currentHoldings)) > 0) {
             return `Cannot sell more than your current holdings (${currentHoldings})`;
         }
 
-        if (transactionType === 'buy' && numValue > maxBuyAmount) {
+        if (transactionType === 'buy' && compareMoney(amount, parseMoney(maxBuyAmount)) > 0) {
             return `Cannot buy more than your available cash (${maxBuyAmount})`;
         }
 
@@ -58,8 +63,14 @@ export default function TransactionPopup({
         setAmount(value);
 
         // Check if the entered amount equals current holdings (for sell all functionality)
-        if (transactionType === 'sell' && value && parseFloat(value) === currentHoldings) {
-            setSellAll(true);
+        if (transactionType === 'sell' && value && isValidMoney(value)) {
+            const enteredAmount = parseMoney(value);
+            const holdingsAmount = parseMoney(currentHoldings);
+            if (compareMoney(enteredAmount, holdingsAmount) === 0) {
+                setSellAll(true);
+            } else {
+                setSellAll(false);
+            }
         } else {
             setSellAll(false);
         }
@@ -91,8 +102,7 @@ export default function TransactionPopup({
             return;
         }
 
-        const numAmount = parseFloat(amount);
-        onConfirm(numAmount);
+        onConfirm(amount); // Pass string directly for arbitrary precision
         onClose();
     };
 

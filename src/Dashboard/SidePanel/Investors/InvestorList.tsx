@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import './InvestorList.css';
+import { compareMoney, parseMoney } from '../../../utils/money';
 import type { Investor } from './Investor';
 import InvestorSummary from './InvestorSummary';
 
@@ -18,7 +19,11 @@ export default function InvestorList({ investors }: InvestorListProps) {
     if (sortBy === 'alphabetical') {
       sorted.sort((a, b) => a.name.localeCompare(b.name));
     } else {
-      sorted.sort((a, b) => b.amountInvested - a.amountInvested);
+      sorted.sort((a, b) => {
+        const amountA = parseMoney(a.amountInvested);
+        const amountB = parseMoney(b.amountInvested);
+        return compareMoney(amountB, amountA); // Descending order (b - a)
+      });
     }
     
     return sorted;
