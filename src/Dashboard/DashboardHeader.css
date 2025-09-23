@@ -1,11 +1,10 @@
 /* Responsive styles for the dashboard header */
 .dashboard-header {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: column;  border-color: rgba(170, 170, 170, 0.4);  align-items: center;
   text-align: center;
   padding: 1.25rem 0rem 1.5rem 0rem;
-  background: #812a89;
+  background: #404040;
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
   margin: 1.5rem auto 1.5rem auto;
@@ -48,7 +47,7 @@
 }
 .dashboard-header__capital-value {
   font-weight: 700;
-  color: #9499f3;
+  color: #aaa;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -58,7 +57,7 @@
 /* Clickable capital styles */
 .dashboard-header__capital--clickable {
   background: none;
-  border: 2px solid rgba(148, 153, 243, 0.2);
+  border: 2px solid rgba(170, 170, 170, 0.2);
   font-family: inherit;
   cursor: pointer;
   padding: 1rem 1.5rem;
@@ -70,14 +69,14 @@
 }
 
 .dashboard-header__capital--clickable:hover {
-  background-color: rgba(148, 153, 243, 0.15);
-  border-color: rgba(255, 108, 220, 0.4);
+  background-color: rgba(170, 170, 170, 0.15);
+  border-color: rgba(119, 119, 119, 0.4);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(148, 153, 243, 0.2);
+  box-shadow: 0 4px 12px rgba(170, 170, 170, 0.2);
 }
 
 .dashboard-header__capital--clickable:hover .dashboard-header__capital-value {
-  color: #ff6cdc;
+  color: #bbb;
 }
 
 .dashboard-header__capital--clickable:hover .dashboard-header__chevron-icon {
@@ -86,12 +85,12 @@
 
 .dashboard-header__capital--clickable:active {
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(148, 153, 243, 0.15);
+  box-shadow: 0 2px 6px rgba(170, 170, 170, 0.15);
 }
 
 .dashboard-header__capital--clickable:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(255, 108, 220, 0.4);
+  box-shadow: 0 0 0 3px rgba(119, 119, 119, 0.4);
 }
 
 .dashboard-header__chevron-icon {
@@ -101,7 +100,7 @@
 }
 
 .dashboard-header__capital--clickable:hover .dashboard-header__chevron-icon {
-  color: #ff6cdc;
+  color: #bbb;
 }
 
 /* Disabled state for when history is loading */
@@ -113,13 +112,13 @@
 
 .dashboard-header__capital--loading:hover {
   background-color: rgba(148, 153, 243, 0.05);
-  border-color: rgba(148, 153, 243, 0.2);
+  border-color: rgba(170, 170, 170, 0.2);
   transform: none;
   box-shadow: none;
 }
 
 .dashboard-header__capital--loading .dashboard-header__capital-value {
-  color: #9499f3;
+  color: #aaa;
 }
 
 .dashboard-header__capital--loading .dashboard-header__chevron-icon {

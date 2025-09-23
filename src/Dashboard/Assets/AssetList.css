@@ -40,8 +40,8 @@
 }
 
 .asset-list__item {
-  background-color: #3d1540;
-  border: 1px solid #4a1a4f;
+  background-color: #2a2a2a;
+  border: 1px solid #555;
   border-radius: 8px;
   padding: 1rem;
   transition: background-color 0.2s, border-color 0.2s;
@@ -52,8 +52,8 @@
 }
 
 .asset-list__item:hover {
-  background-color: #4a1a4f;
-  border-color: #ff6cdc;
+  background-color: #333;
+  border-color: #777;
 }
 
 .asset-list__content {
@@ -71,7 +71,7 @@
 
 .asset-list__amount {
   font-size: 0.9rem;
-  color: #ff6cdc;
+  color: #888;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -97,7 +97,7 @@
 }
 
 .asset-list__button {
-  background-color: #ff6cdc;
+  background-color: #666;
   border: none;
   border-radius: 6px;
   width: 40px;
@@ -112,7 +112,7 @@
 }
 
 .asset-list__button:hover {
-  background-color: #e65ac8;
+  background-color: #888;
   transform: scale(1.05);
 }
 
@@ -122,11 +122,11 @@
 
 .asset-list__button:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(255, 108, 220, 0.4);
+  box-shadow: 0 0 0 2px rgba(200, 200, 200, 0.4);
 }
 
 .asset-list {
-  border: 1px solid rgba(255, 108, 220, 0.3);
+  border: 1px solid rgba(200, 200, 200, 0.3);
   border-radius: 8px;
   margin-top: 1rem;
 }
@@ -255,23 +255,23 @@
 }
 
 .asset-list__items::-webkit-scrollbar-track {
-  background: #3d1540;
+  background: #2a2a2a;
   border-radius: 3px;
 }
 
 .asset-list__items::-webkit-scrollbar-thumb {
-  background: #ff6cdc;
+  background: #666;
   border-radius: 3px;
 }
 
 .asset-list__items::-webkit-scrollbar-thumb:hover {
-  background: #e65ac8;
+  background: #777;
 }
 
 /* Cash asset specific styling */
 .asset-list__item--cash {
   border: 2px solid #ffd700;
-  background-color: #3d1540;
+  background-color: #2a2a2a;
   position: relative;
 }
 

@@ -14,7 +14,7 @@
 }
 
 .popup {
-  background: #812a89;
+  background: #404040;
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
   width: 100%;
@@ -71,12 +71,12 @@
 
 .popup__close-button:hover {
   background-color: rgba(255, 255, 255, 0.1);
-  color: #ff6cdc;
+  color: #777;
 }
 
 .popup__close-button:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(255, 108, 220, 0.4);
+  box-shadow: 0 0 0 2px rgba(119, 119, 119, 0.4);
 }
 
 .popup__content {
@@ -107,23 +107,23 @@
 
 .popup__button:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(255, 108, 220, 0.4);
+  box-shadow: 0 0 0 2px rgba(119, 119, 119, 0.4);
 }
 
 .popup__button:active {
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(255, 108, 220, 0.2);
+  box-shadow: 0 2px 6px rgba(119, 119, 119, 0.2);
 }
 
 .popup__button--primary {
-  background-color: #ff6cdc;
+  background-color: #666;
   color: #fff;
 }
 
 .popup__button--primary:hover {
-  background-color: #e65ac8;
+  background-color: #777;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 108, 220, 0.3);
+  box-shadow: 0 4px 12px rgba(102, 102, 102, 0.3);
 }
 
 .popup__button--success {
@@ -160,14 +160,14 @@
 }
 
 .popup__button--confirm {
-  background: #9c4aa1;
+  background: #666;
   color: white;
-  border: 2px solid #9c4aa1;
+  border: 2px solid #666;
 }
 
 .popup__button--confirm:hover:not(:disabled) {
-  background: #8a3f8f;
-  border-color: #8a3f8f;
+  background: #777;
+  border-color: #777;
 }
 
 .popup__button--confirm:disabled {
@@ -179,7 +179,7 @@
 .popup__value {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #9499f3;
+  color: #aaa;
   text-align: center;
   margin-bottom: 2rem;
 }
@@ -231,7 +231,7 @@
   margin: 0;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #9499f3;
+  color: #aaa;
 }
 
 /* Transaction Form Styles */
@@ -270,7 +270,7 @@
 
 .popup__input:focus {
   outline: none;
-  border-color: #9c4aa1;
+  border-color: #666;
 }
 
 .popup__input::placeholder {
@@ -304,7 +304,7 @@
   margin-right: 0.5rem;
   width: 1rem;
   height: 1rem;
-  accent-color: #9c4aa1;
+  accent-color: #666;
   cursor: pointer;
 }
 
