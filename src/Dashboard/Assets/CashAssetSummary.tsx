@@ -21,8 +21,8 @@ export default function CashAssetSummary({ investment }: CashAssetSummaryProps) 
   return (
     <>
       <div className="asset-list__item asset-list__item--cash">
-        <div className="asset-list__content">
-          <div className="asset-list__type">{investment.targetAssetName}</div>
+        <div className="asset-list__content--cash">
+          <div className="asset-list__type">{investment.targetAssetName}:</div>
           <div className="asset-list__amount">
             {hasPendingAmount ? (
               <>

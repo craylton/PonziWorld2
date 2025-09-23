@@ -56,11 +56,14 @@
   border-color: #777;
 }
 
-.asset-list__content {
+.asset-list__content, .asset-list__content--cash {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+}
+.asset-list__content--cash {
+  flex-direction: row;
 }
 
 .asset-list__type {
@@ -270,7 +273,7 @@
 
 /* Cash asset specific styling */
 .asset-list__item--cash {
-  border: 2px solid #ffd700;
+  border: 2px solid #c0a050;
   background-color: #2a2a2a;
   position: relative;
 }
