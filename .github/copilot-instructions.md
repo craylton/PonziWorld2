@@ -7,7 +7,8 @@
 2. The app is designed for mobile first (less than 900px wide), but should also work on desktop.
   - The biggest impact of this is on mobile the sidebars on the dashboard are hidden by default and can be toggled with buttons.
   - Also there is little need for `:hover` effects since these won't be seen on mobile.
-3. Before implementing a new feature, ask yourself if this is the best way to do it.
+3. Pragmatism is key! This is the most important rule of all!
+  - Before implementing a new feature, ask yourself if this is the best way to do it.
   - If you think there might be a better way, discuss it with the team first.
   - If unsure on certain details, ask for clarification or guidance.
   - You do have a tendency to make mistakes. Be critical of your own work.
