@@ -3,7 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import './Home.css';
 import { makeAuthenticatedRequest } from '../auth';
 import type { Bank } from '../models/Bank';
-import { formatCurrency } from '../utils/currency';
+import type { Player } from '../models/Player';
+import SettingsButton from '../Dashboard/SidePanel/Settings/SettingsButton';
+import SettingsPanel from '../Dashboard/SidePanel/Settings/SettingsPanel';
+import LoadingProvider from '../contexts/LoadingContext';
+import BankCard from './BankCard';
 
 interface HomeProps {
   onLogout: () => void;
@@ -11,6 +15,8 @@ interface HomeProps {
 
 export default function Home({ onLogout }: HomeProps) {
   const [banks, setBanks] = useState<Bank[]>([]);
+  const [player, setPlayer] = useState<Player | null>(null);
+  const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -24,6 +30,15 @@ export default function Home({ onLogout }: HomeProps) {
         }
         const bankData: Bank[] = await bankResponse.json();
         setBanks(bankData);
+
+        const playerResponse = await makeAuthenticatedRequest('/api/player');
+        if (!playerResponse.ok) {
+          onLogout();
+          return;
+        }
+        const playerData: Player = await playerResponse.json();
+        setPlayer(playerData);
+
         setIsLoading(false);
       } catch {
         onLogout();
@@ -36,38 +51,30 @@ export default function Home({ onLogout }: HomeProps) {
     navigate(`/bank/${bankId}`);
   };
 
-  if (isLoading) {
+  if (isLoading || !player) {
     return <div>Loading...</div>;
   }
 
   return (
-    <div className="home-container">
-      <h1>My Banks</h1>
-      <div className="bank-list">
-        {banks.map((bank) => (
-          <div
-            key={bank.id}
-            className="bank-card"
-            onClick={() => handleBankClick(bank.id)}
-          >
-            <h2>{bank.bankName}</h2>
-            <div className="bank-details">
-              <div className="bank-stat">
-                <span className="stat-label">Claimed Capital:</span>
-                <span className="stat-value">{formatCurrency(bank.claimedCapital)}</span>
-              </div>
-              <div className="bank-stat">
-                <span className="stat-label">Actual Capital:</span>
-                <span className="stat-value">{formatCurrency(bank.actualCapital)}</span>
-              </div>
-              <div className="bank-stat">
-                <span className="stat-label">Investors:</span>
-                <span className="stat-value">{bank.investors.length}</span>
-              </div>
-            </div>
-          </div>
-        ))}
+    <LoadingProvider>
+      <div className="home-container">
+        <h1>My Banks</h1>
+        <div className="bank-list">
+          {banks.map((bank) => (
+            <BankCard key={bank.id} bank={bank} onClick={handleBankClick} />
+          ))}
+        </div>
+        <SettingsButton
+          isRightPanelOpen={isRightPanelOpen}
+          onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}
+        />
+        <SettingsPanel
+          visible={isRightPanelOpen}
+          player={player}
+          onLogout={onLogout}
+          onClose={() => setIsRightPanelOpen(false)}
+        />
       </div>
-    </div>
+    </LoadingProvider>
   );
 }
