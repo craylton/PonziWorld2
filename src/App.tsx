@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Login/Login';
 import Dashboard from './Dashboard/Dashboard';
+import Home from './Home/Home';
 import NewBank from './NewBank/NewBank';
 import ProtectedRoute from './ProtectedRoute';
 import { useState, useEffect } from 'react'
@@ -47,7 +48,8 @@ function App() {
           isLoggedIn ? <Navigate to="/" replace /> : <NewBank />
         } />
         <Route path="/" element={<ProtectedRoute isAuthenticated={isLoggedIn} />}>
-          <Route index element={<Dashboard onLogout={handleLogout} />} />
+          <Route index element={<Home onLogout={handleLogout} />} />
+          <Route path="bank/:bankId" element={<Dashboard onLogout={handleLogout} />} />
         </Route>
         <Route path="*" element={<Navigate to={isLoggedIn ? "/" : "/login"} replace />} />
       </Routes>
