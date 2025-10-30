@@ -2,16 +2,26 @@ import SidePanel from '../SidePanel';
 import type { Player } from '../../../models/Player';
 import { makeAuthenticatedRequest } from '../../../auth';
 import { useLoadingContext } from '../../../contexts/useLoadingContext';
+import { useNavigate } from 'react-router-dom';
 
 interface SettingsPanelProps {
   visible: boolean;
   player: Player;
   onLogout: () => void;
   onClose?: () => void;
+  showViewAllBanks?: boolean;
 }
 
-export default function SettingsPanel({ visible, player, onLogout, onClose }: SettingsPanelProps) {
+export default function SettingsPanel({ visible, player, onLogout, onClose, showViewAllBanks = false }: SettingsPanelProps) {
   const { showLoadingPopup } = useLoadingContext();
+  const navigate = useNavigate();
+
+  const handleViewAllBanks = () => {
+    navigate('/');
+    if (onClose) {
+      onClose();
+    }
+  };
 
   const handleAdvanceDay = async () => {
     showLoadingPopup('loading', 'Advancing to next day...');
@@ -37,6 +47,14 @@ export default function SettingsPanel({ visible, player, onLogout, onClose }: Se
   return (
     <SidePanel side="right" visible={visible} onClose={onClose}>
       <h3>Settings</h3>
+      {showViewAllBanks && (
+        <button
+          onClick={handleViewAllBanks}
+          className='dashboard-settings-button'
+        >
+          View all banks
+        </button>
+      )}
       <button
         onClick={onLogout}
         className='dashboard-settings-button'

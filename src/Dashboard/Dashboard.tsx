@@ -136,6 +136,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             player={player}
             onLogout={onLogout}
             onClose={() => setIsRightPanelOpen(false)}
+            showViewAllBanks={true}
           />
         </div>
       </div>
