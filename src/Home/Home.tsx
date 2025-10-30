@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './Home.css';
 import { makeAuthenticatedRequest } from '../auth';
 import type { Bank } from '../models/Bank';
+import { formatCurrency } from '../utils/currency';
 
 interface HomeProps {
   onLogout: () => void;
@@ -53,11 +54,11 @@ export default function Home({ onLogout }: HomeProps) {
             <div className="bank-details">
               <div className="bank-stat">
                 <span className="stat-label">Claimed Capital:</span>
-                <span className="stat-value">${bank.claimedCapital.toLocaleString()}</span>
+                <span className="stat-value">{formatCurrency(bank.claimedCapital)}</span>
               </div>
               <div className="bank-stat">
                 <span className="stat-label">Actual Capital:</span>
-                <span className="stat-value">${bank.actualCapital.toLocaleString()}</span>
+                <span className="stat-value">{formatCurrency(bank.actualCapital)}</span>
               </div>
               <div className="bank-stat">
                 <span className="stat-label">Investors:</span>
