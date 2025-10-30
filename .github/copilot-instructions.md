@@ -25,6 +25,7 @@
   - If you notice any unnecessarily complex code, try to simplify it.
   - If you notice any code which isn't used, remove it.
   - There is a separate Go code style guide for the backend code in `PonziWorld2-service/documentation/GO_CODE_STYLE.md`.
+  - There is a separate TypeScript code style guide for the frontend code in `documentation/TS_CODE_STYLE.md`.
 4. You can write comments as you write the code, however after writing code, go back and remove any unnecessary comments.
 5. Do not use abbreviations. For example use `transaction` instead of `tx`.
 
