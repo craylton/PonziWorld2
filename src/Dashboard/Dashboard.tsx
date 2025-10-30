@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import './Dashboard.css';
 import DashboardHeader from './DashboardHeader';
 import InvestorsButton from './SidePanel/Investors/InvestorsButton';
@@ -17,6 +18,8 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ onLogout }: DashboardProps) {
+  const { bankId } = useParams<{ bankId: string }>();
+  const navigate = useNavigate();
   const [bank, setBank] = useState<Bank | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
   const [currentDay, setCurrentDay] = useState<number | null>(null);
@@ -25,6 +28,11 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [isInitialDataLoading, setIsInitialDataLoading] = useState(true);
 
   const fetchBankData = useCallback(async () => {
+    if (!bankId) {
+      navigate('/');
+      return null;
+    }
+
     try {
       // Fetch bank data
       const bankResponse = await makeAuthenticatedRequest('/api/banks');
@@ -33,16 +41,22 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         return null;
       }
       const bankData: Bank[] = await bankResponse.json();
-      // For now, we'll just use the first bank
-      const firstBank = bankData[0];
-      setBank(firstBank);
-
-      return firstBank;
+      
+      // Find the specific bank by ID
+      const specificBank = bankData.find(b => b.id === bankId);
+      if (!specificBank) {
+        // Bank not found, redirect to home
+        navigate('/');
+        return null;
+      }
+      
+      setBank(specificBank);
+      return specificBank;
     } catch {
       onLogout();
       return null;
     }
-  }, [onLogout]);
+  }, [onLogout, bankId, navigate]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -122,6 +136,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             player={player}
             onLogout={onLogout}
             onClose={() => setIsRightPanelOpen(false)}
+            showViewAllBanks={true}
           />
         </div>
       </div>
