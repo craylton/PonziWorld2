@@ -8,6 +8,8 @@ import SettingsButton from '../Dashboard/SidePanel/Settings/SettingsButton';
 import SettingsPanel from '../Dashboard/SidePanel/Settings/SettingsPanel';
 import LoadingProvider from '../contexts/LoadingContext';
 import BankCard from './BankCard';
+import CreateBankPopup from './CreateBankPopup';
+import LoadingPopup from '../Dashboard/Assets/LoadingPopup';
 
 interface HomeProps {
   onLogout: () => void;
@@ -18,6 +20,12 @@ export default function Home({ onLogout }: HomeProps) {
   const [player, setPlayer] = useState<Player | null>(null);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreateBankPopupOpen, setIsCreateBankPopupOpen] = useState(false);
+  const [loadingPopupState, setLoadingPopupState] = useState<{
+    isOpen: boolean;
+    status: 'loading' | 'success' | 'error';
+    message?: string;
+  }>({ isOpen: false, status: 'loading' });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -51,6 +59,41 @@ export default function Home({ onLogout }: HomeProps) {
     navigate(`/bank/${bankId}`);
   };
 
+  const handleCreateBank = async (bankName: string) => {
+    setIsCreateBankPopupOpen(false);
+    setLoadingPopupState({ isOpen: true, status: 'loading', message: 'Creating bank...' });
+
+    try {
+      const response = await makeAuthenticatedRequest('/api/bank', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ bankName }),
+      });
+
+      if (response.ok) {
+        setLoadingPopupState({ isOpen: true, status: 'success', message: 'Bank created successfully' });
+        // Refresh the banks list
+        const bankResponse = await makeAuthenticatedRequest('/api/banks');
+        if (bankResponse.ok) {
+          const bankData: Bank[] = await bankResponse.json();
+          setBanks(bankData);
+        }
+      } else {
+        const errorData = await response.json();
+        const errorMessage = errorData.error || 'Failed to create bank';
+        setLoadingPopupState({ isOpen: true, status: 'error', message: errorMessage });
+      }
+    } catch {
+      setLoadingPopupState({ isOpen: true, status: 'error', message: 'Network error occurred' });
+    }
+  };
+
+  const handleCloseLoadingPopup = () => {
+    setLoadingPopupState({ isOpen: false, status: 'loading' });
+  };
+
   if (isLoading || !player) {
     return <div>Loading...</div>;
   }
@@ -64,6 +107,13 @@ export default function Home({ onLogout }: HomeProps) {
             <BankCard key={bank.id} bank={bank} onClick={handleBankClick} />
           ))}
         </div>
+        <button
+          className="create-bank-button"
+          onClick={() => setIsCreateBankPopupOpen(true)}
+          disabled={banks.length >= 3}
+        >
+          Create New Bank
+        </button>
         <SettingsButton
           isRightPanelOpen={isRightPanelOpen}
           onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}
@@ -73,6 +123,17 @@ export default function Home({ onLogout }: HomeProps) {
           player={player}
           onLogout={onLogout}
           onClose={() => setIsRightPanelOpen(false)}
+        />
+        <CreateBankPopup
+          isOpen={isCreateBankPopupOpen}
+          onClose={() => setIsCreateBankPopupOpen(false)}
+          onConfirm={handleCreateBank}
+        />
+        <LoadingPopup
+          isOpen={loadingPopupState.isOpen}
+          onClose={handleCloseLoadingPopup}
+          status={loadingPopupState.status}
+          message={loadingPopupState.message}
         />
       </div>
     </LoadingProvider>
