@@ -7,6 +7,7 @@ import ProtectedRoute from './ProtectedRoute';
 import { useState, useEffect } from 'react'
 import './App.css'
 import { isAuthenticated, removeAuthToken } from './auth';
+import { CurrentDayProvider } from './contexts/CurrentDayContext';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -39,21 +40,23 @@ function App() {
   }
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={
-          isLoggedIn ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />
-        } />
-        <Route path="/new" element={
-          isLoggedIn ? <Navigate to="/" replace /> : <NewBank />
-        } />
-        <Route path="/" element={<ProtectedRoute isAuthenticated={isLoggedIn} />}>
-          <Route index element={<Home onLogout={handleLogout} />} />
-          <Route path="bank/:bankId" element={<Dashboard onLogout={handleLogout} />} />
-        </Route>
-        <Route path="*" element={<Navigate to={isLoggedIn ? "/" : "/login"} replace />} />
-      </Routes>
-    </BrowserRouter>
+    <CurrentDayProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={
+            isLoggedIn ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />
+          } />
+          <Route path="/new" element={
+            isLoggedIn ? <Navigate to="/" replace /> : <NewBank />
+          } />
+          <Route path="/" element={<ProtectedRoute isAuthenticated={isLoggedIn} />}>
+            <Route index element={<Home onLogout={handleLogout} />} />
+            <Route path="bank/:bankId" element={<Dashboard onLogout={handleLogout} />} />
+          </Route>
+          <Route path="*" element={<Navigate to={isLoggedIn ? "/" : "/login"} replace />} />
+        </Routes>
+      </BrowserRouter>
+    </CurrentDayProvider>
   );
 }
 

@@ -10,6 +10,7 @@ import LoadingProvider from '../contexts/LoadingContext';
 import BankCard from './BankCard';
 import CreateBankPopup from './CreateBankPopup';
 import LoadingPopup from '../Dashboard/Assets/LoadingPopup';
+import PageHeader from '../components/PageHeader';
 
 interface HomeProps {
   onLogout: () => void;
@@ -101,7 +102,7 @@ export default function Home({ onLogout }: HomeProps) {
   return (
     <LoadingProvider>
       <div className="home-container">
-        <h1>My Banks</h1>
+        <PageHeader title="My Banks" />
         <div className="bank-list">
           {banks.map((bank) => (
             <BankCard key={bank.id} bank={bank} onClick={handleBankClick} />

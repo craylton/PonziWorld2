@@ -1,0 +1,46 @@
+.page-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 2rem 2.5rem;
+    background: #404040;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    margin: 0 auto 2rem auto;
+    width: 100%;
+    max-width: 600px;
+}
+
+.page-header__day {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #cecece;
+    margin-bottom: 0.25rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.page-header__title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+
+@media (max-width: 900px) {
+    .page-header {
+        margin: 0 auto 1.5rem auto;
+        width: 100%;
+        max-width: 95vw;
+        padding: 1rem 0.5rem;
+        box-sizing: border-box;
+        border-radius: 0px;
+        box-shadow: none;
+    }
+
+    .page-header__title {
+        font-size: 1.5rem;
+    }
+}

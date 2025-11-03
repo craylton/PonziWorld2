@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./NewBank.css";
+import PageHeader from "../components/PageHeader";
 
 const NewBank: React.FC = () => {
   const [username, setUsername] = useState("");
@@ -40,8 +41,9 @@ const NewBank: React.FC = () => {
 
   return (
     <div className="new-bank-container">
+      <PageHeader title="Create a New Bank" />
       <form className="new-bank-form" onSubmit={handleSubmit}>
-        <h2>Create a New Bank</h2>        <label>
+        <label>
           Username
           <input
             type="text"

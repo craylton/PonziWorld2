@@ -10,6 +10,7 @@ import AssetSection from './Assets/AssetSection';
 import { makeAuthenticatedRequest } from '../auth';
 import { BankProvider } from '../contexts/BankContext';
 import LoadingProvider from '../contexts/LoadingContext';
+import { useCurrentDay } from '../contexts/CurrentDayContext';
 import type { Bank } from '../models/Bank';
 import type { Player } from '../models/Player';
 
@@ -22,7 +23,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const navigate = useNavigate();
   const [bank, setBank] = useState<Bank | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
-  const [currentDay, setCurrentDay] = useState<number | null>(null);
+  const { currentDay } = useCurrentDay();
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
   const [isInitialDataLoading, setIsInitialDataLoading] = useState(true);
@@ -41,7 +42,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         return null;
       }
       const bankData: Bank[] = await bankResponse.json();
-      
+
       // Find the specific bank by ID
       const specificBank = bankData.find(b => b.id === bankId);
       if (!specificBank) {
@@ -49,7 +50,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         navigate('/');
         return null;
       }
-      
+
       setBank(specificBank);
       return specificBank;
     } catch {
@@ -61,15 +62,6 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch current day
-        const currentDayResponse = await fetch('/api/currentDay');
-        if (!currentDayResponse.ok) {
-          onLogout();
-          return;
-        }
-        const currentDayData: { currentDay: number } = await currentDayResponse.json();
-        setCurrentDay(currentDayData.currentDay);
-
         // Fetch player data
         const playerResponse = await makeAuthenticatedRequest('/api/player');
         if (!playerResponse.ok) {

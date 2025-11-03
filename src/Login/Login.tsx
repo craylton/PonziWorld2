@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import './Login.css';
 import { useNavigate } from 'react-router-dom';
 import { removeAuthToken, setAuthToken } from '../auth';
+import PageHeader from '../components/PageHeader';
 
 interface LoginProps {
   onLogin: () => Promise<void>;
@@ -60,8 +61,9 @@ export default function Login({ onLogin }: LoginProps) {
 
   return (
     <div className="login-container">
+      <PageHeader title="Login" />
       <form className="login-form" onSubmit={handleSubmit}>
-        <h2>Login</h2>        <input
+        <input
           type="text"
           placeholder="Enter username"
           value={username}
