@@ -4,7 +4,9 @@
   align-items: center;
   min-height: 100vh;
   background: #2a2a2a;
-  padding: 1.5rem 1rem;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+  box-sizing: border-box;
 }
 
 .home-content {
