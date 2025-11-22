@@ -7,6 +7,8 @@ import SettingsButton from './SidePanel/Settings/SettingsButton';
 import InvestorsPanel from './SidePanel/Investors/InvestorsPanel';
 import SettingsPanel from './SidePanel/Settings/SettingsPanel';
 import AssetSection from './Assets/AssetSection';
+import BottomTabs from './BottomPanel/BottomTabs';
+import BottomPanel from './BottomPanel/BottomPanel';
 import { makeAuthenticatedRequest } from '../auth';
 import { BankProvider } from '../contexts/BankContext';
 import LoadingProvider from '../contexts/LoadingContext';
@@ -26,6 +28,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const { currentDay } = useCurrentDay();
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
+  const [activeBottomTab, setActiveBottomTab] = useState<'today' | 'tomorrow' | null>(null);
   const [isInitialDataLoading, setIsInitialDataLoading] = useState(true);
 
   const fetchBankData = useCallback(async () => {
@@ -86,6 +89,32 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     fetchData();
   }, [onLogout, fetchBankData]);
 
+  const handleLeftPanelToggle = () => {
+    setIsRightPanelOpen(false);
+    setActiveBottomTab(null);
+    setIsLeftPanelOpen(!isLeftPanelOpen);
+  };
+
+  const handleRightPanelToggle = () => {
+    setIsLeftPanelOpen(false);
+    setActiveBottomTab(null);
+    setIsRightPanelOpen(!isRightPanelOpen);
+  };
+
+  const handleBottomTabClick = (tab: 'today' | 'tomorrow') => {
+    if (activeBottomTab === tab) {
+      setActiveBottomTab(null);
+    } else {
+      setIsLeftPanelOpen(false);
+      setIsRightPanelOpen(false);
+      setActiveBottomTab(tab);
+    }
+  };
+
+  const handleBottomPanelClose = () => {
+    setActiveBottomTab(null);
+  };
+
   if (isInitialDataLoading || !bank || !player || currentDay === null) {
     return <div>Loading...</div>;
   }
@@ -109,7 +138,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
           <main className="dashboard-main">
             <InvestorsButton
               isLeftPanelOpen={isLeftPanelOpen}
-              onClick={() => setIsLeftPanelOpen(!isLeftPanelOpen)}
+              onClick={handleLeftPanelToggle}
             />
             <BankProvider bankId={bank.id}>
               <AssetSection
@@ -120,7 +149,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
 
             <SettingsButton
               isRightPanelOpen={isRightPanelOpen}
-              onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}
+              onClick={handleRightPanelToggle}
             />
           </main>
           <SettingsPanel
@@ -131,6 +160,19 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             showViewAllBanks={true}
           />
         </div>
+        <BottomTabs
+          activeTab={activeBottomTab}
+          onTabClick={handleBottomTabClick}
+        />
+        <BottomPanel
+          visible={activeBottomTab !== null}
+          onClose={handleBottomPanelClose}
+        >
+          <div key={activeBottomTab} className="dashboard-bottompanel-content">
+            {activeBottomTab === 'today' && <div>This panel will display info about what happened since you last logged in</div>}
+            {activeBottomTab === 'tomorrow' && <div>This panel will display info about what you can plan for tomorrow</div>}
+          </div>
+        </BottomPanel>
       </div>
     </LoadingProvider>
   );

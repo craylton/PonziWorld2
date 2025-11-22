@@ -104,6 +104,81 @@
   background-color: #666;
 }
 
+.dashboard-bottom-tabs {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0;
+  z-index: 1003;
+  background: #333;
+  border-radius: 8px 8px 0 0;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.12);
+  max-width: 900px;
+  width: 100%;
+  border: 2px solid #666;
+  border-bottom: 0px;
+}
+
+.dashboard-bottom-tab {
+  flex: 1;
+  padding: 16px 48px;
+  background: #333;
+  color: #ccc;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+  border-radius: 8px 8px 0 0;
+}
+
+.dashboard-bottom-tab:first-child {
+  border-right: 1px solid #444;
+}
+
+.dashboard-bottom-tab--active {
+  background: #555;
+  color: white;
+}
+
+.dashboard-bottompanel {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  width: 100%;
+  max-width: 900px;
+  height: 50vh;
+  background: #404040;
+  border-radius: 8px 8px 0 0;
+  border: #666 2px solid;
+  border-bottom: 0px;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+  padding: 1.5rem;
+  transition: transform 0.3s cubic-bezier(.4, 0, .2, 1);
+  touch-action: none;
+}
+
+.dashboard-bottompanel--visible {
+  transform: translateX(-50%) translateY(0);
+}
+
+.dashboard-bottompanel-content {
+  animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @media (max-width: 900px) {
   .dashboard-layout {
     flex-direction: column;
@@ -153,5 +228,21 @@
   .dashboard-sidepanel-button--left {
     display: flex;
     left: 1.2rem;
+  }
+
+  .dashboard-bottom-tabs {
+    max-width: 100%;
+    border-radius: 0;
+  border-top: #666 2px solid;
+  }
+
+  .dashboard-bottom-tab {
+    padding: 14px 16px;
+  }
+
+  .dashboard-bottompanel {
+    height: 60vh;
+    max-width: 100%;
+    border-radius: 0;
   }
 }
