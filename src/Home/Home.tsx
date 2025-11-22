@@ -103,18 +103,20 @@ export default function Home({ onLogout }: HomeProps) {
     <LoadingProvider>
       <div className="home-container">
         <PageHeader title="My Banks" />
-        <div className="bank-list">
-          {banks.map((bank) => (
-            <BankCard key={bank.id} bank={bank} onClick={handleBankClick} />
-          ))}
+        <div className="home-content">
+          <div className="bank-list">
+            {banks.map((bank) => (
+              <BankCard key={bank.id} bank={bank} onClick={handleBankClick} />
+            ))}
+          </div>
+          <button
+            className="create-bank-button"
+            onClick={() => setIsCreateBankPopupOpen(true)}
+            disabled={banks.length >= 3}
+          >
+            Create New Bank
+          </button>
         </div>
-        <button
-          className="create-bank-button"
-          onClick={() => setIsCreateBankPopupOpen(true)}
-          disabled={banks.length >= 3}
-        >
-          Create New Bank
-        </button>
         <SettingsButton
           isRightPanelOpen={isRightPanelOpen}
           onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}

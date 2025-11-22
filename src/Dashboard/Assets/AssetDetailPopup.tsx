@@ -22,7 +22,7 @@ export default function AssetDetailPopup({
   investment
 }: AssetDetailPopupProps) {
   const { bankId } = useBankContext();
-  const { refreshAssets, refreshBank, cashBalance } = useAssetContext();
+  const { refreshBank, cashBalance } = useAssetContext();
   const { showLoadingPopup } = useLoadingContext();
   const [transactionPopupOpen, setTransactionPopupOpen] = useState(false);
   const [transactionType, setTransactionType] = useState<'buy' | 'sell'>('buy');
@@ -111,12 +111,9 @@ export default function AssetDetailPopup({
       if (response.ok) {
         showLoadingPopup('success', 'Transaction completed successfully');
 
-        // Refresh bank data first (to update availableAssets list)
         if (refreshBank) {
           await refreshBank();
         }
-        // Then refresh individual asset details
-        refreshAssets();
       } else {
         // Error from server
         const error = await response.json();

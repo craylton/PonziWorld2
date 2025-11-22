@@ -1,13 +1,13 @@
 import './AssetList.css';
 import ChevronIcon from '../ChevronIcon';
 import { useState, useCallback } from 'react';
-import type { AvailableAsset } from '../../models/AvailableAsset';
+import type { AssetWithDetails } from '../../models/AssetWithDetails';
 import AssetSummary from './AssetSummary';
 
 interface AssetListProps {
     title: string;
     isExpandedByDefault: boolean;
-    assets: AvailableAsset[];
+    assets: AssetWithDetails[];
 }
 
 export default function AssetList({ title, isExpandedByDefault, assets }: AssetListProps) {
@@ -38,11 +38,12 @@ export default function AssetList({ title, isExpandedByDefault, assets }: AssetL
                             (Empty)
                         </div>
                     ) : (
-                        assets.map((asset, index) => {
+                        assets.map((assetWithDetails, index) => {
                             return (
                                 <AssetSummary
-                                    key={`${asset.assetName}-${index}`}
-                                    availableAsset={asset}
+                                    key={`${assetWithDetails.asset.assetName}-${index}`}
+                                    availableAsset={assetWithDetails.asset}
+                                    investmentDetails={assetWithDetails.details}
                                 />
                             );
                         })
