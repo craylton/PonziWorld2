@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { useDrag } from '@use-gesture/react';
+import './BottomPanel.css';
 
 interface BottomPanelProps {
   visible: boolean;

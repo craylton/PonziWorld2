@@ -1,3 +1,5 @@
+import './BottomPanel.css';
+
 interface BottomTabsProps {
   activeTab: 'today' | 'tomorrow' | null;
   onTabClick: (tab: 'today' | 'tomorrow') => void;
