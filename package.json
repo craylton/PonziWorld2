@@ -12,10 +12,10 @@
   "dependencies": {
     "@use-gesture/react": "^10.3.1",
     "chart.js": "^4.5.0",
-    "react": "^19.1.0",
+    "react": "^19.2.3",
     "react-chartjs-2": "^5.3.0",
-    "react-dom": "^19.1.0",
-    "react-router-dom": "^7.6.2"
+    "react-dom": "^19.2.3",
+    "react-router-dom": "^7.10.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
