@@ -43,7 +43,7 @@ export default function SettingsPanel({ visible, player, onLogout, onClose, show
       showLoadingPopup('error', 'Failed to advance day: Network error.');
     }
   };
-  
+
   return (
     <SidePanel side="right" visible={visible} onClose={onClose}>
       <h3>Settings</h3>

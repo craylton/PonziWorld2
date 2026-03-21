@@ -1,5 +1,5 @@
 import './PageHeader.css';
-import { useCurrentDay } from '../contexts/CurrentDayContext';
+import { useCurrentDay } from '../contexts/useCurrentDay';
 
 interface PageHeaderProps {
     title: string;

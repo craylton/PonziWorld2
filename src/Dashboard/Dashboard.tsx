@@ -9,10 +9,11 @@ import SettingsPanel from './SidePanel/Settings/SettingsPanel';
 import AssetSection from './Assets/AssetSection';
 import BottomTabs from './BottomPanel/BottomTabs';
 import BottomPanel from './BottomPanel/BottomPanel';
+import TomorrowPanel from './BottomPanel/TomorrowPanel';
 import { makeAuthenticatedRequest } from '../auth';
 import { BankProvider } from '../contexts/BankContext';
 import LoadingProvider from '../contexts/LoadingContext';
-import { useCurrentDay } from '../contexts/CurrentDayContext';
+import { useCurrentDay } from '../contexts/useCurrentDay';
 import type { Bank } from '../models/Bank';
 import type { Player } from '../models/Player';
 
@@ -170,7 +171,13 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         >
           <div key={activeBottomTab} className="dashboard-bottompanel-content">
             {activeBottomTab === 'today' && <div>This panel will display info about what happened since you last logged in</div>}
-            {activeBottomTab === 'tomorrow' && <div>This panel will display info about what you can plan for tomorrow</div>}
+            {activeBottomTab === 'tomorrow' && (
+              <TomorrowPanel
+                bankId={bank.id}
+                ponziFactor={bank.ponziFactor}
+                onRefreshBank={async () => { await fetchBankData(); }}
+              />
+            )}
           </div>
         </BottomPanel>
       </div>
