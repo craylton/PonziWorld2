@@ -104,6 +104,13 @@
   align-items: center;
 }
 
+.ponzi-value__percent {
+  display: inline-block;
+  min-width: 6ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 .ponzi-value__controls {
   display: flex;
   align-items: center;

@@ -13,7 +13,7 @@ Readability comes first. Aim for simple, boring code that others can scan quickl
 ## Files
 
 - Each file should focus on a single component, hook, or core concept (utility, type, or service). If a file contains multiple concepts with their own responsibilities, split them into separate files.
-- Files should be small. If a file is longer than approximately 100 lines (excluding imports and type/interface definitions), it should be split into two or more files.
+- Files should be small. If a file is longer than approximately 100 lines (excluding imports and type/interface definitions), we should consider splitting it into two or more files.
 - Files should be simple and focused. If a file seems to have multiple concerns, split it.
 - Types and interfaces should be defined near where they are used. Export them only when they are shared across modules.
 - Ensure each file is in the correct feature/domain folder. If there are many files in the same directory, consider creating a new subdirectory.

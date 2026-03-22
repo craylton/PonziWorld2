@@ -15,6 +15,13 @@ const maxPonziFactor = 0.15;
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
+const statusText: Record<SaveStatus, string> = {
+  idle: '',
+  saving: 'Saving...',
+  saved: 'Saved',
+  error: 'Error',
+};
+
 const sanitizePonziFactor = (value: number) => {
   if (!Number.isFinite(value)) {
     return 0;
@@ -35,17 +42,16 @@ const formatPercent = (value: number) => {
 };
 
 export default function PonziValue({ bankId, ponziFactor, onPonziFactorSaved }: PonziValueProps) {
-  const sanitizedInitialPonziFactor = sanitizePonziFactor(ponziFactor);
+  const sanitizedPonziFactor = sanitizePonziFactor(ponziFactor);
 
-  const [ponziFactorInput, setPonziFactorInput] = useState<number>(() => sanitizedInitialPonziFactor);
+  const [ponziFactorInput, setPonziFactorInput] = useState(sanitizedPonziFactor);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
 
-  const isMountedRef = useRef(false);
-  const ponziFactorInputRef = useRef<number>(sanitizedInitialPonziFactor);
-  const lastSavedPonziFactorRef = useRef<number>(sanitizedInitialPonziFactor);
+  const ponziFactorInputRef = useRef<number>(sanitizedPonziFactor);
+  const lastSavedPonziFactorRef = useRef<number>(sanitizedPonziFactor);
 
   const debounceTimeoutIdRef = useRef<number | null>(null);
-  const clearSavedMessageTimeoutIdRef = useRef<number | null>(null);
+  const savedMessageTimeoutIdRef = useRef<number | null>(null);
   const saveAbortControllerRef = useRef<AbortController | null>(null);
 
   const clearDebounceTimeout = useCallback(() => {
@@ -56,45 +62,36 @@ export default function PonziValue({ bankId, ponziFactor, onPonziFactorSaved }: 
   }, []);
 
   const clearSavedMessageTimeout = useCallback(() => {
-    if (clearSavedMessageTimeoutIdRef.current !== null) {
-      window.clearTimeout(clearSavedMessageTimeoutIdRef.current);
-      clearSavedMessageTimeoutIdRef.current = null;
+    if (savedMessageTimeoutIdRef.current !== null) {
+      window.clearTimeout(savedMessageTimeoutIdRef.current);
+      savedMessageTimeoutIdRef.current = null;
     }
   }, []);
 
-  const markSaving = useCallback(() => {
+  const updateSaveStatus = useCallback((nextStatus: SaveStatus) => {
     clearSavedMessageTimeout();
-    if (isMountedRef.current) {
-      setSaveStatus('saving');
-    }
+    setSaveStatus(nextStatus);
   }, [clearSavedMessageTimeout]);
 
-  const scheduleClearSavedMessage = useCallback(() => {
-    clearSavedMessageTimeout();
-    clearSavedMessageTimeoutIdRef.current = window.setTimeout(() => {
-      if (!isMountedRef.current) {
-        return;
-      }
-
+  const showSavedStatus = useCallback(() => {
+    updateSaveStatus('saved');
+    savedMessageTimeoutIdRef.current = window.setTimeout(() => {
+      savedMessageTimeoutIdRef.current = null;
       setSaveStatus('idle');
     }, savedMessageMilliseconds);
-  }, [clearSavedMessageTimeout]);
+  }, [updateSaveStatus]);
 
-  const savePonziFactor = useCallback(async (valueToSave: number) => {
-    const sanitizedValueToSave = sanitizePonziFactor(valueToSave);
-
-    if (sanitizedValueToSave === lastSavedPonziFactorRef.current) {
+  const savePonziFactor = useCallback(async (sanitizedValue: number) => {
+    if (sanitizedValue === lastSavedPonziFactorRef.current) {
       return;
     }
 
-    if (saveAbortControllerRef.current) {
-      saveAbortControllerRef.current.abort();
-    }
+    saveAbortControllerRef.current?.abort();
 
     const abortController = new AbortController();
     saveAbortControllerRef.current = abortController;
 
-    markSaving();
+    updateSaveStatus('saving');
 
     try {
       const response = await makeAuthenticatedRequest('/api/bank/ponziFactor', {
@@ -103,7 +100,7 @@ export default function PonziValue({ bankId, ponziFactor, onPonziFactorSaved }: 
           'Content-Type': 'application/json',
         },
         signal: abortController.signal,
-        body: JSON.stringify({ bankId, ponziFactor: sanitizedValueToSave }),
+        body: JSON.stringify({ bankId, ponziFactor: sanitizedValue }),
       });
 
       if (saveAbortControllerRef.current !== abortController) {
@@ -114,17 +111,11 @@ export default function PonziValue({ bankId, ponziFactor, onPonziFactorSaved }: 
         throw new Error('Save failed');
       }
 
-      lastSavedPonziFactorRef.current = sanitizedValueToSave;
+      lastSavedPonziFactorRef.current = sanitizedValue;
 
-      onPonziFactorSaved(sanitizedValueToSave);
+      onPonziFactorSaved(sanitizedValue);
 
-      if (!isMountedRef.current) {
-        return;
-      }
-
-      setSaveStatus('saved');
-
-      scheduleClearSavedMessage();
+      showSavedStatus();
     } catch (error) {
       if (saveAbortControllerRef.current !== abortController) {
         return;
@@ -134,18 +125,13 @@ export default function PonziValue({ bankId, ponziFactor, onPonziFactorSaved }: 
         return;
       }
 
-      if (!isMountedRef.current) {
-        return;
-      }
-
-      clearSavedMessageTimeout();
-      setSaveStatus('error');
+      updateSaveStatus('error');
     } finally {
       if (saveAbortControllerRef.current === abortController) {
         saveAbortControllerRef.current = null;
       }
     }
-  }, [bankId, clearSavedMessageTimeout, markSaving, onPonziFactorSaved, scheduleClearSavedMessage]);
+  }, [bankId, onPonziFactorSaved, showSavedStatus, updateSaveStatus]);
 
   const scheduleDebouncedSave = useCallback((valueToSave: number) => {
     clearDebounceTimeout();
@@ -156,10 +142,7 @@ export default function PonziValue({ bankId, ponziFactor, onPonziFactorSaved }: 
   }, [clearDebounceTimeout, savePonziFactor]);
 
   useEffect(() => {
-    isMountedRef.current = true;
     return () => {
-      isMountedRef.current = false;
-
       const shouldFlushDebouncedSave = debounceTimeoutIdRef.current !== null;
       clearDebounceTimeout();
       clearSavedMessageTimeout();
@@ -168,12 +151,7 @@ export default function PonziValue({ bankId, ponziFactor, onPonziFactorSaved }: 
         return;
       }
 
-      const latestValue = ponziFactorInputRef.current;
-      if (latestValue === lastSavedPonziFactorRef.current) {
-        return;
-      }
-
-      void savePonziFactor(latestValue);
+      void savePonziFactor(ponziFactorInputRef.current);
     };
   }, [clearDebounceTimeout, clearSavedMessageTimeout, savePonziFactor]);
 
@@ -192,42 +170,29 @@ export default function PonziValue({ bankId, ponziFactor, onPonziFactorSaved }: 
 
   const handleChange = (nextValue: number) => {
     const sanitizedNextValue = sanitizePonziFactor(nextValue);
+
+    saveAbortControllerRef.current?.abort();
+
     ponziFactorInputRef.current = sanitizedNextValue;
     setPonziFactorInput(sanitizedNextValue);
 
     if (sanitizedNextValue === lastSavedPonziFactorRef.current) {
       clearDebounceTimeout();
-      clearSavedMessageTimeout();
-      setSaveStatus('idle');
+      updateSaveStatus('idle');
       return;
     }
 
-    markSaving();
+    updateSaveStatus('saving');
     scheduleDebouncedSave(sanitizedNextValue);
   };
 
-  const statusText = saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved' : saveStatus === 'error' ? 'Error' : '';
-  const statusClassName = saveStatus === 'saving'
-    ? 'ponzi-value__status ponzi-value__status--saving'
-    : saveStatus === 'saved'
-      ? 'ponzi-value__status ponzi-value__status--saved'
-      : saveStatus === 'error'
-        ? 'ponzi-value__status ponzi-value__status--error'
-        : 'ponzi-value__status';
+  const statusModifier = saveStatus !== 'idle' ? ` ponzi-value__status--${saveStatus}` : '';
 
   return (
     <div className="ponzi-value">
       <label className="ponzi-value__label">
         Ponzi value:{' '}
-        <span
-          className="ponzi-value__percent"
-          style={{
-            display: 'inline-block',
-            minWidth: '6ch',
-            textAlign: 'right',
-            fontVariantNumeric: 'tabular-nums',
-          }}
-        >
+        <span className="ponzi-value__percent">
           {formatPercent(ponziFactorInput)}
         </span>
       </label>
@@ -241,8 +206,8 @@ export default function PonziValue({ bankId, ponziFactor, onPonziFactorSaved }: 
           value={ponziFactorInput}
           onChange={(event) => handleChange(Number(event.target.value))}
         />
-        <span className={statusClassName} aria-live="polite">
-          {statusText}
+        <span className={`ponzi-value__status${statusModifier}`} aria-live="polite">
+          {statusText[saveStatus]}
         </span>
       </div>
     </div>

@@ -59,8 +59,6 @@ export default function TomorrowPanel({ bankId }: TomorrowPanelProps) {
   }
 
   return (
-    <div>
-      <PonziValue bankId={bankId} ponziFactor={ponziFactor} onPonziFactorSaved={setPonziFactor} />
-    </div>
+    <PonziValue bankId={bankId} ponziFactor={ponziFactor} onPonziFactorSaved={setPonziFactor} />
   );
 }
