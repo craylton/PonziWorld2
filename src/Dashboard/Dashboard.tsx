@@ -63,6 +63,10 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     }
   }, [onLogout, bankId, navigate]);
 
+  const refreshBank = useCallback(async () => {
+    await fetchBankData();
+  }, [fetchBankData]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -144,7 +148,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             <BankProvider bankId={bank.id}>
               <AssetSection
                 availableAssets={bank.availableAssets}
-                onRefreshBank={async () => { await fetchBankData(); }}
+                onRefreshBank={refreshBank}
               />
             </BankProvider>
 
@@ -175,7 +179,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
               <TomorrowPanel
                 bankId={bank.id}
                 ponziFactor={bank.ponziFactor}
-                onRefreshBank={async () => { await fetchBankData(); }}
+                onRefreshBank={refreshBank}
               />
             )}
           </div>
