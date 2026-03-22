@@ -178,8 +178,6 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             {activeBottomTab === 'tomorrow' && (
               <TomorrowPanel
                 bankId={bank.id}
-                ponziFactor={bank.ponziFactor}
-                onRefreshBank={refreshBank}
               />
             )}
           </div>

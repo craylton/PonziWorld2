@@ -1,104 +1,66 @@
 import { useEffect, useState } from 'react';
+import PonziValue from './PonziValue';
 import { makeAuthenticatedRequest } from '../../auth';
-import { useLoadingContext } from '../../contexts/useLoadingContext';
 
 interface TomorrowPanelProps {
   bankId: string;
-  ponziFactor: number;
-  onRefreshBank: () => Promise<void>;
 }
 
-const minPonziFactor = -0.05;
-const maxPonziFactor = 0.15;
-
-const sanitizePonziFactor = (value: number) => {
-  if (!Number.isFinite(value)) {
-    return 0;
-  }
-
-  return Math.max(minPonziFactor, Math.min(maxPonziFactor, value));
-};
-
-export default function TomorrowPanel({ bankId, ponziFactor, onRefreshBank }: TomorrowPanelProps) {
-  const { showLoadingPopup } = useLoadingContext();
-  const [ponziFactorInput, setPonziFactorInput] = useState<number>(() => sanitizePonziFactor(ponziFactor));
+export default function TomorrowPanel({ bankId }: TomorrowPanelProps) {
+  const [ponziFactor, setPonziFactor] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasLoadError, setHasLoadError] = useState(false);
 
   useEffect(() => {
-    setPonziFactorInput(sanitizePonziFactor(ponziFactor));
-  }, [ponziFactor]);
+    const abortController = new AbortController();
 
-  const formatPercent = (value: number) => {
-    const percent = value * 100;
-    const rounded = Math.round(percent * 10) / 10;
-    if (Number.isInteger(rounded)) {
-      return `${rounded.toFixed(0)}%`;
-    }
-    return `${rounded.toFixed(1)}%`;
-  };
+    const load = async () => {
+      setIsLoading(true);
+      setHasLoadError(false);
 
-  const handleSavePonziFactor = async () => {
-    if (
-      !Number.isFinite(ponziFactorInput) ||
-      ponziFactorInput < minPonziFactor ||
-      ponziFactorInput > maxPonziFactor
-    ) {
-      showLoadingPopup('error', 'Please enter a valid Ponzi value.');
-      return;
-    }
+      try {
+        const response = await makeAuthenticatedRequest(
+          `/api/bank/ponziFactor?bankId=${encodeURIComponent(bankId)}`,
+          { signal: abortController.signal },
+        );
 
-    showLoadingPopup('loading', 'Saving Ponzi value...');
+        if (!response.ok) {
+          throw new Error('Load failed');
+        }
 
-    try {
-      const response = await makeAuthenticatedRequest('/api/bank/ponziFactor', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ bankId, ponziFactor: ponziFactorInput }),
-      });
+        const data = (await response.json()) as { ponziFactor: number };
+        setPonziFactor(data.ponziFactor);
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return;
+        }
 
-      if (response.ok) {
-        await onRefreshBank();
-        showLoadingPopup('success', 'Ponzi value saved.');
-      } else {
-        const errorData = await response.json();
-        showLoadingPopup('error', `Failed to save Ponzi value: ${errorData.error || 'Unknown error'}.`);
+        setHasLoadError(true);
+      } finally {
+        if (!abortController.signal.aborted) {
+          setIsLoading(false);
+        }
       }
-    } catch {
-      showLoadingPopup('error', 'Failed to save Ponzi value: Network error.');
-    }
-  };
+    };
+
+    void load();
+
+    return () => {
+      abortController.abort();
+    };
+  }, [bankId]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (hasLoadError || ponziFactor === null) {
+    return <div>Error loading ponzi value</div>;
+  }
 
   return (
     <div>
-      <label>
-        Ponzi value:{' '}
-        <span
-          style={{
-            display: 'inline-block',
-            minWidth: '6ch',
-            textAlign: 'right',
-            fontVariantNumeric: 'tabular-nums',
-          }}
-        >
-          {formatPercent(ponziFactorInput)}
-        </span>
-        <input
-          type="range"
-          min={minPonziFactor}
-          max={maxPonziFactor}
-          step={0.001}
-          value={ponziFactorInput}
-          onChange={(event) => setPonziFactorInput(sanitizePonziFactor(Number(event.target.value)))}
-        />
-      </label>
-      <button
-        type="button"
-        onClick={handleSavePonziFactor}
-        className="dashboard-settings-button"
-      >
-        Save Ponzi value
-      </button>
+      <PonziValue bankId={bankId} ponziFactor={ponziFactor} onPonziFactorSaved={setPonziFactor} />
     </div>
   );
 }
