@@ -17,11 +17,11 @@ export default function AssetHistoricalPerformanceDisplay({ investment }: AssetH
   
   // historicalValues are already percentages
   const oneDayChange = numValues >= 2
-    ? historicalValues[numValues - 1] - historicalValues[numValues - 2]
+    ? (historicalValues[numValues - 1] - historicalValues[numValues - 2]) / historicalValues[numValues - 2] * 100
     : 0;
 
   const sevenDayChange = numValues >= 8
-    ? historicalValues[numValues - 1] - historicalValues[numValues - 8]
+    ? (historicalValues[numValues - 1] - historicalValues[numValues - 8]) / historicalValues[numValues - 8] * 100
     : 0;
 
   const getPercentageClass = (change: number) => {
