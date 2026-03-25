@@ -1,7 +1,7 @@
 import type { AvailableAsset } from '../../models/AvailableAsset';
 import type { InvestmentDetailsResponse } from '../../models/AssetDetails';
 import type { AssetWithDetails } from '../../models/AssetWithDetails';
-import AssetProvider from '../../contexts/AssetContext';
+import { AssetProvider } from '../../contexts/AssetProvider';
 import AssetList from './AssetList';
 import { useEffect, useState } from 'react';
 import { makeAuthenticatedRequest } from '../../auth';

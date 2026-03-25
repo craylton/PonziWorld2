@@ -2,10 +2,10 @@ import { useContext } from 'react';
 
 import { CurrentDayContext } from './currentDayContext';
 
-export function useCurrentDay() {
+export function useCurrentDayContext() {
   const context = useContext(CurrentDayContext);
   if (context === undefined) {
-    throw new Error('useCurrentDay must be used within a CurrentDayProvider');
+    throw new Error('useCurrentDayContext must be used within a CurrentDayProvider');
   }
   return context;
 }

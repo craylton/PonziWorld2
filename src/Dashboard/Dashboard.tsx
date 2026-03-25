@@ -11,9 +11,9 @@ import BottomTabs from './BottomPanel/BottomTabs';
 import BottomPanel from './BottomPanel/BottomPanel';
 import TomorrowPanel from './BottomPanel/TomorrowPanel';
 import { makeAuthenticatedRequest } from '../auth';
-import { BankProvider } from '../contexts/BankContext';
-import LoadingProvider from '../contexts/LoadingContext';
-import { useCurrentDay } from '../contexts/useCurrentDay';
+import { BankProvider } from '../contexts/BankProvider';
+import { LoadingProvider } from '../contexts/LoadingProvider';
+import { useCurrentDayContext } from '../contexts/useCurrentDayContext';
 import type { Bank } from '../models/Bank';
 import type { Player } from '../models/Player';
 
@@ -26,7 +26,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const navigate = useNavigate();
   const [bank, setBank] = useState<Bank | null>(null);
   const [player, setPlayer] = useState<Player | null>(null);
-  const { currentDay } = useCurrentDay();
+  const { currentDay } = useCurrentDayContext();
   const [isLeftPanelOpen, setIsLeftPanelOpen] = useState(false);
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
   const [activeBottomTab, setActiveBottomTab] = useState<'today' | 'tomorrow' | null>(null);
@@ -175,11 +175,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         >
           <div key={activeBottomTab} className="dashboard-bottompanel-content">
             {activeBottomTab === 'today' && <div>This panel will display info about what happened since you last logged in</div>}
-            {activeBottomTab === 'tomorrow' && (
-              <TomorrowPanel
-                bankId={bank.id}
-              />
-            )}
+            {activeBottomTab === 'tomorrow' && (<TomorrowPanel bankId={bank.id} />)}
           </div>
         </BottomPanel>
       </div>
