@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import PonziValue from './PonziValue';
+import PonziFactorSlider from './PonziValue';
 import { makeAuthenticatedRequest } from '../../auth';
 
 interface TomorrowPanelProps {
@@ -55,10 +55,14 @@ export default function TomorrowPanel({ bankId }: TomorrowPanelProps) {
   }
 
   if (hasLoadError || ponziFactor === null) {
-    return <div>Error loading ponzi value</div>;
+    return <div>Error loading ponzi factor</div>;
   }
 
   return (
-    <PonziValue bankId={bankId} ponziFactor={ponziFactor} onPonziFactorSaved={setPonziFactor} />
+    <PonziFactorSlider
+      bankId={bankId}
+      ponziFactor={ponziFactor}
+      onPonziFactorSaved={setPonziFactor}
+    />
   );
 }
