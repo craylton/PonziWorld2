@@ -6,6 +6,7 @@ export interface Bank {
     bankName: string;
     claimedCapital: number;
     actualCapital: number;
+    ponziFactor: number;
     availableAssets: AvailableAsset[];
     investors: Investor[];
 }

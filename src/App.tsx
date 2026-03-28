@@ -7,7 +7,7 @@ import ProtectedRoute from './ProtectedRoute';
 import { useState, useEffect } from 'react'
 import './App.css'
 import { isAuthenticated, removeAuthToken } from './auth';
-import { CurrentDayProvider } from './contexts/CurrentDayContext';
+import { CurrentDayProvider } from './contexts/CurrentDayProvider';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);

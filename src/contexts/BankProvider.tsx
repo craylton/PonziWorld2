@@ -1,11 +1,6 @@
-import { createContext } from 'react';
 import type { ReactNode } from 'react';
 
-interface BankContextType {
-  bankId: string;
-}
-
-const BankContext = createContext<BankContextType | undefined>(undefined);
+import { BankContext } from './BankContext';
 
 interface BankProviderProps {
   children: ReactNode;
@@ -19,6 +14,3 @@ export function BankProvider({ children, bankId }: BankProviderProps) {
     </BankContext.Provider>
   );
 }
-
-export { BankContext };
-export type { BankContextType };

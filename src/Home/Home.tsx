@@ -6,7 +6,7 @@ import type { Bank } from '../models/Bank';
 import type { Player } from '../models/Player';
 import SettingsButton from '../Dashboard/SidePanel/Settings/SettingsButton';
 import SettingsPanel from '../Dashboard/SidePanel/Settings/SettingsPanel';
-import LoadingProvider from '../contexts/LoadingContext';
+import { LoadingProvider } from '../contexts/LoadingProvider';
 import BankCard from './BankCard';
 import CreateBankPopup from './CreateBankPopup';
 import LoadingPopup from '../Dashboard/Assets/LoadingPopup';

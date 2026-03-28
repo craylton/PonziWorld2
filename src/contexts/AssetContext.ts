@@ -1,6 +1,6 @@
 import { createContext } from 'react';
 
-interface AssetContextType {
+export interface AssetContextType {
   refreshBank?: () => Promise<void>;
   cashBalance: number;
   setCashBalance: (balance: number) => void;

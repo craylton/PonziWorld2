@@ -1,12 +1,12 @@
 import './PageHeader.css';
-import { useCurrentDay } from '../contexts/CurrentDayContext';
+import { useCurrentDayContext } from '../contexts/useCurrentDayContext';
 
 interface PageHeaderProps {
     title: string;
 }
 
 export default function PageHeader({ title }: PageHeaderProps) {
-    const { currentDay } = useCurrentDay();
+    const { currentDay } = useCurrentDayContext();
 
     return (
         <header className="page-header">
