@@ -1,5 +1,7 @@
 import {
   Chart as ChartJS,
+  type ChartData,
+  type ChartOptions,
   CategoryScale,
   LinearScale,
   PointElement,
@@ -7,6 +9,7 @@ import {
   Title,
   Tooltip,
   Legend,
+  type TooltipItem,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 
@@ -42,7 +45,7 @@ export default function LineGraph({
   height = '300px',
   color = '#2563eb'
 }: LineGraphProps) {
-  const chartData = {
+  const chartData: ChartData<'line', number[], string> = {
     labels: data.map(d => `Day ${d.day}`),
     datasets: [
       {
@@ -60,7 +63,7 @@ export default function LineGraph({
     ],
   };
 
-  const options = {
+  const options: ChartOptions<'line'> = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
@@ -69,8 +72,8 @@ export default function LineGraph({
       },
       tooltip: {
         callbacks: {
-          label: (context: { parsed: { y: number } }) => {
-            return formatTooltip(context.parsed.y);
+          label: (context: TooltipItem<'line'>) => {
+            return formatTooltip(context.parsed.y ?? 0);
           },
         },
       },
